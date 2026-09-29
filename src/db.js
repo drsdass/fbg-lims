@@ -1,0 +1,203 @@
+// Data layer: Supabase auth (with two-step verification), loading and saving.
+// Every table row is { id, data (the record as JSON), ... }. Row Level Security
+// in the database decides what each signed-in user can read and write.
+import { createClient } from "@supabase/supabase-js";
+
+const url = String(import.meta.env.VITE_SUPABASE_URL || "").trim();
+const key = String(import.meta.env.VITE_SUPABASE_ANON_KEY || "").replace(/\s+/g, "");
+// A key copied from the dashboard's shortened display contains "…", which browsers refuse to send.
+export const CONFIG_ERROR = !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(url)
+  ? "The Supabase URL isn't set correctly. Check VITE_SUPABASE_URL in your host's environment variables, then redeploy."
+  : !/^[\x21-\x7e]+$/.test(key) || key.length < 20
+  ? "The Supabase key isn't set correctly. Copy the publishable key with the copy button and paste it into VITE_SUPABASE_ANON_KEY, then redeploy."
+  : "";
+if (CONFIG_ERROR) console.error(CONFIG_ERROR);
+export const sb = createClient(CONFIG_ERROR ? "https://invalid.supabase.co" : url, CONFIG_ERROR ? "invalid-key-placeholder" : key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+
+const DOC_TABLES = ["clinics", "patients", "orders", "notes", "claims", "outbox"];
+const LAB_ONLY = new Set(["claims", "outbox"]);
+const SETTINGS = ["lab", "fees", "confMap"];
+const PENDING_KEY = "fbg-pending-registration";
+
+let synced = {};           // "table:id" -> JSON last known to be on the server
+let saveTimer = null, saving = false, again = false, onError = () => {};
+
+async function fetchAll(table, cols) {
+  const out = []; const page = 1000;
+  for (let from = 0; ; from += page) {
+    const { data, error } = await sb.from(table).select(cols).range(from, from + page - 1);
+    if (error) throw error;
+    out.push(...data);
+    if (data.length < page) break;
+  }
+  return out;
+}
+
+function dirty(S, isLab) {
+  const out = [];
+  for (const t of DOC_TABLES) {
+    if (LAB_ONLY.has(t) && !isLab) continue;
+    for (const d of S[t] || []) {
+      const k = t + ":" + d.id, j = JSON.stringify(d);
+      if (synced[k] !== j) out.push({ t, d, k, j });
+    }
+  }
+  if (isLab) for (const key of SETTINGS) {
+    if (S[key] === undefined) continue;
+    const k = "settings:" + key, j = JSON.stringify(S[key]);
+    if (synced[k] !== j) out.push({ t: "settings", key, d: S[key], k, j });
+  }
+  return out;
+}
+
+async function flush(S, isLab) {
+  if (saving) { again = true; return; }
+  saving = true;
+  try {
+    const items = dirty(S, isLab);
+    const byTable = {};
+    for (const it of items) (byTable[it.t] = byTable[it.t] || []).push(it);
+    for (const [t, list] of Object.entries(byTable)) {
+      const toRow = it => t === "settings" ? { key: it.key, data: it.d }
+        : t === "notes" ? { id: it.d.id, aud: it.d.aud, data: it.d }
+        : (t === "patients" || t === "orders") ? { id: it.d.id, clinic_id: it.d.clinicId, data: it.d }
+        : { id: it.d.id, data: it.d };
+      if (t === "settings") {
+        const { error } = await sb.from(t).upsert(list.map(toRow));
+        if (error) onError(error); else list.forEach(it => { synced[it.k] = it.j; });
+        continue;
+      }
+      // New records are inserted; existing ones are updated one by one, so the
+      // database's insert and update rules each apply exactly where they should.
+      const fresh = list.filter(it => synced[it.k] === undefined), existing = list.filter(it => synced[it.k] !== undefined);
+      if (fresh.length) {
+        const { error } = await sb.from(t).insert(fresh.map(toRow));
+        if (error) onError(error); else fresh.forEach(it => { synced[it.k] = it.j; });
+      }
+      for (const it of existing) {
+        const { error } = await sb.from(t).update({ data: it.d }).eq("id", it.d.id);
+        if (error) onError(error); else synced[it.k] = it.j;
+      }
+    }
+  } catch (e) { onError(e); }
+  finally {
+    saving = false;
+    if (again) { again = false; flush(S, isLab); }
+  }
+}
+
+export const DB = {
+  onSaveError(fn) { onError = fn; },
+  onAuth(fn) { sb.auth.onAuthStateChange((event, session) => fn(event, session)); },
+  async session() { const { data } = await sb.auth.getSession(); return data.session; },
+  async signIn(email, password) { const { error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error; },
+  async signOut() { synced = {}; await sb.auth.signOut(); },
+  async resetPassword(email) { await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin }); },
+  async updatePassword(password) { const { error } = await sb.auth.updateUser({ password }); if (error) throw error; },
+
+  // Two-step verification (TOTP authenticator app)
+  async aal() { const { data, error } = await sb.auth.mfa.getAuthenticatorAssuranceLevel(); if (error) throw error; return data; },
+  async mfaSetup() {
+    const { data, error } = await sb.auth.mfa.listFactors(); if (error) throw error;
+    const verified = (data.totp || []).filter(f => f.status === "verified");
+    if (verified.length) return { mode: "verify", factorId: verified[0].id };
+    for (const f of (data.all || []).filter(f => f.status !== "verified")) await sb.auth.mfa.unenroll({ factorId: f.id });
+    const en = await sb.auth.mfa.enroll({ factorType: "totp", friendlyName: "FBG portal" });
+    if (en.error) throw en.error;
+    return { mode: "enroll", factorId: en.data.id, qr: en.data.totp.qr_code, secret: en.data.totp.secret };
+  },
+  async mfaVerify(factorId, code) {
+    const ch = await sb.auth.mfa.challenge({ factorId }); if (ch.error) throw ch.error;
+    const { error } = await sb.auth.mfa.verify({ factorId, challengeId: ch.data.id, code }); if (error) throw error;
+  },
+
+  async profile() {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return { user: null, profile: null };
+    const { data, error } = await sb.from("profiles").select("*").eq("user_id", user.id).maybeSingle();
+    if (error) throw error;
+    return { user, profile: data };
+  },
+
+  // Clinic self-registration. With email confirmation on, the clinic is created
+  // on the first sign-in after the user confirms their email.
+  async registerClinic(email, password, name, clinic) {
+    const slim = { ...clinic, agreement: { ...clinic.agreement, sig: null } };
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify({ email: email.toLowerCase(), name, clinic })); } catch (e) {}
+    const { data, error } = await sb.auth.signUp({ email, password, options: { data: { name, pending_clinic: slim }, emailRedirectTo: location.origin } });
+    if (error) throw error;
+    if (data.session) { await DB.finishRegistration(data.user); return "done"; }
+    return "confirm";
+  },
+  async finishRegistration(user) {
+    let pending = null;
+    try { const p = JSON.parse(localStorage.getItem(PENDING_KEY) || "null"); if (p && p.email === (user.email || "").toLowerCase()) pending = p; } catch (e) {}
+    const clinic = pending ? pending.clinic : user.user_metadata && user.user_metadata.pending_clinic;
+    const name = pending ? pending.name : (user.user_metadata && user.user_metadata.name) || "";
+    if (!clinic) return false;
+    const { error } = await sb.rpc("register_clinic", { p_clinic: clinic, p_name: name });
+    if (error) throw error;
+    try { localStorage.removeItem(PENDING_KEY); } catch (e) {}
+    return true;
+  },
+
+  async loadAll(isLab) {
+    const tables = isLab ? DOC_TABLES : DOC_TABLES.filter(t => !LAB_ONLY.has(t));
+    const res = {};
+    await Promise.all(tables.map(async t => { res[t] = (await fetchAll(t, "id,data")).map(r => r.data); }));
+    const set = await fetchAll("settings", "key,data");
+    for (const r of set) res[r.key] = r.data;
+    if (!isLab) { res.claims = []; res.outbox = []; }
+    return res;
+  },
+  markSynced(S, isLab) {
+    synced = {};
+    for (const t of DOC_TABLES) for (const d of S[t] || []) synced[t + ":" + d.id] = JSON.stringify(d);
+    if (isLab) for (const k of SETTINGS) if (S[k] !== undefined) synced["settings:" + k] = JSON.stringify(S[k]);
+  },
+  // Merge fresh server data into S, keeping local edits that haven't saved yet.
+  merge(S, fresh, isLab) {
+    const tables = isLab ? DOC_TABLES : DOC_TABLES.filter(t => !LAB_ONLY.has(t));
+    for (const t of tables) {
+      const local = new Map((S[t] || []).map(d => [d.id, d]));
+      const next = [];
+      for (const d of fresh[t] || []) {
+        const k = t + ":" + d.id, mine = local.get(d.id);
+        if (mine && synced[k] !== JSON.stringify(mine)) next.push(mine);
+        else { next.push(d); synced[k] = JSON.stringify(d); }
+        local.delete(d.id);
+      }
+      for (const [id, d] of local) if (synced[t + ":" + id] !== JSON.stringify(d)) next.push(d);
+      S[t] = next;
+    }
+    if (!isLab && fresh.lab) S.lab = fresh.lab;
+  },
+  queueSave(S, isLab) { clearTimeout(saveTimer); saveTimer = setTimeout(() => flush(S, isLab), 350); },
+  flushNow(S, isLab) { clearTimeout(saveTimer); return flush(S, isLab); },
+  hasUnsaved(S, isLab) { return dirty(S, isLab).length > 0; },
+
+  async sendAlerts() {
+    const { data, error } = await sb.functions.invoke("send-alerts", { body: {} });
+    if (error) {
+      let msg = error.message || "Couldn't reach the alert service.";
+      try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) {}
+      throw new Error(msg);
+    }
+    return data;
+  },
+  async nextSeq(name) { const { data, error } = await sb.rpc("next_seq", { p_name: name }); if (error) throw error; return Number(data); },
+  log(action, table, id, detail) { sb.from("audit_log").insert({ action, tbl: table, row_id: id == null ? null : String(id), detail: detail || null }).then(() => {}, () => {}); },
+  logView(table, id, detail) { DB.log("view", table, id, detail ? { what: detail } : null); },
+  async audit({ from, to, actor, action, rowIds, offset = 0, limit = 200 }) {
+    let q = sb.from("audit_log").select("id,at,actor,action,tbl,row_id,detail").order("at", { ascending: false });
+    if (from) q = q.gte("at", new Date(from + "T00:00:00").toISOString());
+    if (to) q = q.lte("at", new Date(to + "T23:59:59.999").toISOString());
+    if (actor) q = q.eq("actor", actor);
+    if (action) q = q.in("action", action.split(","));
+    if (rowIds) q = q.in("row_id", rowIds.slice(0, 300));
+    const { data, error } = await q.range(offset, offset + limit - 1);
+    if (error) throw error;
+    return data;
+  },
+  async profilesAll() { return fetchAll("profiles", "user_id,role,clinic_id,name,email"); },
+};
