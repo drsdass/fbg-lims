@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) and `supabase/migrations/0003_roles.sql` (lab roles).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -42,6 +42,8 @@ Clinics register themselves from the sign-in page. Lab staff are added by an adm
 insert into public.profiles (user_id, role, name, email)
 select id, 'lab', 'Full Name', email from auth.users where email = 'person@firstbiogenetics.com';
 ```
+
+(Once `manage-users` is deployed, use the **Users** page instead of SQL.)
 
 To add another user to an existing clinic, do the same with `role = 'clinic'` and the clinic's id
 (find it with `select id, data->>'name', data->>'acct' from clinics;`):
@@ -109,6 +111,30 @@ Changes made in the SQL editor are recorded as "System or administrator".
 Failed sign-in attempts are recorded by Supabase itself under **Authentication → Logs**.
 Keep audit records for at least six years; don't delete the Supabase project without exporting them first.
 
+## 9. Roles and users
+
+Lab staff can hold one or more roles:
+
+| Role | Can do |
+|---|---|
+| Admin | Everything, including users, roles, settings and approving clinics |
+| Scientist | Receive specimens, run instruments, enter, verify and release results, send-outs, alerts |
+| Reporting | Enter requisitions, receive specimens, report out results a scientist has verified, alerts |
+| Sales | View, add and edit clinics; enter requisitions. No result values |
+| Billing | Claims and billing export; edit patient insurance. No result values |
+| Read-only | View everything, including results, billing and the audit log |
+
+The database enforces these rules, not just the screens. Results can only be entered or changed by a scientist or admin,
+and reporting staff can only release results a scientist has verified.
+
+**Deploy the user service:** Supabase → Edge Functions → Deploy a new function → Via editor. Name it `manage-users`,
+paste `supabase/functions/manage-users/index.ts`, deploy, and turn off "Enforce JWT verification" (it checks that the caller is an admin).
+Also redeploy `send-alerts` with the updated file.
+
+**Manage people:** admins open **Users** to add lab staff or clinic users, change roles, reset a password or
+two-step verification, and deactivate people who leave. New users get a temporary password, set up two-step
+verification, and then must choose their own password. All of it is recorded in the audit log.
+
 ## Before go-live
 
 - [ ] Supabase Team plan, HIPAA add-on, signed BAA, project marked High Compliance
@@ -121,6 +147,7 @@ Keep audit records for at least six years; don't delete the Supabase project wit
 - [ ] Lab NPI and Tax ID entered in Lab settings
 - [ ] BAAs signed with Resend and SmartFax; Twilio number registration approved
 - [ ] Test email, text and fax received for a made-up patient
+- [ ] Every person's roles reviewed; former staff deactivated
 - [ ] Someone assigned to review the audit log on a regular schedule (for example, monthly)
 - [ ] End-to-end test in the test project with made-up patients, signed off by the lab director
 - [ ] Staff trained; paper requisitions kept as a fallback for the first weeks

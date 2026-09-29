@@ -28,8 +28,9 @@ Deno.serve(async (req) => {
   let aal = "";
   try { aal = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).aal; } catch { /* ignore */ }
   if (aal !== "aal2") return json({ error: "Two-step verification required" }, 403);
-  const { data: prof } = await admin.from("profiles").select("role").eq("user_id", u.user.id).maybeSingle();
-  if (prof?.role !== "lab") return json({ error: "Lab staff only" }, 403);
+  const { data: prof } = await admin.from("profiles").select("role,lab_roles,active").eq("user_id", u.user.id).maybeSingle();
+  const canSend = prof?.role === "lab" && prof.active && (prof.lab_roles ?? []).some((r: string) => ["admin", "scientist", "reporting"].includes(r));
+  if (!canSend) return json({ error: "Your role can't send result alerts" }, 403);
 
   const { data: rows, error } = await admin.from("outbox").select("id,data").filter("data->>status", "eq", "Queued").limit(25);
   if (error) return json({ error: error.message }, 500);

@@ -20,7 +20,7 @@ const SETTINGS = ["lab", "fees", "confMap"];
 const PENDING_KEY = "fbg-pending-registration";
 
 let synced = {};           // "table:id" -> JSON last known to be on the server
-let saveTimer = null, saving = false, again = false, onError = () => {};
+let canSettings = false, saveTimer = null, saving = false, again = false, onError = () => {};
 
 async function fetchAll(table, cols) {
   const out = []; const page = 1000;
@@ -42,7 +42,7 @@ function dirty(S, isLab) {
       if (synced[k] !== j) out.push({ t, d, k, j });
     }
   }
-  if (isLab) for (const key of SETTINGS) {
+  if (isLab && canSettings) for (const key of SETTINGS) {
     if (S[key] === undefined) continue;
     const k = "settings:" + key, j = JSON.stringify(S[key]);
     if (synced[k] !== j) out.push({ t: "settings", key, d: S[key], k, j });
@@ -88,6 +88,19 @@ async function flush(S, isLab) {
 
 export const DB = {
   onSaveError(fn) { onError = fn; },
+  setSettingsWritable(b) { canSettings = !!b; },
+  async manageUsers(action, payload) {
+    const { data, error } = await sb.functions.invoke("manage-users", { body: { action, ...(payload || {}) } });
+    if (error) {
+      let msg = error.message || "Couldn't reach the user service.";
+      try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) {}
+      throw new Error(msg);
+    }
+    if (data && data.error) throw new Error(data.error);
+    return data;
+  },
+  async createClinic(clinic) { const { data, error } = await sb.rpc("create_clinic", { p_clinic: clinic }); if (error) throw error; return data; },
+  async passwordChanged() { const { error } = await sb.rpc("password_changed"); if (error) throw error; },
   onAuth(fn) { sb.auth.onAuthStateChange((event, session) => fn(event, session)); },
   async session() { const { data } = await sb.auth.getSession(); return data.session; },
   async signIn(email, password) { const { error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error; },
