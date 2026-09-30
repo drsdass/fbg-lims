@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
-    "jsbarcode": "^3.11.6"
+    "jsbarcode": "^3.11.6",
+    "read-excel-file": "^9.3.10"
   },
   "devDependencies": {
     "vite": "^5.4.0"

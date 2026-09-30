@@ -7,8 +7,10 @@ const env = (k: string) => (Deno.env.get(k) ?? "").trim();
 const SB_URL = env("SUPABASE_URL");
 const SERVICE = env("SUPABASE_SERVICE_ROLE_KEY") || env("SUPABASE_SECRET_KEY");
 const cors = {
-  "Access-Control-Allow-Origin": env("PORTAL_URL").replace(/\/+$/, "") || "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  // Requests are authorized by the signed-in user's token (checked below), not by cookies,
+  // so allowing any origin is safe and avoids breakage when the portal address changes.
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-region",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 const json = (b: unknown, status = 200) =>
