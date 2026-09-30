@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) and `supabase/migrations/0003_roles.sql` (lab roles).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders) and `supabase/migrations/0005_clinic_defaults.sql`.
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -134,6 +134,19 @@ Also redeploy `send-alerts` with the updated file.
 **Manage people:** admins open **Users** to add lab staff or clinic users, change roles, reset a password or
 two-step verification, and deactivate people who leave. New users get a temporary password, set up two-step
 verification, and then must choose their own password. All of it is recorded in the audit log.
+
+## 10. Clinic setup and settings
+
+Clinics can register themselves from the sign-in page, or lab staff can set them up from the paper onboarding packet:
+**Clinics → Add clinic**, tick "Signed paper onboarding is on file (SOF)" and record who signed. Each clinic has portal settings:
+
+- **Clinic can place orders**: on by default. The lab and collectors can always enter orders for any clinic.
+- **Supply ordering**: clinic users can order supplies (catalog in Lab settings).
+- **Who sees results**: everyone at the clinic, or users linked to providers see only their providers' orders.
+
+Add clinic logins under **Users → Add user → Clinic user**, with an email or a username, and link providers where needed.
+Two-step verification applies to lab staff only; clinic users sign in with a password. Everyone can change their own password (key icon, top right). "Keep me signed in for 12 hours" skips the 15-minute
+inactivity sign-out on a private computer.
 
 ## Before go-live
 

@@ -15,7 +15,9 @@ const cors = {
 };
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...cors, "Content-Type": "application/json" } });
-const LAB_ROLES = ["admin", "scientist", "reporting", "sales", "billing", "auditor"];
+const LAB_ROLES = ["admin", "scientist", "reporting", "sales", "collector", "billing", "auditor"];
+// Username sign-in: a username is stored as <username>@<USERNAME_DOMAIN>. No email is ever sent to these addresses.
+const USERNAME_DOMAIN = "users.firstbiogenetics.com";
 
 function tempPassword() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
@@ -43,6 +45,7 @@ Deno.serve(async (req) => {
   const save = (p: any) => admin.rpc("admin_save_profile", {
     p_actor: actor, p_user: p.user_id, p_role: p.role, p_lab_roles: p.lab_roles ?? [], p_clinic: p.clinic_id ?? null,
     p_name: p.name ?? "", p_email: p.email ?? "", p_active: p.active ?? true, p_must_change: p.must_change_pw ?? null,
+    p_provider_ids: p.provider_ids ?? null,
   });
   const note = (action: string, row: string, detail: Record<string, unknown>) =>
     admin.from("audit_log").insert({ actor, action, tbl: "profiles", row_id: row, detail });
@@ -55,7 +58,8 @@ Deno.serve(async (req) => {
     const roles = kind === "lab" ? [...new Set((b.roles ?? []).filter((r: string) => LAB_ROLES.includes(r)))] : [];
     if (kind === "lab" && !roles.length) throw new Error("Choose at least one role.");
     if (kind === "clinic" && !b.clinicId) throw new Error("Choose the clinic this user belongs to.");
-    return { kind, roles, clinic: kind === "clinic" ? b.clinicId : null, name: String(b.name ?? "").trim() };
+    const providers = kind === "clinic" && Array.isArray(b.providerIds) ? b.providerIds.map(String) : [];
+    return { kind, roles, clinic: kind === "clinic" ? b.clinicId : null, name: String(b.name ?? "").trim(), providers };
   };
 
   try {
@@ -74,15 +78,21 @@ Deno.serve(async (req) => {
           const p: any = byId.get(x.id) ?? {};
           return {
             id: x.id, email: x.email, name: p.name ?? x.user_metadata?.name ?? "", kind: p.role ?? null,
-            roles: p.lab_roles ?? [], clinicId: p.clinic_id ?? null, active: p.active ?? false, linked: !!p.user_id,
+            roles: p.lab_roles ?? [], clinicId: p.clinic_id ?? null, providerIds: p.provider_ids ?? [], active: p.active ?? false, linked: !!p.user_id,
+            username: (x.email ?? "").endsWith("@" + USERNAME_DOMAIN) ? (x.email ?? "").split("@")[0] : null,
             mustChange: !!p.must_change_pw, lastSignIn: x.last_sign_in_at, createdAt: x.created_at,
             mfa: (x.factors ?? []).some((f: any) => f.status === "verified"),
           };
         }) });
       }
       case "create": {
-        const email = String(body.email ?? "").trim().toLowerCase();
-        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error("Enter a valid email address.");
+        let email = String(body.email ?? "").trim().toLowerCase();
+        if (body.username) {
+          const un = String(body.username).trim().toLowerCase();
+          if (!/^[a-z0-9][a-z0-9._-]{2,39}$/.test(un)) throw new Error("Usernames are 3-40 characters: letters, numbers, dots, dashes or underscores.");
+          email = `${un}@${USERNAME_DOMAIN}`;
+        }
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error("Enter a valid email address or username.");
         const c = clean(body);
         const pw = tempPassword();
         let userId: string;
@@ -97,7 +107,7 @@ Deno.serve(async (req) => {
           userId = found.id;
           await admin.auth.admin.updateUserById(userId, { password: pw });
         } else userId = created.user.id;
-        const r = await save({ user_id: userId, role: c.kind, lab_roles: c.roles, clinic_id: c.clinic, name: c.name, email, active: true, must_change_pw: true });
+        const r = await save({ user_id: userId, role: c.kind, lab_roles: c.roles, clinic_id: c.clinic, name: c.name, email, active: true, must_change_pw: true, provider_ids: c.providers });
         if (r.error) throw r.error;
         return json({ ok: true, userId, tempPassword: pw });
       }
@@ -108,7 +118,7 @@ Deno.serve(async (req) => {
         if (!au?.user) throw new Error("User not found.");
         const losingAdmin = p?.role === "lab" && (p.lab_roles ?? []).includes("admin") && !(c.kind === "lab" && c.roles.includes("admin"));
         if (losingAdmin && (await adminsLeft(body.userId)) === 0) throw new Error("There must always be at least one admin.");
-        const r = await save({ user_id: body.userId, role: c.kind, lab_roles: c.roles, clinic_id: c.clinic, name: c.name || p?.name, email: au.user.email, active: p?.active ?? true });
+        const r = await save({ user_id: body.userId, role: c.kind, lab_roles: c.roles, clinic_id: c.clinic, name: c.name || p?.name, email: au.user.email, active: p?.active ?? true, provider_ids: c.providers });
         if (r.error) throw r.error;
         return json({ ok: true });
       }
@@ -120,7 +130,7 @@ Deno.serve(async (req) => {
           throw new Error("There must always be at least one active admin.");
         const { error } = await admin.auth.admin.updateUserById(body.userId, { ban_duration: body.active ? "none" : "876000h" });
         if (error) throw error;
-        const r = await save({ ...p, active: !!body.active });
+        const r = await save({ ...p, active: !!body.active, provider_ids: p.provider_ids });
         if (r.error) throw r.error;
         return json({ ok: true });
       }
@@ -129,7 +139,7 @@ Deno.serve(async (req) => {
         const { error } = await admin.auth.admin.updateUserById(body.userId, { password: pw });
         if (error) throw error;
         const { data: p } = await admin.from("profiles").select("*").eq("user_id", body.userId).maybeSingle();
-        if (p) { const r = await save({ ...p, must_change_pw: true }); if (r.error) throw r.error; }
+        if (p) { const r = await save({ ...p, must_change_pw: true, provider_ids: p.provider_ids }); if (r.error) throw r.error; }
         await note("reset_password", body.userId, {});
         return json({ ok: true, tempPassword: pw });
       }

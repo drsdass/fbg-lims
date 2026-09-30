@@ -14,7 +14,7 @@ export const CONFIG_ERROR = !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(url
 if (CONFIG_ERROR) console.error(CONFIG_ERROR);
 export const sb = createClient(CONFIG_ERROR ? "https://invalid.supabase.co" : url, CONFIG_ERROR ? "invalid-key-placeholder" : key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
 
-const DOC_TABLES = ["clinics", "patients", "orders", "notes", "claims", "outbox"];
+const DOC_TABLES = ["clinics", "patients", "orders", "notes", "claims", "outbox", "supply_orders"];
 const LAB_ONLY = new Set(["claims", "outbox"]);
 const SETTINGS = ["lab", "fees", "confMap"];
 const PENDING_KEY = "fbg-pending-registration";
@@ -26,6 +26,8 @@ async function fetchAll(table, cols) {
   const out = []; const page = 1000;
   for (let from = 0; ; from += page) {
     const { data, error } = await sb.from(table).select(cols).range(from, from + page - 1);
+    // A table added by a newer migration may not exist yet; treat it as empty until the SQL is run.
+    if (error && (error.code === "42P01" || error.code === "PGRST205" || /does not exist|could not find the table/i.test(error.message || ""))) return out;
     if (error) throw error;
     out.push(...data);
     if (data.length < page) break;
@@ -60,7 +62,7 @@ async function flush(S, isLab) {
     for (const [t, list] of Object.entries(byTable)) {
       const toRow = it => t === "settings" ? { key: it.key, data: it.d }
         : t === "notes" ? { id: it.d.id, aud: it.d.aud, data: it.d }
-        : (t === "patients" || t === "orders") ? { id: it.d.id, clinic_id: it.d.clinicId, data: it.d }
+        : (t === "patients" || t === "orders" || t === "supply_orders") ? { id: it.d.id, clinic_id: it.d.clinicId, data: it.d }
         : { id: it.d.id, data: it.d };
       if (t === "settings") {
         const { error } = await sb.from(t).upsert(list.map(toRow));
@@ -109,6 +111,7 @@ export const DB = {
   async updatePassword(password) { const { error } = await sb.auth.updateUser({ password }); if (error) throw error; },
 
   // Two-step verification (TOTP authenticator app)
+  async mfaRequired() { const { data, error } = await sb.rpc("mfa_required"); if (error) return true; return data !== false; },
   async aal() { const { data, error } = await sb.auth.mfa.getAuthenticatorAssuranceLevel(); if (error) throw error; return data; },
   async mfaSetup() {
     const { data, error } = await sb.auth.mfa.listFactors(); if (error) throw error;
