@@ -40,6 +40,8 @@ const I={
  x:ic('<path d="M6 6l12 12M18 6 6 18"/>'),
  drop:ic('<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>'),
 };
+I.down=ic('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>');
+I.chart=ic('<path d="M4 19h16M4 5v14M8 15l3-4 3 2 5-6"/>');
 I.key=ic('<circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.7-8.7M16 7l3 3M14 9l2 2"/>');
 I.box=ic('<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/>');
 I.camera=ic('<path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.5"/>');
@@ -299,11 +301,11 @@ let ui={pq:"",pins:"",rq:"",rstat:"",rcat:"",rfrom:"",rto:"",runread:false,qq:""
 let lf={email:"",pw:""};
 let reg=null,draft=null,ptForm=null,cs=null,provForm=null,labForm=null,rej=null;
 let sigs={};
-const roots={spf:()=>spf,clf:()=>clf,uf:()=>uf,au:()=>AU,ui:()=>ui,lf:()=>lf,reg:()=>reg,draft:()=>draft,pt:()=>ptForm,cs:()=>cs,prov:()=>provForm,labf:()=>labForm,rej:()=>rej,res:()=>resEdit};
+const roots={al:()=>AL,qf:()=>qf,qs:()=>QCS,spf:()=>spf,clf:()=>clf,uf:()=>uf,au:()=>AU,ui:()=>ui,lf:()=>lf,reg:()=>reg,draft:()=>draft,pt:()=>ptForm,cs:()=>cs,prov:()=>provForm,labf:()=>labForm,rej:()=>rej,res:()=>resEdit};
 let resEdit=null;
 
 const me=()=>S.users.find(u=>u.id===S.session);
-const ROLE_PERMS={admin:["*"],scientist:["clinics.view","orders.receive","instruments","sendouts","results.view","results.enter","results.release","alerts"],reporting:["clinics.view","orders.enter","orders.receive","sendouts","results.view","results.release","alerts","supplies"],sales:["clinics.view","clinics.edit","orders.enter","supplies"],collector:["clinics.view","orders.enter","supplies"],billing:["clinics.view","billing","billing.view","patients.edit"],auditor:["clinics.view","results.view","billing.view","audit"]};
+const ROLE_PERMS={admin:["*"],scientist:["clinics.view","orders.receive","instruments","sendouts","results.view","results.enter","results.release","alerts","qc"],reporting:["clinics.view","orders.enter","orders.receive","sendouts","results.view","results.release","alerts","supplies"],sales:["clinics.view","clinics.edit","orders.enter","supplies"],collector:["clinics.view","orders.enter","supplies"],billing:["clinics.view","billing","billing.view","patients.edit"],auditor:["clinics.view","results.view","billing.view","audit"]};
 const ROLE_INFO=[["admin","Admin","Everything, including users, roles, settings and approving clinics"],["scientist","Scientist","Receive specimens, run instruments, enter, verify and release results"],["reporting","Reporting","Enter requisitions, receive specimens, report out results a scientist has verified"],["sales","Sales","View, add and edit clinics; enter orders; manage supply orders. No result values"],["collector","Collector","Enter orders for clinics (mobile collection) and manage supply orders. No result values"],["billing","Billing","Claims and billing export; edit patient insurance. No result values"],["auditor","Read-only","View everything, including results, billing and the audit log. Can't change anything"]];
 function can(p){const u=me();if(!u||u.role!=="lab")return false;return (u.roles||[]).some(r=>{const ps=ROLE_PERMS[r]||[];return ps.includes("*")||ps.includes(p)})}
 const isLab=()=>me()?.role==="lab";
@@ -333,10 +335,10 @@ function render(){
  if(openForm&&$("#modal-root").innerHTML){refreshing=true;formModal(openForm);refreshing=false}
  if(fb){const el=document.querySelector(`[data-b="${CSS.escape(fb)}"]`);if(el&&el!==document.activeElement){el.focus();try{if(pos!=null)el.setSelectionRange(pos,pos)}catch(e){}}}
 }
-function labAllowed(v){const need={supplies:["supplies"],"order-new":["orders.enter"],instruments:["instruments","sendouts"],billing:["billing","billing.view"],clinics:["clinics.view"],outbox:["alerts"],audit:["audit"],users:["users"],labset:["settings"],entry:["results.enter","results.release"]}[v];return !need||need.some(can)}
+function labAllowed(v){const need={qc:["qc","results.view"],qcm:["qc","results.view"],supplies:["supplies"],"order-new":["orders.enter"],instruments:["instruments","sendouts"],billing:["billing","billing.view"],clinics:["clinics.view"],outbox:["alerts"],audit:["audit"],users:["users"],labset:["settings"],entry:["results.enter","results.release"]}[v];return !need||need.some(can)}
 function page(){
  const v=route.v,lab=isLab();if(!lab&&((v==="order-new"&&!cset(myClinic(),"ordering"))||(v==="supplies"&&!cset(myClinic(),"supplies"))))route={v:"dash",p:{}};if(lab&&!labAllowed(v))route={v:"dash",p:{}};
- const map=lab?{dash:vLabDash,queue:vQueue,order:vOrder,entry:vEntry,clinics:vClinics,menu:vMenu,instruments:vInstruments,billing:vBilling,"order-new":vOrderNew,audit:vAudit,users:vUsers,supplies:vSupplies,outbox:vOutbox,labset:vLabSet,notes:vNotes,patient:vPatient}
+ const map=lab?{dash:vLabDash,queue:vQueue,order:vOrder,entry:vEntry,clinics:vClinics,menu:vMenu,instruments:vInstruments,billing:vBilling,"order-new":vOrderNew,audit:vAudit,users:vUsers,supplies:vSupplies,qc:vQC,qcm:vQCM,outbox:vOutbox,labset:vLabSet,notes:vNotes,patient:vPatient}
              :{dash:vClinicDash,patients:vPatients,patient:vPatient,"order-new":vOrderNew,results:vResults,order:vOrder,notes:vNotes,menu:vMenu,settings:vSettings,supplies:vSupplies};
  return (map[v]||map.dash)();
 }
@@ -344,9 +346,9 @@ function shell(content){
  const u=me(),lab=isLab(),c=lab?null:myClinic(),n=unread();
  const openQ=S.orders.filter(o=>["Ordered","Received","In Process"].includes(o.status)).length;
  const unreadRes=lab?0:S.orders.filter(o=>o.clinicId===u.clinicId&&o.status==="Released"&&!o.readAt).length;
- const items=lab?[["dash","Dashboard",I.home],["order-new","New order",I.plus],["queue","Accessioning",I.flask,openQ],["instruments","Instruments",I.chip,(can("instruments")?pendingFor("UDS").length+pendingFor("CONF").length+pendingFor("CONFOF").length:0)+(can("sendouts")?refPending().length:0)||""],["billing","Billing",I.dollar,can("billing")?S.claims.filter(c=>claimStatus(c)==="Ready").length||"":""],["clinics","Clinics",I.building,can("clinics.approve")?S.clinics.filter(x=>x.status==="pending").length||"":""],["menu","Test menu",I.list],["supplies","Supply orders",I.box,S.supply_orders.filter(x=>x.status==="New").length||""],["outbox","Notification log",I.send],["audit","Audit log",I.list],["users","Users",I.users],["labset","Lab settings",I.gear]].filter(([v])=>labAllowed(v))
+ const items=lab?[["dash","Dashboard",I.home],["order-new","New order",I.plus],["queue","Accessioning",I.flask,openQ],["qc","Quality control",I.chart],["instruments","Instruments",I.chip,(can("instruments")?pendingFor("UDS").length+pendingFor("CONF").length+pendingFor("CONFOF").length:0)+(can("sendouts")?refPending().length:0)||""],["billing","Billing",I.dollar,can("billing")?S.claims.filter(c=>claimStatus(c)==="Ready").length||"":""],["clinics","Clinics",I.building,can("clinics.approve")?S.clinics.filter(x=>x.status==="pending").length||"":""],["menu","Test menu",I.list],["supplies","Supply orders",I.box,S.supply_orders.filter(x=>x.status==="New").length||""],["outbox","Notification log",I.send],["audit","Audit log",I.list],["users","Users",I.users],["labset","Lab settings",I.gear]].filter(([v])=>labAllowed(v))
   :[["dash","Dashboard",I.home],["patients","Patients",I.users],...(cset(c,"ordering")?[["order-new","New order",I.plus]]:[]),["results","Orders & results",I.doc,unreadRes||""],...(cset(c,"supplies")?[["supplies","Supplies",I.box]]:[]),["notes","Notifications",I.bell,n||""],["menu","Test menu",I.list],["settings","Clinic settings",I.gear]];
- const act=v=>route.v===v||(v==="results"&&route.v==="order"&&!lab)||(v==="queue"&&["order","entry"].includes(route.v)&&lab)||(v==="patients"&&route.v==="patient");
+ const act=v=>route.v===v||(v==="qc"&&route.v==="qcm")||(v==="results"&&route.v==="order"&&!lab)||(v==="queue"&&["order","entry"].includes(route.v)&&lab)||(v==="patients"&&route.v==="patient");
  return `<div class="shell"><aside class="side">
   <div class="brand"><img src="${LOGO}" alt="First Bio Genetics"></div>
   <div class="portal-tag">${lab?"<b>Laboratory</b> workspace":`<b>${esc(c.name)}</b>`}</div>
@@ -742,10 +744,21 @@ function vMenu(){const lab=isLab(),L=S.lab;
  return `<div class="page-h"><div><h1>Test menu</h1><p class="muted">Provider reference guide, effective September 2026. For pricing, collection requirements and turnaround times, contact ${esc(L.phone||"the lab")}${L.email?` or ${esc(L.email)}`:""}.</p></div></div>
  <div class="stack">${CATS.map(cat=>`<div class="panel"><div class="panel-h"><div><h2>${cat.name}</h2>${lab&&cat.id==="mol"?`<p class="small muted">Target lists are a starting set. Confirm them against the reference lab's validated panels.</p>`:""}${cat.id==="blood"?`<p class="small muted">Calculated biomarkers are derived automatically when the panels they depend on are on the same order.</p>`:""}</div><span class="small muted">${cat.note}</span></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>Test</th><th>Specimen</th><th>CPT</th><th>${cat.id==="blood"?"Biomarkers":cat.id==="mol"?"Targets and analytes":"Analytes"}</th></tr></thead><tbody>${TESTS.filter(t=>t.cat===cat.id).map(t=>`<tr><td style="vertical-align:top;min-width:190px"><div class="nm">${esc(t.name)}</div>${lab?`<div class="xs muted">${ROUTE_NAME[routeOf(t.code)]}</div>`:""}${t.abn?`<div class="xs muted">ABN may apply for Medicare</div>`:""}${t.fasting?`<div class="xs muted">Fasting preferred</div>`:""}</td><td class="small" style="vertical-align:top;min-width:150px">${esc(t.specimen)}</td><td class="small" style="vertical-align:top">${esc(t.cpt)}</td><td class="small" style="vertical-align:top">${t.dynamic?DEF[t.spec].map(([g,l])=>`<div style="margin-bottom:6px"><span class="xs muted">${esc(g)}</span><br>${l.map(x=>`<span class="tag">${esc(x)}</span>`).join("")}</div>`).join(""):t.analytes.map(a=>`<span class="tag">${cat.id==="blood"?BIO_NUM[a.name]+". ":""}${esc(a.name)}${a.type==="calc"?" (calc)":""}</span>`).join("")}</td></tr>`).join("")}</tbody></table></div></div>`).join("")}</div>`}
 
+const AL={status:undefined,channel:"Email",dest:"",busy:false};
+async function loadAlertStatus(){AL.status=null;try{AL.status=await DB.alertStatus()}catch(e){AL.status={error:errMsg(e)}}render()}
+function deliveryPanel(){if(AL.status===undefined)setTimeout(loadAlertStatus,0);const st=AL.status;
+ const chip=(ok,label)=>`<span class="badge ${ok?"st-released":"st-rejected"}">${label}: ${ok?"set up":"not set up"}</span>`;
+ return `<div class="panel" style="margin-bottom:18px"><div class="panel-h"><div><h2>Delivery setup</h2><p class="small muted">Alerts go out only after each vendor's settings are added in Supabase (README section 7).</p></div><button class="btn sm ghost" data-a="refreshAlertStatus">Check again</button></div><div class="panel-b stack" style="gap:14px">
+  ${st===undefined||st===null?`<p class="small muted">Checking…</p>`:st.error?`<div class="banner warn">${I.alert}<div>Couldn't reach the alert sender: ${esc(st.error)}. Make sure the send-alerts function is deployed.</div></div>`:`<div class="row">${chip(st.email,"Email")}${chip(st.text,"Text")}${chip(st.fax,"Fax")}${chip(st.portalUrl,"Portal link")}</div>`}
+  <div class="row" style="align-items:flex-end"><div class="field"><label>Send a test</label><select class="input" style="width:auto" data-b="al.channel" data-live="1">${["Email","Text","Fax"].map(c=>`<option ${AL.channel===c?"selected":""}>${c}</option>`).join("")}</select></div>
+  <div class="field" style="flex:1;min-width:220px"><label>${AL.channel==="Email"?"Email address":AL.channel==="Text"?"Mobile number":"Fax number"}</label><input class="input" data-b="al.dest" value="${esc(AL.dest)}" placeholder="${AL.channel==="Email"?"you@firstbiogenetics.com":"(480) 555-0100"}" data-enter="alertTest"></div>
+  <button class="btn primary" data-a="alertTest" ${AL.busy?"disabled":""}>${AL.busy?"Sending…":"Send test"}</button></div>
+  <p class="xs muted">Tests contain no patient information. A test fax is a one-page notice sent through your fax service.</p></div></div>`}
 function vOutbox(){const list=[...S.outbox].sort((a,b)=>b.at-a.at),q=list.filter(x=>x.status==="Queued").length,f=list.filter(x=>x.status==="Failed").length;
  const st=x=>x.channel==="Phone (critical)"?(x.status!=="Completed"?`<button class="btn sm danger" data-a="logCall" data-id="${x.id}">Document call</button>`:`<span class="badge st-released">Completed</span>`)
   :x.status==="Sent"?`<span class="badge st-released">Sent</span>`:x.status==="Queued"?`<span class="badge st-pending">Queued</span>`:x.status==="Failed"?`<span class="badge st-rejected">Failed</span>`:`<span class="badge">${esc(x.status)}</span>`;
  return `<div class="page-h"><div><h1>Notification log</h1><p class="muted">Result alerts to providers by email, text and fax.</p></div><div class="row">${f?`<button class="btn" data-a="retryAlerts">Retry ${f} failed</button>`:""}${q?`<button class="btn primary" data-a="sendAlerts" ${alertBusy?"disabled":""}>${alertBusy?"Sending…":`Send ${q} queued now`}</button>`:""}</div></div>
+ ${deliveryPanel()}
  <div class="banner info" style="margin-bottom:18px">${I.info}<div>Emails and texts say only that results are ready and link to the portal; they contain no patient information. Faxes carry the full report with a confidentiality notice and go to the clinic's fax number on file.</div></div>
  <div class="panel">${list.length?`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Time</th><th>Channel</th><th>To</th><th>Order</th><th>Status</th></tr></thead><tbody>${list.map(x=>{const o=x.orderId?orderOf(x.orderId):null;return `<tr><td class="small">${fmtDT(x.at)}</td><td class="small"><b>${esc(x.channel)}</b>${x.crit?' <span class="flag C">Critical</span>':""}</td><td class="small">${esc(x.to)}</td><td class="small">${o?`<button class="link" data-a="openOrder" data-id="${o.id}">${o.accession}</button>`:""}</td><td>${st(x)}${x.detail?`<div class="xs muted" style="max-width:340px">${esc(x.detail)}</div>`:""}${x.sentAt?`<div class="xs faint">${fmtDT(x.sentAt)}</div>`:""}</td></tr>`}).join("")}</tbody></table></div>`:`<div class="empty"><h3>No alerts yet</h3><p>Release a result to send the first one.</p></div>`}</div>`}
 
@@ -819,10 +832,10 @@ function reportHTML(m){const td=(v,t)=>`<td${t?` style="color:${RP_TONE[t]};font
  <div class="rp-foot">Laboratory Director: ${esc(m.lab.director||"")}${m.lab.clia?` &nbsp;·&nbsp; CLIA ID# ${esc(m.lab.clia)}`:""}${m.reported?`<br>Released ${esc(m.reported)}${m.releasedBy?` by ${esc(m.releasedBy)}`:""}.`:""} Flags: H high, L low, A abnormal, C critical.</div></div>`}
 
 function showReport(id){DB.logView("orders",id,"report");lastDoc={tbl:"orders",id,what:"report"};const o=S.orders.find(x=>x.id===id);
- modal(`Report ${o.accession}`,reportHTML(reportModel(o)),{wide:1,print:1})}
+ modal(`Report ${o.accession}`,reportHTML(reportModel(o)),{wide:1,print:1,dl:o.id})}
 
 /* ---------- modal ---------- */
-function modal(title,body,o={}){$("#modal-root").innerHTML=`<div class="modal-bg" data-a="bgClose"><div class="modal ${o.wide?"wide":""} ${refreshing?"noanim":""}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="modal-h"><h2>${esc(title)}</h2><div class="row">${o.print?`<button class="btn sm" data-a="print">${I.print} Print</button>`:""}<button class="icon-btn" data-a="closeModal" aria-label="Close">${I.x}</button></div></div><div class="${o.print?"":"modal-b"}">${body}</div>${o.foot?`<div class="modal-f">${o.foot}</div>`:""}</div></div>`;
+function modal(title,body,o={}){$("#modal-root").innerHTML=`<div class="modal-bg" data-a="bgClose"><div class="modal ${o.wide?"wide":""} ${refreshing?"noanim":""}" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="modal-h"><h2>${esc(title)}</h2><div class="row">${o.dl?`<button class="btn sm" data-a="dlReport" data-id="${o.dl}">${I.down} Download PDF</button>`:""}${o.print?`<button class="btn sm" data-a="print">${I.print} Print</button>`:""}<button class="icon-btn" data-a="closeModal" aria-label="Close">${I.x}</button></div></div><div class="${o.print?"":"modal-b"}">${body}</div>${o.foot?`<div class="modal-f">${o.foot}</div>`:""}</div></div>`;
  document.querySelectorAll("#modal-root svg.bc").forEach(s=>{try{if(window.JsBarcode)JsBarcode(s,s.dataset.v,{format:"CODE128",height:s.dataset.small?38:44,width:s.dataset.small?1.3:1.6,displayValue:!s.dataset.small,fontSize:12,margin:0,background:"transparent"});else s.outerHTML=`<div style="font-weight:700;letter-spacing:.08em">${esc(s.dataset.v)}</div>`}catch(e){}});
  initSigs()}
 function closeModal(){$("#modal-root").innerHTML="";openForm=null;ptForm=null;provForm=null;rej=null}
@@ -950,6 +963,32 @@ const A={
   S.supply_orders.push(x);pushNote("lab",null,f.urgency==="STAT"?"New STAT supply order":"New supply order",`${c.name} ordered supplies (${x.number}).`,f.urgency==="STAT"?"crit":"info");save();spf=null;render();toast("Supply order submitted")},
  supShip:e=>{const x=S.supply_orders.find(y=>y.id===e.dataset.id),tr=prompt("Tracking number (optional)")??null;if(tr===null)return;x.status="Shipped";x.tracking=tr.trim();x.shippedAt=Date.now();x.shippedBy=me().name;pushNote(x.clinicId,null,"Supplies shipped",`${x.number} has shipped${x.tracking?`, tracking ${x.tracking}`:""}.`,"ok");save();render();toast("Marked shipped")},
  supCancel:e=>{if(!confirm("Cancel this supply order?"))return;const x=S.supply_orders.find(y=>y.id===e.dataset.id);x.status="Cancelled";x.cancelledBy=me().name;save();render()},
+ async dlReport(e){const o=orderOf(e.dataset.id);if(!o)return;try{toast("Preparing PDF…");const {reportPdf}=await import("./reportpdf.js");const bytes=await reportPdf(reportModel(o));
+  const p=patientOf(o.patientId),name=`FBG_${o.accession}_${(p?p.last:"report").replace(/[^A-Za-z0-9-]/g,"")}.pdf`,u=URL.createObjectURL(new Blob([bytes],{type:"application/pdf"})),a=document.createElement("a");
+  a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);DB.log("export","orders",o.id,{what:"report pdf"})}catch(err){toast("The PDF couldn't be created: "+errMsg(err))}},
+ refreshAlertStatus(){loadAlertStatus()},
+ async alertTest(){const dest=String(AL.dest||"").trim();if(!dest)return toast("Enter where to send the test.");AL.busy=true;render();try{const r=await DB.alertTest(AL.channel,dest);toast(r.detail||"Test sent")}catch(err){toast(errMsg(err))}finally{AL.busy=false;render()}},
+ goQC(){closeModal();go("qc")},
+ qcOpen:e=>{QCS.detail=null;go("qcm",{id:e.dataset.id})},
+ qcFilter:e=>{QCS.status=QCS.status===e.dataset.val?"":e.dataset.val;render()},
+ qcAddMat(){qf={instrument:"",control:"",analyte:"",units:"ng/mL",lot:"",expires:"",mean:"",sd:""};openForm=null;qcMatModal()},
+ qcEditMat:e=>{qf=JSON.parse(JSON.stringify(QCS.mats.find(x=>x.id===e.dataset.id)));qcMatModal()},
+ async qcSaveMat(){const f=qf;if(!String(f.instrument).trim()||!String(f.control).trim()||!String(f.analyte).trim())return toast("Enter the instrument, control and analyte.");
+  const num=v=>{const x=parseFloat(v);return isFinite(x)?x:null};const m={...f,instrument:String(f.instrument).trim(),control:String(f.control).trim(),analyte:String(f.analyte).trim(),mean:num(f.mean),sd:num(f.sd)};
+  if((m.mean==null)!==(m.sd==null))return toast("Enter both the target mean and SD, or leave both blank.");if(m.sd!=null&&!(m.sd>0))return toast("The SD must be greater than zero.");
+  if(!m.id){m.key=qcKey(m.instrument,m.control,m.analyte);m.id="qm"+qhash(m.key+"|"+Date.now());m.active=true;m.source="manual";m.createdAt=Date.now()}
+  if(m.mean!=null&&m.establishedFrom&&(m.mean!==(QCS.mats.find(x=>x.id===m.id)||{}).mean))delete m.establishedFrom;
+  try{await DB.qcSaveMaterial(m);const i=QCS.mats.findIndex(x=>x.id===m.id);if(i>=0)QCS.mats[i]=m;else QCS.mats.push(m);closeModal();render();toast("Control saved")}catch(err){toast(errMsg(err))}},
+ async qcNewLot(){const old=QCS.mats.find(x=>x.id===qf.id),lot=prompt("New lot number");if(!lot)return;const exp=prompt("Lot expiration (YYYY-MM-DD, optional)")||"";
+  const m={...old,id:"qm"+qhash(old.key+"|"+lot+"|"+Date.now()),lot:lot.trim(),expires:exp.trim(),mean:null,sd:null,establishedFrom:undefined,active:true,createdAt:Date.now(),previousLot:old.lot||""};
+  try{await DB.qcSaveMaterial({...old,active:false,retiredAt:Date.now()});await DB.qcSaveMaterial(m);QCS.mats=null;QCS.detail=null;closeModal();go("qcm",{id:m.id});toast(`Lot ${m.lot} started. Targets are set after 20 runs, or enter them with Edit control.`)}catch(err){toast(errMsg(err))}},
+ qcAddRes:e=>{const now=new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,16);rej={id:e.dataset.id,at:now,value:"",comment:""};modal("Log control result",`<div class="grid g2"><div class="field"><label class="req">Date and time</label><input class="input" type="datetime-local" data-b="rej.at" value="${now}"></div><div class="field"><label class="req">Value</label><input class="input" inputmode="decimal" data-b="rej.value"></div><div class="field spanall"><label>Comment</label><input class="input" data-b="rej.comment"></div></div>`,{foot:`<button class="btn" data-a="closeModal">Cancel</button><button class="btn primary" data-a="qcSaveRes">Save</button>`})},
+ async qcSaveRes(){const v=parseFloat(rej.value);if(!isFinite(v))return toast("Enter a numeric value.");const at=new Date(rej.at).getTime()||Date.now(),r={id:"qr"+qhash(`${rej.id}|${at}|${v}|${Math.random()}`),materialId:rej.id,at,value:v,by:me().name,source:"Manual entry",comment:String(rej.comment||"").trim()};
+  try{await DB.qcAddResults([r]);closeModal();qcLoadDetail(rej.id);toast("Result logged")}catch(err){toast(errMsg(err))}},
+ qcComment:e=>{const r=QCS.detail.series.find(x=>x.id===e.dataset.id);rej={rid:r.id,comment:r.comment||"",excluded:!!r.excluded};modal("Corrective action / comment",`<div class="field"><label>Corrective action or comment</label><textarea class="input" data-b="rej.comment" placeholder="e.g. Recalibrated, reran control, within range. Patient results held and re-run.">${esc(rej.comment)}</textarea></div><label class="check" style="margin-top:12px"><input type="checkbox" data-b="rej.excluded" ${rej.excluded?"checked":""}>Exclude this run from statistics (for example, a documented bad vial). The run stays on record.</label>`,{foot:`<button class="btn" data-a="closeModal">Cancel</button><button class="btn primary" data-a="qcSaveComment">Save</button>`})},
+ async qcSaveComment(){const r=QCS.detail.series.find(x=>x.id===rej.rid),n={...r,comment:String(rej.comment||"").trim(),excluded:!!rej.excluded,reviewedBy:me().name,reviewedAt:Date.now()};
+  try{await DB.qcUpdateResult(n);Object.assign(r,n);closeModal();render();toast("Saved")}catch(err){toast(errMsg(err))}},
+ qcPrint(){qcPrintView()},
  editOrder:e=>{draft=draftFromOrder(orderOf(e.dataset.id));sigs={};go("order-new")},
  draftNewPt(){draft.newPt=true;ptForm=blankPatient();render()},
  draftPickExisting(){draft.newPt=false;ptForm=null;render()},
@@ -1044,13 +1083,13 @@ function parseTable(text){const lines=String(text).replace(/\r/g,"").split("\n")
 const findOrderBySample=s=>{const raw=String(s||"").trim().toUpperCase();if(!raw)return null;const base=stripSuffix(raw);return S.orders.find(o=>{const a=o.accession.toUpperCase();return raw===a||base===a||raw.startsWith(a+"-")})};
 
 function importC560(text){const {h,rows}=parseExport(text,l=>/(chemistry|assay)/i.test(l)&&/result/i.test(l));const col=re=>h.findIndex(x=>re.test(String(x).trim()));
- const ci={bc:col(/bar\s*code/i),id:col(/^sample\s*id$|^sampleid$|^sample$|specimen/i),as:col(/chemistry|assay|^test$/i),r:col(/^result$/i),t:col(/^t?ype$/i),fl:col(/^flag$/i)};
+ const ci={bc:col(/bar\s*code/i),id:col(/^sample\s*id$|^sampleid$|^sample$|specimen/i),as:col(/chemistry|assay|^test$/i),r:col(/^result$/i),t:col(/^t?ype$/i),fl:col(/^flag$/i),rd:col(/run\s*date/i)};
  if(ci.r<0)ci.r=col(/result|value/i);const idc=ci.bc>=0?ci.bc:ci.id;
  if(idc<0||ci.as<0||ci.r<0)return{error:"Couldn't find the Bar Code (or Sample ID), Chemistry and Result columns."};
  const touched=new Set(),unmatched=new Set(),unknown=new Set(),qc=[],flags=[];let n=0;
  rows.forEach(r=>{const type=ci.t>=0?String(r[ci.t]||"").trim().toUpperCase():"",sid=String(r[idc]||"").trim(),chem=String(r[ci.as]||"").trim().toUpperCase(),raw=String(r[ci.r]??"").trim(),fl=ci.fl>=0?String(r[ci.fl]||"").trim():"";
   if(!chem)return;
-  if(type==="C"||isControlName(sid)){qc.push({name:String((ci.id>=0&&r[ci.id])||sid),chem,raw,fl});return}
+  if(type==="C"||isControlName(sid)){qc.push({name:String((ci.id>=0&&r[ci.id])||sid),chem,raw,fl,at:ci.rd>=0?Date.parse(r[ci.rd])||0:0});return}
   const o=findOrderBySample(sid);if(!o||!o.tests.includes("UDS")||!inLab(o)){if(sid)unmatched.add(sid);return}
   o.results.UDS=o.results.UDS||{};if(fl)flags.push(`${o.accession} ${chem}: instrument flag ${fl}`);
   const vName=VALIDITY_CODES[chem];
@@ -1065,11 +1104,12 @@ function importC560(text){const {h,rows}=parseExport(text,l=>/(chemistry|assay)/
  return{kind:"c560",n,orders:[...touched],unmatched:[...unmatched],unknown:[...unknown],qc,flags}}
 
 function importSciex(text){const {h,rows}=parseExport(text,l=>/sample\s*name/i.test(l));const col=re=>h.findIndex(x=>re.test(String(x).trim()));
- const ci={s:col(/^sample\s*name$/i),t:col(/^sample\s*type$/i),c:col(/^component(\s*name)?$/i),v:col(/calculated\s*conc/i)};
+ const ci={s:col(/^sample\s*name$/i),t:col(/^sample\s*type$/i),c:col(/^component(\s*name)?$/i),v:col(/calculated\s*conc/i),acq:col(/acq/i)};
  if(ci.s<0||ci.c<0||ci.v<0)return{error:"Couldn't find the Sample Name, Component Name and Calculated Concentration columns."};
- const per=new Map(),unmatched=new Set(),qcNames=new Set(),high=[];let n=0;
+ const per=new Map(),unmatched=new Set(),qcNames=new Set(),high=[],qcRows=[];let n=0;
  rows.forEach(r=>{const name=String(r[ci.s]||"").trim();if(!name)return;
-  if((ci.t>=0&&r[ci.t]&&!/unknown/i.test(r[ci.t]))||isControlName(name)){qcNames.add(name);return}
+  if((ci.t>=0&&r[ci.t]&&!/unknown/i.test(r[ci.t]))||isControlName(name)){qcNames.add(name);
+   if(/^qc/i.test(name)){const vj=r.length<h.length&&ci.v===h.length-1?r.length-1:ci.v,val=parseFloat(String(r[vj]||"").replace(/,/g,""));if(isFinite(val))qcRows.push({control:name.split(/\s+/)[0],comp:String(r[ci.c]||"").replace(/[\s\u00a0]+\d+\s*$/,"").trim(),value:val,at:ci.acq>=0?Date.parse(r[ci.acq])||0:0})}return}
   const o=findOrderBySample(name);if(!o||!o.tests.some(isDef)||!inLab(o)){unmatched.add(name);return}
   // MultiQuant sometimes splits "Component Name" into two header cells; the concentration is then the last cell of each row
   const vi=r.length<h.length&&ci.v===h.length-1?r.length-1:ci.v;
@@ -1080,7 +1120,7 @@ function importSciex(text){const {h,rows}=parseExport(text,l=>/sample\s*name/i.t
    const det={};seen.forEach(c=>{const x=m[normName(c.name)],u=parseFloat(c.uloq),p=x>=parseFloat(c.cutoff);det[canon(c.name)]={pos:p,text:p?(u&&x>u?`>${fmtN(u)}`:fmtN(x)):""};if(p&&u&&x>u)high.push(`${o.accession}: ${c.name} ${fmtN(x)} ng/mL is above the ULOQ of ${fmtN(u)}`)});
    o.results[dc][cl]={v:pos.length?"Positive":"Negative",c:pos.map(c=>`${c.name} ${det[canon(c.name)].text}`).join("; "),comps:det}});
   markInProcess(o,"Confirmation results imported from MultiQuant")});
- return{kind:"sciex",n,orders:[...per.keys()],unmatched:[...unmatched],qcNames:[...qcNames],high}}
+ return{kind:"sciex",n,orders:[...per.keys()],unmatched:[...unmatched],qcNames:[...qcNames],high,qcRows}}
 
 function exampleC560(){const pend=pendingFor("UDS");if(!pend.length)return"";const L=["SampleID,Assay,Result,Units"];
  pend.forEach((o,oi)=>Object.entries(C560_MAP).forEach(([code,an],ai)=>{const a=T("UDS").analytes.find(x=>x.name===an),cut=parseFloat(a.cutoff);let v=Math.round(cut*((ai*7+oi*3)%10)/40*10)/10;
@@ -1090,9 +1130,10 @@ function exampleSciex(){const pend=[...pendingFor("CONF"),...pendingFor("CONFOF"
  pend.forEach(o=>{const sp=specOf(o);o.confirm.forEach(an=>((S.confMap[sp]||{})[an]||[]).forEach((c,i)=>{const pos=o.meds.includes(an)&&i===0;L.push(`${o.accession}\tUnknown\t${c.name}\t${pos?Math.round(c.cutoff*14*10)/10:"N/A"}`)}));L.push(`${o.accession}\tUnknown\tOxycodone-d6 (IS)\t50`)});
  return L.join("\n")}
 
-function runImport(kind,text){if(!String(text||"").trim())return toast("Paste an export or choose a file first.");
+async function runImport(kind,text){if(!String(text||"").trim())return toast("Paste an export or choose a file first.");
  const res=kind==="c560"?importC560(text):importSciex(text);if(res.error)return toast(res.error);
  ui["paste_"+kind]="";resEdit=null;save();render();
+ try{res.qcLogged=await qcLogImport(kind,res)}catch(e){res.qcError=errMsg(e)}
  modal("Import complete",`<p>${res.n} result row${res.n===1?"":"s"} matched to ${res.orders.length} order${res.orders.length===1?"":"s"} from the ${kind==="c560"?"Yumizen C560":"SCIEX 4500"}.</p>
  ${res.orders.length?`<div class="tbl-wrap" style="margin-top:14px;border:1px solid var(--border);border-radius:var(--r-sm)"><table class="tbl"><tbody>${res.orders.map(o=>`<tr><td class="acc">${o.accession}</td><td class="small">${esc(pname(patientOf(o.patientId)))}</td><td style="text-align:right"><button class="btn sm primary" data-a="reviewOrder" data-id="${o.id}">Review and release</button></td></tr>`).join("")}</tbody></table></div>`:""}
  ${res.unmatched.length?`<div class="banner warn" style="margin-top:14px">${I.alert}<div><b>Not matched to an open order:</b> ${res.unmatched.map(esc).join(", ")}</div></div>`:""}
@@ -1101,6 +1142,7 @@ function runImport(kind,text){if(!String(text||"").trim())return toast("Paste an
  ${res.high&&res.high.length?`<div class="banner warn" style="margin-top:10px">${I.alert}<div><b>Above the upper limit of quantitation</b> (reported as &gt;ULOQ unless you dilute and re-run):<br>${res.high.map(esc).join("<br>")}</div></div>`:""}
  ${res.flags&&res.flags.length?`<div class="banner warn" style="margin-top:10px">${I.alert}<div><b>Instrument flags:</b><br>${res.flags.map(esc).join("<br>")}</div></div>`:""}
  ${res.qc&&res.qc.length?`<details style="margin-top:12px"><summary class="small" style="cursor:pointer"><b>${res.qc.length} control result${res.qc.length===1?"":"s"}</b> in this file (not attached to patients). Review before reporting.</summary><div class="tbl-wrap" style="margin-top:8px;max-height:260px;overflow:auto;border:1px solid var(--border);border-radius:var(--r-sm)"><table class="tbl"><thead><tr><th>Control</th><th>Assay</th><th>Result</th><th>Flag</th></tr></thead><tbody>${res.qc.map(x=>`<tr><td class="small">${esc(x.name)}</td><td class="small">${esc(x.chem)}</td><td class="small">${esc(x.raw)}</td><td class="small">${esc(x.fl)}</td></tr>`).join("")}</tbody></table></div></details>`:""}
+ ${res.qcLogged?`<div class="banner info" style="margin-top:10px">${I.chart}<div><b>${res.qcLogged} control result${res.qcLogged===1?"":"s"}</b> logged to Quality control. <button class="link" data-a="goQC">Review Levey-Jennings charts</button></div></div>`:""}${res.qcError?`<div class="banner warn" style="margin-top:10px">${I.alert}<div>Control results couldn't be logged: ${esc(res.qcError)}</div></div>`:""}
  ${res.qcNames&&res.qcNames.length?`<p class="xs muted" style="margin-top:12px">Skipped blanks, calibrators and QCs: ${res.qcNames.map(esc).join(", ")}.</p>`:""}`,{wide:1,foot:`<button class="btn" data-a="closeModal">Close</button>`})}
 
 /* instruments page */
@@ -1223,6 +1265,86 @@ async function readCard(){const f=ptForm;if(!f||!f.ins.cardFront||!SAMPLE||cardB
  catch(e){const c=e&&e.code;toast(c==="not_granted"?"Card reading wasn't allowed, so enter the details by hand.":c==="rate_limited"?"Too many requests. Try again in a moment.":"The card couldn't be read. Try a sharper photo or enter the details by hand.")}
  finally{cardBusy=false;render()}}
 
+/* ---------- quality control ---------- */
+const QCS={mats:null,results:[],loading:false,err:"",days:31,q:"",inst:"",status:"",detail:null,detailDays:90};let qf=null;
+const qhash=s=>{let h=5381;for(const ch of String(s))h=((h<<5)+h+ch.charCodeAt(0))|0;return (h>>>0).toString(36)};
+const qcKey=(inst,control,analyte)=>`${inst}|${control}|${analyte}`.toLowerCase();
+async function qcLogImport(kind,res){if(!can("qc"))return 0;
+ let rows=kind==="c560"?(res.qc||[]).map(x=>({inst:"Yumizen C560",control:String(x.name||"").trim(),analyte:String(x.chem||"").trim(),value:parseFloat(x.raw),at:x.at,flag:x.fl}))
+  :(res.qcRows||[]).map(x=>({inst:"SCIEX 4500",control:x.control,analyte:x.comp,value:x.value,at:x.at}));
+ rows=rows.filter(r=>r.control&&r.analyte&&isFinite(r.value));if(!rows.length)return 0;
+ const mats=await DB.qcMaterials(),byKey={};mats.filter(m=>m.active!==false).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0)).forEach(m=>{byKey[m.key]=m});
+ const created=[],now=Date.now();
+ rows.forEach(r=>{const k=qcKey(r.inst,r.control,r.analyte);let m=byKey[k];if(!m){m={id:"qm"+qhash(k),key:k,instrument:r.inst,control:r.control,analyte:r.analyte,units:"ng/mL",lot:"",mean:null,sd:null,active:true,source:"auto",createdAt:now};byKey[k]=m;created.push(m)}r.mid=m.id;if(!r.at)r.at=now});
+ await DB.qcInsertMaterials(created);
+ const out=rows.map(r=>({id:"qr"+qhash(`${r.mid}|${r.at}|${r.value}`),materialId:r.mid,at:r.at,value:r.value,by:me().name,source:kind==="c560"?"C560 import":"MultiQuant import",flag:r.flag||""}));
+ await DB.qcAddResults(out);QCS.mats=null;return out.length}
+// Westgard multirules on a chronological series of z-scores.
+function westgard(vals,mean,sd){const zs=vals.map(v=>(v-mean)/sd);return vals.map((v,i)=>{const z=zs[i],rules=[];let st="ok";const last=n=>zs.slice(Math.max(0,i-n+1),i+1);
+  if(Math.abs(z)>3)rules.push("1-3s");
+  if(i>=1){const p=zs[i-1];if((z>2&&p>2)||(z<-2&&p<-2))rules.push("2-2s");if((z>2&&p<-2)||(z<-2&&p>2))rules.push("R-4s")}
+  if(i>=3){const l=last(4);if(l.every(x=>x>1)||l.every(x=>x<-1))rules.push("4-1s")}
+  if(i>=9){const l=last(10);if(l.every(x=>x>0)||l.every(x=>x<0))rules.push("10x")}
+  if(rules.length)st="reject";else if(Math.abs(z)>2){rules.push("1-2s");st="warn"}
+  if(i>=6){const l=vals.slice(i-6,i+1);let up=true,dn=true;for(let k=1;k<l.length;k++){if(!(l[k]>l[k-1]))up=false;if(!(l[k]<l[k-1]))dn=false}if(up||dn){rules.push("7T trend");if(st==="ok")st="warn"}}
+  return {z,status:st,rules}})}
+const qcStats=v=>{const n=v.length;if(!n)return{n:0};const mean=v.reduce((a,b)=>a+b,0)/n,sd=n>1?Math.sqrt(v.reduce((a,b)=>a+(b-mean)**2,0)/(n-1)):0;return{n,mean,sd,cv:mean?sd/mean*100:0}};
+const qfmt=x=>x==null||!isFinite(x)?"—":Math.abs(x)>=100?x.toFixed(1):Math.abs(x)>=10?x.toFixed(2):x.toFixed(3);
+function qcSeries(m,list){return (list||QCS.results).filter(r=>r.materialId===m.id&&!r.excluded).sort((a,b)=>a.at-b.at)}
+function qcTarget(m){const mean=parseFloat(m.mean),sd=parseFloat(m.sd);return isFinite(mean)&&sd>0?{mean,sd}:null}
+function qcEstablish(){if(!can("qc"))return;QCS.mats.forEach(m=>{if(qcTarget(m))return;const s=qcSeries(m);if(s.length<20)return;const st=qcStats(s.slice(0,20).map(r=>r.value));if(!(st.sd>0))return;
+  m.mean=+st.mean.toFixed(4);m.sd=+st.sd.toFixed(4);m.establishedFrom=20;m.establishedAt=Date.now();DB.qcSaveMaterial(m).catch(()=>{})})}
+async function qcLoad(){QCS.loading=true;QCS.err="";render();try{QCS.mats=await DB.qcMaterials();QCS.results=await DB.qcResultsSince(Date.now()-QCS.days*DAY);qcEstablish()}catch(e){QCS.err=errMsg(e);QCS.mats=QCS.mats||[]}finally{QCS.loading=false;render()}}
+function qcState(m){const s=qcSeries(m),t=qcTarget(m);if(!t)return{label:`Establishing ${Math.min(s.length,20)}/20`,cls:"",rejects:0,last:s[s.length-1]};const ev=westgard(s.map(r=>r.value),t.mean,t.sd),lastEv=ev[ev.length-1];
+ return{label:!lastEv?"No runs":lastEv.status==="reject"?"Reject":lastEv.status==="warn"?"Warning":"In control",cls:!lastEv?"":lastEv.status==="reject"?"st-rejected":lastEv.status==="warn"?"st-pending":"st-released",rejects:ev.filter(e=>e.status==="reject").length,last:s[s.length-1],lastEv}}
+function ljChart(series,t,ev,opt={}){const W=900,H=opt.h||300,P={l:74,r:18,t:14,b:34},n=series.length;if(!n)return `<div class="empty">No control results in this period.</div>`;if(!t)return `<div class="empty">The target mean and SD are set automatically after 20 runs, or enter them with Edit control.</div>`;
+ const lo=-3.6,hi=3.6,y=z=>P.t+(H-P.t-P.b)*(1-(Math.max(lo,Math.min(hi,z))-lo)/(hi-lo)),x=i=>P.l+(n===1?0.5:i/(n-1))*(W-P.l-P.r);
+ const ln=(k,c,d)=>`<line x1="${P.l}" x2="${W-P.r}" y1="${y(k)}" y2="${y(k)}" stroke="${c}" stroke-width="${k===0?1.4:1}" ${d?'stroke-dasharray="5 4"':""}/><text x="${P.l-6}" y="${y(k)+4}" text-anchor="end" font-size="11" fill="currentColor" opacity=".75">${k===0?"Mean":(k>0?"+":"")+k+"SD"} ${qfmt(t.mean+k*t.sd)}</text>`;
+ const col={ok:"#1590cf",warn:"#b7791f",reject:"#d0263b"};
+ const pts=series.map((r,i)=>[x(i),y(ev[i].z)]);
+ const ticks=[...new Set([0,Math.floor((n-1)/3),Math.floor(2*(n-1)/3),n-1])];
+ return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Levey-Jennings chart">
+  ${ln(3,"#d0263b",1)}${ln(2,"#b7791f",1)}${ln(1,"#9aa6bb",1)}${ln(0,"currentColor",0)}${ln(-1,"#9aa6bb",1)}${ln(-2,"#b7791f",1)}${ln(-3,"#d0263b",1)}
+  <polyline points="${pts.map(p=>p.join(",")).join(" ")}" fill="none" stroke="#1590cf" stroke-width="1.4" opacity=".7"/>
+  ${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="${ev[i].status==="ok"?3.6:5}" fill="${col[ev[i].status]}"><title>${esc(fmtDT(series[i].at))}: ${qfmt(series[i].value)} (${ev[i].z>=0?"+":""}${ev[i].z.toFixed(2)} SD)${ev[i].rules.length?" · "+ev[i].rules.join(", "):""}</title></circle>`).join("")}
+  ${ticks.map(i=>`<text x="${x(i)}" y="${H-10}" text-anchor="middle" font-size="11" fill="currentColor" opacity=".7">${esc(fmtD(series[i].at))}</text>`).join("")}</svg>`}
+function vQC(){if(QCS.mats===null&&!QCS.loading)setTimeout(qcLoad,0);
+ const q=QCS.q.trim().toLowerCase(),mats=(QCS.mats||[]).filter(m=>m.active!==false).map(m=>({m,st:qcState(m)}))
+  .filter(x=>(!QCS.inst||x.m.instrument===QCS.inst)&&(!q||`${x.m.control} ${x.m.analyte} ${x.m.lot}`.toLowerCase().includes(q))&&(!QCS.status||(QCS.status==="reject"?x.st.rejects>0:QCS.status==="warn"?x.st.cls==="st-pending":QCS.status==="est"?!qcTarget(x.m):true)))
+  .sort((a,b)=>(b.st.rejects-a.st.rejects)||a.m.instrument.localeCompare(b.m.instrument)||a.m.control.localeCompare(b.m.control)||a.m.analyte.localeCompare(b.m.analyte));
+ const all=(QCS.mats||[]).filter(m=>m.active!==false),rej=all.filter(m=>qcState(m).rejects>0).length,est=all.filter(m=>!qcTarget(m)).length,runs=QCS.results.filter(r=>r.at>Date.now()-DAY).length;
+ const insts=[...new Set(all.map(m=>m.instrument))].sort();
+ return `<div class="page-h"><div><h1>Quality control</h1><p class="muted">Control results from the C560 and MultiQuant imports are logged automatically. Westgard rules: 1-2s warning; 1-3s, 2-2s, R-4s, 4-1s and 10x reject; 7T trend warning.</p></div>${can("qc")?`<button class="btn primary" data-a="qcAddMat">${I.plus} Add control</button>`:""}</div>
+ <div class="stack">${QCS.err?`<div class="banner danger">${I.alert}<div>${esc(QCS.err)}${/qc_/i.test(QCS.err)?" Run 0006_qc.sql in Supabase.":""}</div></div>`:""}
+ <div class="stats"><div class="stat"><div class="v">${all.length}</div><div class="k">Controls tracked</div></div><div class="stat"><div class="v">${runs}</div><div class="k">Control results, last 24 hours</div></div><button class="stat" data-a="qcFilter" data-val="reject"><div class="v" style="${rej?"color:var(--danger)":""}">${rej}</div><div class="k">Controls with rejects, last ${QCS.days} days</div></button><button class="stat" data-a="qcFilter" data-val="est"><div class="v">${est}</div><div class="k">Establishing targets</div></button></div>
+ <div class="panel"><div class="panel-h" style="flex-wrap:wrap"><div class="row" style="flex:1"><div class="search" style="min-width:220px">${I.search}<input class="input" data-b="qs.q" data-live="1" value="${esc(QCS.q)}" placeholder="Control, analyte or lot"></div>
+  <select class="input" style="width:auto" data-b="qs.inst" data-live="1"><option value="">All instruments</option>${insts.map(i=>`<option ${QCS.inst===i?"selected":""}>${esc(i)}</option>`).join("")}</select>
+  <select class="input" style="width:auto" data-b="qs.status" data-live="1">${[["","Any status"],["reject","Has rejects"],["warn","Warning"],["est","Establishing"]].map(([v,l])=>`<option value="${v}" ${QCS.status===v?"selected":""}>${l}</option>`).join("")}</select></div></div>
+ ${QCS.mats===null?`<div class="empty">Loading…</div>`:mats.length?`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Instrument</th><th>Control</th><th>Analyte</th><th>Lot</th><th>Target mean ± SD</th><th>Last result</th><th>Runs (${QCS.days} days)</th><th>Status</th></tr></thead><tbody>${mats.map(({m,st})=>{const t=qcTarget(m),n=qcSeries(m).length;return `<tr class="click" data-a="qcOpen" data-id="${m.id}"><td class="small">${esc(m.instrument)}</td><td class="nm small">${esc(m.control)}</td><td class="small">${esc(m.analyte)}</td><td class="small">${esc(m.lot||"—")}</td><td class="small">${t?`${qfmt(t.mean)} ± ${qfmt(t.sd)} ${esc(m.units||"")}`:'<span class="muted">Not set</span>'}</td><td class="small">${st.last?`${qfmt(st.last.value)}<div class="xs muted">${fmtDT(st.last.at)}</div>`:"—"}</td><td class="small">${n}</td><td><span class="badge ${st.cls}">${st.label}</span>${st.rejects?`<div class="xs" style="color:var(--danger)">${st.rejects} reject${st.rejects>1?"s":""}</div>`:""}</td></tr>`}).join("")}</tbody></table></div>`:`<div class="empty"><h3>No controls yet</h3><p>Import a C560 or MultiQuant file that contains controls, or add a control by hand.</p></div>`}</div></div>`}
+async function qcLoadDetail(id){QCS.detail={id,days:+QCS.detailDays,loading:true,series:[]};render();try{if(!QCS.mats)QCS.mats=await DB.qcMaterials();const list=await DB.qcResultsSince(Date.now()-QCS.detailDays*DAY,id);QCS.detail={id,days:+QCS.detailDays,series:list.sort((a,b)=>a.at-b.at)}}catch(e){QCS.detail={id,days:+QCS.detailDays,series:[],err:errMsg(e)}}render()}
+function vQCM(){const id=route.p.id;if(!QCS.detail||QCS.detail.id!==id||QCS.detail.days!==+QCS.detailDays){if(!QCS.detail||!QCS.detail.loading)setTimeout(()=>qcLoadDetail(id),0);return `<div class="empty">Loading…</div>`}
+ const m=(QCS.mats||[]).find(x=>x.id===id);if(!m)return `<div class="empty">Control not found.</div>`;
+ const all=QCS.detail.series,series=all.filter(r=>!r.excluded),t=qcTarget(m),ev=t?westgard(series.map(r=>r.value),t.mean,t.sd):[],obs=qcStats(series.map(r=>r.value)),evById={};series.forEach((r,i)=>evById[r.id]=ev[i]);
+ return `<div class="crumb"><button data-a="go" data-v="qc">Quality control</button> / ${esc(m.control)} · ${esc(m.analyte)}</div>
+ <div class="page-h"><div><h1>${esc(m.analyte)} <span class="muted" style="font-weight:400">· ${esc(m.control)}</span></h1><p class="muted">${esc(m.instrument)}${m.lot?` · Lot ${esc(m.lot)}`:""}${m.expires?` · Expires ${esc(m.expires)}`:""}</p></div>
+ <div class="row"><select class="input" style="width:auto" data-b="qs.detailDays" data-live="1" aria-label="Period">${[30,90,180,365].map(d=>`<option value="${d}" ${+QCS.detailDays===d?"selected":""}>Last ${d} days</option>`).join("")}</select><button class="btn" data-a="qcPrint">${I.print} Print for review</button>${can("qc")?`<button class="btn" data-a="qcEditMat" data-id="${m.id}">${I.pen} Edit control</button><button class="btn primary" data-a="qcAddRes" data-id="${m.id}">${I.plus} Log result</button>`:""}</div></div>
+ <div class="stack"><div class="panel"><div class="panel-b">${ljChart(series,t,ev)}</div></div>
+ <div class="stats"><div class="stat"><div class="v">${t?qfmt(t.mean):"—"}</div><div class="k">Target mean${m.establishedFrom?" (from first 20 runs)":""}</div></div><div class="stat"><div class="v">${t?qfmt(t.sd):"—"}</div><div class="k">Target SD${t?`, CV ${qfmt(t.sd/t.mean*100)}%`:""}</div></div><div class="stat"><div class="v">${qfmt(obs.mean)}</div><div class="k">Observed mean, ${obs.n} runs</div></div><div class="stat"><div class="v">${qfmt(obs.sd)}</div><div class="k">Observed SD${obs.n>1?`, CV ${qfmt(obs.cv)}%`:""}</div></div></div>
+ <div class="panel"><div class="panel-h"><h2>Runs</h2></div>${all.length?`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Date</th><th>Value</th><th>SD from mean</th><th>Rules</th><th>Source</th><th>Corrective action / comment</th>${can("qc")?"<th></th>":""}</tr></thead><tbody>${[...all].reverse().map(r=>{const e=evById[r.id];return `<tr${r.excluded?' style="opacity:.55"':""}><td class="small">${fmtDT(r.at)}</td><td class="nm small">${qfmt(r.value)}</td><td class="small">${e?(e.z>=0?"+":"")+e.z.toFixed(2):"—"}</td><td>${r.excluded?'<span class="badge">Excluded</span>':e&&e.rules.length?`<span class="badge ${e.status==="reject"?"st-rejected":"st-pending"}">${esc(e.rules.join(", "))}</span>`:""}</td><td class="small">${esc(r.source||"")}<div class="xs muted">${esc(r.by||"")}</div></td><td class="small">${esc(r.comment||"")}${r.reviewedBy?`<div class="xs muted">${esc(r.reviewedBy)}, ${fmtDT(r.reviewedAt)}</div>`:""}</td>${can("qc")?`<td style="text-align:right"><button class="btn sm ghost" data-a="qcComment" data-id="${r.id}">${e&&e.status!=="ok"&&!r.comment?"Add action":"Comment"}</button></td>`:""}</tr>`}).join("")}</tbody></table></div>`:`<div class="empty">No runs in this period.</div>`}</div></div>`}
+function qcMatForm(){const f=qf;return `<div class="grid g2"><div class="field"><label class="req">Instrument</label><input class="input" data-b="qf.instrument" value="${esc(f.instrument)}" ${f.id&&f.source==="auto"?"disabled":""} list="qcinst"><datalist id="qcinst"><option value="Yumizen C560"><option value="SCIEX 4500"></datalist></div><div class="field"><label class="req">Control name / level</label><input class="input" data-b="qf.control" value="${esc(f.control)}" ${f.id&&f.source==="auto"?"disabled":""}></div>
+ <div class="field"><label class="req">Analyte</label><input class="input" data-b="qf.analyte" value="${esc(f.analyte)}" ${f.id&&f.source==="auto"?"disabled":""}></div><div class="field"><label>Units</label><input class="input" data-b="qf.units" value="${esc(f.units||"")}"></div>
+ <div class="field"><label>Lot number</label><input class="input" data-b="qf.lot" value="${esc(f.lot||"")}"></div><div class="field"><label>Lot expiration</label><input class="input" type="date" data-b="qf.expires" value="${esc(f.expires||"")}"></div>
+ <div class="field"><label>Target mean</label><input class="input" inputmode="decimal" data-b="qf.mean" value="${esc(f.mean??"")}"></div><div class="field"><label>Target SD</label><input class="input" inputmode="decimal" data-b="qf.sd" value="${esc(f.sd??"")}"></div></div>
+ <p class="xs muted" style="margin-top:12px">Leave the mean and SD blank to set them automatically from the first 20 runs. For the manufacturer's range, enter the target mean and SD from the package insert.${f.id?" Use Start new lot when a new control lot goes into service; the old lot's history is kept.":""}</p>`}
+function qcMatModal(){modal(qf.id?"Edit control":"Add control",qcMatForm(),{foot:`${qf.id?`<button class="btn ghost" data-a="qcNewLot">Start new lot</button><span style="flex:1"></span>`:""}<button class="btn" data-a="closeModal">Cancel</button><button class="btn primary" data-a="qcSaveMat">Save</button>`})}
+async function qcPrintView(){const id=route.p.id,m=QCS.mats.find(x=>x.id===id),series=QCS.detail.series.filter(r=>!r.excluded),t=qcTarget(m),ev=t?westgard(series.map(r=>r.value),t.mean,t.sd):[],obs=qcStats(series.map(r=>r.value));
+ lastDoc={tbl:"qc_materials",id,what:"Levey-Jennings"};
+ modal(`Levey-Jennings: ${m.analyte}, ${m.control}`,`<div class="paper" style="color:#1c2638"><div class="ph"><div><img src="${LOGO}" alt="First Bio Genetics"></div><div style="text-align:right"><h2 style="font-size:17px">Levey-Jennings QC review</h2><div style="font-size:11.5px;color:#5d687c">${esc(m.instrument)} · ${esc(m.control)} · ${esc(m.analyte)}${m.lot?` · Lot ${esc(m.lot)}`:""}<br>Last ${QCS.detailDays} days · printed ${fmtDT(Date.now())}</div></div></div>
+ <div style="margin:14px 0">${ljChart(series,t,ev,{h:280})}</div>
+ <table><tbody><tr><td>Target mean ± SD</td><td>${t?`${qfmt(t.mean)} ± ${qfmt(t.sd)} ${esc(m.units||"")}`:"Not set"}</td><td>Observed mean ± SD (n=${obs.n})</td><td>${qfmt(obs.mean)} ± ${qfmt(obs.sd)}, CV ${qfmt(obs.cv)}%</td></tr></tbody></table>
+ <div class="sect"><h3>Rule violations</h3><table><thead><tr><th>Date</th><th>Value</th><th>SD</th><th>Rules</th><th>Corrective action</th></tr></thead><tbody>${series.map((r,i)=>ev[i]&&ev[i].status!=="ok"?`<tr class="${ev[i].status==="reject"?"crit-row":"abn-row"}"><td>${fmtDT(r.at)}</td><td>${qfmt(r.value)}</td><td>${ev[i].z.toFixed(2)}</td><td>${esc(ev[i].rules.join(", "))}</td><td>${esc(r.comment||"")}</td></tr>`:"").join("")||`<tr><td colspan="5">None</td></tr>`}</tbody></table></div>
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:40px;font-size:11px"><div style="border-top:1px solid #0e1726;padding-top:4px">Reviewed by (technical supervisor) · date</div><div style="border-top:1px solid #0e1726;padding-top:4px">Laboratory director · date</div></div></div>`,{wide:1,print:1})}
+
 /* ---------- supply orders ---------- */
 const SUPPLY_DEFAULT=["Urine collection cups","Oral fluid collection devices","Urine toxicology requisitions","Oral fluid toxicology requisitions","General requisitions","Specimen transport bags","Shipping boxes","Specimen labels","Blood tubes, SST (gold)","Blood tubes, EDTA (lavender)","UTI urine transport tubes","Wound swab kits","Nail collection kits"];
 const supplyItems=()=>{const t=String(S.lab.supplyItems||"").split("\n").map(x=>x.trim()).filter(Boolean);return t.length?t:SUPPLY_DEFAULT};
@@ -1255,7 +1377,7 @@ function clinicForm(){const f=clf,i=(k,l,o={})=>`<div class="field ${o.cls||""}"
  ${clinicSettingsForm(f)}
  ${!f.agreement||!(f.agreement.sig||f.agreement.onFile)?`<h3 style="margin:22px 0 10px">Services agreement and BAA</h3><label class="check"><input type="checkbox" data-b="clf.sof.on" ${f.sof&&f.sof.on?"checked":""}>Signed paper onboarding is on file (SOF)</label>${f.sof&&f.sof.on?`<div class="grid g3" style="margin-top:10px"><div class="field"><label>Signed by</label><input class="input" data-b="clf.sof.signer" value="${esc(f.sof.signer)}"></div><div class="field"><label>Title</label><input class="input" data-b="clf.sof.title" value="${esc(f.sof.title)}"></div><div class="field"><label>Date signed</label><input class="input" type="date" data-b="clf.sof.date" value="${esc(f.sof.date)}"></div></div>`:""}`:""}
  ${!f.id&&can("clinics.approve")?`<label class="check" style="margin-top:16px"><input type="checkbox" data-b="clf.approveNow" ${f.approveNow?"checked":""}>Approve this clinic now</label>`:!f.id?`<p class="xs muted" style="margin-top:16px">The clinic starts as pending until an admin approves it.</p>`:""}`}
-function blankClinic(){return {name:"",npi:"",taxId:"",specialty:"",phone:"",fax:"",address:"",city:"",state:"AZ",zip:"",contactName:"",contactEmail:"",providers:[{id:uid("p"),name:"",cred:"",npi:"",email:"",phone:""}],notify:{email:true,sms:false,fax:false,criticalPhone:""},settings:{...CLINIC_DEFAULTS},sof:{on:true,signer:"",title:"",date:ymd(Date.now(),"-")},approveNow:false}}
+function blankClinic(){return {name:"",npi:"",taxId:"",specialty:"",phone:"",fax:"",address:"",city:"",state:"AZ",zip:"",contactName:"",contactEmail:"",providers:[{id:uid("p"),name:"",cred:"",npi:"",email:"",phone:""}],notify:{email:true,sms:false,fax:false,criticalPhone:""},settings:{...CLINIC_DEFAULTS,ordering:false},sof:{on:true,signer:"",title:"",date:ymd(Date.now(),"-")},approveNow:false}}
 function clinicFormModal(){modal(clf.id?`Edit ${clf.name}`:"Add clinic",clinicForm(),{wide:1,foot:`<button class="btn" data-a="closeModal">Cancel</button><button class="btn primary" data-a="saveClinicForm">${clf.id?"Save changes":"Add clinic"}</button>`})}
 
 /* ---------- users (admin) ---------- */

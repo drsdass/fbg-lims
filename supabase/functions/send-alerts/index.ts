@@ -34,6 +34,36 @@ Deno.serve(async (req) => {
   const canSend = prof?.role === "lab" && prof.active && (prof.lab_roles ?? []).some((r: string) => ["admin", "scientist", "reporting"].includes(r));
   if (!canSend) return json({ error: "Your role can't send result alerts" }, 403);
 
+  let body: any = {};
+  try { body = await req.json(); } catch { /* no body */ }
+  // Which delivery channels have their vendor settings in place.
+  if (body.action === "status") {
+    return json({
+      email: !!(env("RESEND_API_KEY") && env("ALERT_FROM")),
+      text: !!(env("TWILIO_ACCOUNT_SID") && env("TWILIO_AUTH_TOKEN") && env("TWILIO_FROM")),
+      fax: !!(env("RESEND_API_KEY") && env("FAX_EMAIL_TEMPLATE") && (env("FAX_FROM") || env("ALERT_FROM"))),
+      portalUrl: !!env("PORTAL_URL"),
+    });
+  }
+  // Send a test message on one channel, without any patient information.
+  if (body.action === "test") {
+    const d: any = { channel: body.channel, dest: String(body.dest ?? "").trim(), test: true };
+    try {
+      let detail = "";
+      if (d.channel === "Email") detail = await sendEmail(d);
+      else if (d.channel === "Text") detail = await sendText(d);
+      else if (d.channel === "Fax") {
+        d.report = { status: "TEST", lab: { name: "First Bio Genetics", phone: "", address: "" }, accession: "TEST", patient: { name: "TEST FAX - NO PATIENT DATA", mrn: "" }, clinic: "Fax test",
+          blocks: [{ type: "title", text: "Test fax" }, { type: "note", text: "This is a test fax from the First Bio Genetics portal to confirm fax delivery. It contains no patient information." }] };
+        detail = await sendFax(d);
+      } else throw new Error("Choose Email, Text or Fax.");
+      await admin.from("audit_log").insert({ actor: u.user.id, action: "send", tbl: "outbox", row_id: "test", detail: { channel: d.channel, status: "Sent", test: true } });
+      return json({ ok: true, detail });
+    } catch (e) {
+      return json({ ok: false, error: String((e as Error)?.message ?? e) });
+    }
+  }
+
   const { data: rows, error } = await admin.from("outbox").select("id,data").filter("data->>status", "eq", "Queued").limit(25);
   if (error) return json({ error: error.message }, 500);
 
@@ -76,6 +106,7 @@ async function sendEmail(d: any) {
   if (!from) throw new Error("Email isn't set up: add the ALERT_FROM secret.");
   if (!d.dest) throw new Error("No email address for this provider.");
   const portal = env("PORTAL_URL");
+  if (d.test) { await resend({ from, to: [d.dest], subject: "Test message - First Bio Genetics portal", text: "This is a test email from the First Bio Genetics portal to confirm result alerts are working. It contains no patient information." }); return `Test email sent to ${d.dest}`; }
   const subject = d.crit ? "Critical result available - First Bio Genetics" : d.corrected ? "Corrected results available - First Bio Genetics" : "New results available - First Bio Genetics";
   const text = [
     d.crit
@@ -102,7 +133,8 @@ async function sendText(d: any) {
   const sid = env("TWILIO_ACCOUNT_SID"), tok = env("TWILIO_AUTH_TOKEN"), from = env("TWILIO_FROM");
   if (!sid || !tok || !from) throw new Error("Texting isn't set up: add TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN and TWILIO_FROM.");
   const portal = env("PORTAL_URL");
-  const body = d.crit
+  const body = d.test ? "First Bio Genetics portal: test text message. Result alerts are working."
+    : d.crit
     ? `First Bio Genetics: a result needing prompt attention is in your provider portal. The lab will also call. ${portal}`
     : d.corrected ? `First Bio Genetics: a corrected report is available in your provider portal. ${portal}`
     : `First Bio Genetics: new results are available in your provider portal. ${portal}`;

@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders) and `supabase/migrations/0005_clinic_defaults.sql`.
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql` and `supabase/migrations/0006_qc.sql` (quality control).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -140,13 +140,34 @@ verification, and then must choose their own password. All of it is recorded in 
 Clinics can register themselves from the sign-in page, or lab staff can set them up from the paper onboarding packet:
 **Clinics → Add clinic**, tick "Signed paper onboarding is on file (SOF)" and record who signed. Each clinic has portal settings:
 
-- **Clinic can place orders**: on by default. The lab and collectors can always enter orders for any clinic.
+- **Clinic can place orders**: off for clinics the lab sets up, on for clinics that register themselves. The lab and collectors can always enter orders for any clinic.
 - **Supply ordering**: clinic users can order supplies (catalog in Lab settings).
 - **Who sees results**: everyone at the clinic, or users linked to providers see only their providers' orders.
 
 Add clinic logins under **Users → Add user → Clinic user**, with an email or a username, and link providers where needed.
 Two-step verification applies to lab staff only; clinic users sign in with a password. Everyone can change their own password (key icon, top right). "Keep me signed in for 12 hours" skips the 15-minute
 inactivity sign-out on a private computer.
+
+## 11. Quality control
+
+**Quality control** logs control results automatically whenever a C560 or MultiQuant file is imported (C560 rows of
+Type C; MultiQuant samples whose names start with "QC"). Each control/analyte gets a Levey-Jennings chart with Westgard
+rules (1-2s warning; 1-3s, 2-2s, R-4s, 4-1s and 10x reject; 7T trend warning). Targets are set from the first 20 runs
+unless you enter the manufacturer's mean and SD. Record corrective actions on flagged runs, start a new lot when one goes
+into service, and print the monthly review sheet for supervisor and director signatures.
+
+## 12. Result PDFs and delivery tests
+
+Reports have **Download PDF** next to Print. The PDF is the same document that is faxed.
+`src/reportpdf.js` is generated from `supabase/functions/send-alerts/index.ts`; if you change the fax layout, regenerate it.
+**Notification log → Delivery setup** shows which channels are configured and can send a test email, text or fax.
+
+## 13. Instrument connections
+
+Today the portal imports instrument export files (C560 Excel/CSV, MultiQuant CSV), including control results. Automatic,
+two-way connections need a small interface program on the lab PC: for the Yumizen C560 it would answer the analyzer's host
+queries (orders down, results up) using HORIBA's LIS protocol; for the SCIEX 4500 it would watch the MultiQuant export
+folder and upload new files. Building it needs HORIBA's LIS interface specification for the C560.
 
 ## Before go-live
 
@@ -159,7 +180,8 @@ inactivity sign-out on a private computer.
 - [ ] CPT codes, units and G-code drug-class mapping confirmed by the billing company
 - [ ] Lab NPI and Tax ID entered in Lab settings
 - [ ] BAAs signed with Resend and SmartFax; Twilio number registration approved
-- [ ] Test email, text and fax received for a made-up patient
+- [ ] Test email, text and fax received (Notification log → Send test)
+- [ ] QC targets reviewed for each control lot; monthly Levey-Jennings review assigned
 - [ ] Every person's roles reviewed; former staff deactivated
 - [ ] Someone assigned to review the audit log on a regular schedule (for example, monthly)
 - [ ] End-to-end test in the test project with made-up patients, signed off by the lab director

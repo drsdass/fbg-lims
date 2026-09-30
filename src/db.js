@@ -22,12 +22,13 @@ const PENDING_KEY = "fbg-pending-registration";
 let synced = {};           // "table:id" -> JSON last known to be on the server
 let canSettings = false, saveTimer = null, saving = false, again = false, onError = () => {};
 
+const missingTable = (e) => e && (e.code === "42P01" || e.code === "PGRST205" || /does not exist|could not find the table/i.test(e.message || ""));
 async function fetchAll(table, cols) {
   const out = []; const page = 1000;
   for (let from = 0; ; from += page) {
     const { data, error } = await sb.from(table).select(cols).range(from, from + page - 1);
     // A table added by a newer migration may not exist yet; treat it as empty until the SQL is run.
-    if (error && (error.code === "42P01" || error.code === "PGRST205" || /does not exist|could not find the table/i.test(error.message || ""))) return out;
+    if (error && missingTable(error)) return out;
     if (error) throw error;
     out.push(...data);
     if (data.length < page) break;
@@ -192,6 +193,36 @@ export const DB = {
   flushNow(S, isLab) { clearTimeout(saveTimer); return flush(S, isLab); },
   hasUnsaved(S, isLab) { return dirty(S, isLab).length > 0; },
 
+  async alertStatus() { const { data, error } = await sb.functions.invoke("send-alerts", { body: { action: "status" } }); if (error) throw error; return data; },
+  async alertTest(channel, dest) {
+    const { data, error } = await sb.functions.invoke("send-alerts", { body: { action: "test", channel, dest } });
+    if (error) { let msg = error.message; try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) {} throw new Error(msg); }
+    if (data && data.ok === false) throw new Error(data.error || "The test failed.");
+    return data;
+  },
+  // ---------- quality control ----------
+  async qcMaterials() { return (await fetchAll("qc_materials", "id,data")).map((r) => r.data); },
+  async qcResultsSince(sinceMs, materialId) {
+    const out = [], page = 1000;
+    for (let from = 0; ; from += page) {
+      let q = sb.from("qc_results").select("id,data").gte("at", new Date(sinceMs).toISOString()).order("at", { ascending: true });
+      if (materialId) q = q.eq("material_id", materialId);
+      const { data, error } = await q.range(from, from + page - 1);
+      if (error) { if (missingTable(error)) return out; throw error; }
+      out.push(...data.map((r) => r.data));
+      if (data.length < page) break;
+    }
+    return out;
+  },
+  async qcInsertMaterials(list) { if (!list.length) return; const { error } = await sb.from("qc_materials").upsert(list.map((m) => ({ id: m.id, data: m })), { onConflict: "id", ignoreDuplicates: true }); if (error) throw error; },
+  async qcSaveMaterial(m) { const { error } = await sb.from("qc_materials").upsert({ id: m.id, data: m }); if (error) throw error; },
+  async qcAddResults(list) {
+    for (let i = 0; i < list.length; i += 500) {
+      const { error } = await sb.from("qc_results").upsert(list.slice(i, i + 500).map((r) => ({ id: r.id, material_id: r.materialId, at: new Date(r.at).toISOString(), data: r })), { onConflict: "id", ignoreDuplicates: true });
+      if (error) throw error;
+    }
+  },
+  async qcUpdateResult(r) { const { error } = await sb.from("qc_results").update({ data: r }).eq("id", r.id); if (error) throw error; },
   async sendAlerts() {
     const { data, error } = await sb.functions.invoke("send-alerts", { body: {} });
     if (error) {
