@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control) and `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -196,6 +196,51 @@ maintenance, temperatures and SOP acknowledgments. Documents are stored privatel
   ratio, internal standard response and retention time against the limits in Lab settings. Failures are shown in the
   import summary and on the order, and must be acknowledged before verifying. Exports without these columns skip the review.
 
+## 16. Instrument bridge, labels, HL7, claim checks, duplicates
+
+**Instrument bridge.** Deploy `supabase/functions/instrument-upload` (JWT verification OFF). In Lab settings → Instrument
+bridge, add a device and download its script (`fbg-bridge.ps1`, already filled in with the URL and that device's key).
+On the lab PC, save it as `C:\FBG\fbg-bridge.ps1`, run `powershell -ExecutionPolicy Bypass -File C:\FBG\fbg-bridge.ps1 -Test`,
+then schedule it at startup (steps in the script header). Point the C560 and MultiQuant exports at
+`C:\FBG\Exports\C560` and `C:\FBG\Exports\MultiQuant`. New files appear in the Instrument inbox on the Instruments
+page; a scientist imports each one. Only a hash of each device key is stored; deactivate a device to cut it off.
+
+**Labels.** Every order has a Labels button. Lab settings → Specimen labels sets the size (2×1, 2.25×1.25, 3×1, 4×2 in),
+copies per container, and printer type (any printer through the print dialog, or a Zebra ZPL file).
+
+**HL7.** Released orders have an HL7 button that downloads an HL7 v2.5.1 ORU^R01 results message for a clinic's EMR
+(F for final, C for corrected). Instruments → Reference lab imports HL7 result files from the reference lab: results
+match orders by accession and tests by name or by the code mapping you set (Code mapping).
+
+**Claim checks.** Claims are held for: invalid NPI check digits (lab or ordering provider), invalid ICD-10 format,
+missing member ID, payer, date of birth or address, and codes with no charge. Warnings (not holds): possible duplicates,
+old service dates, Medicare without an ABN for ABN tests, and Z-code-only drug testing.
+
+**Duplicate patients.** Adding a patient whose name and date of birth already exist at the clinic offers the existing
+record. Lab settings → Data maintenance finds and merges duplicates (orders move to the kept record).
+
+## 17. Pickups, receipt checks, rejections, reports, invoices, 837P
+
+**Pickups.** Clinics request courier pickups (Pickups). The lab assigns a collector, the collector records the pickup
+(count, transport condition, seal) and delivery; collectors filter with "Assigned to me". Every step is logged as the
+chain of custody.
+
+**Receipt check.** Mark received now asks the accessioner to confirm labeling, container integrity, temperature and
+stability, record the condition on arrival and link the courier pickup. Failed checks can go straight to rejection.
+
+**Rejections.** Standard reasons plus details; the clinic is asked to recollect. Compliance → Quality indicators shows
+rejections by reason.
+
+**Reports.** Orders by month, clinics, test mix, payer mix, screen and confirmation positivity, and turnaround, with CSV
+export. Sales sees volume; charges show only for billing and admins.
+
+**Client invoices.** Billing → Client invoices creates monthly invoices for released "Client bill" orders, priced from
+each clinic's client prices (Clinic → Edit) or the charge master. Clinics see their invoices in the portal.
+
+**837P.** Billing → export format "ANSI 837P (5010)". Set the submitter and receiver IDs from your clearinghouse in Lab
+settings, keep the lab address in the form "street, city, ST 12345", and add each patient's payer ID. Only insurance
+lines are sent; client-bill and self-pay lines go on invoices. Start in Test mode until the clearinghouse accepts a file.
+
 ## Before go-live
 
 - [ ] Supabase Team plan, HIPAA add-on, signed BAA, project marked High Compliance
@@ -210,6 +255,7 @@ maintenance, temperatures and SOP acknowledgments. Documents are stored privatel
 - [ ] Test email, text and fax received (Notification log → Send test)
 - [ ] QC targets reviewed for each control lot; monthly Levey-Jennings review assigned
 - [ ] Every person's roles reviewed; former staff deactivated
+- [ ] 837P test file accepted by the clearinghouse before switching to Production
 - [ ] Delta check limits, retention periods and batch review limits confirmed by the lab director
 - [ ] Compliance: equipment, lots, personnel, SOPs, vendors and BAAs entered; first risk assessment and access review recorded
 - [ ] Someone assigned to review the audit log on a regular schedule (for example, monthly)

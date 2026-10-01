@@ -14,7 +14,7 @@ export const CONFIG_ERROR = !/^https:\/\/[a-z0-9-]+\.supabase\.co\/?$/i.test(url
 if (CONFIG_ERROR) console.error(CONFIG_ERROR);
 export const sb = createClient(CONFIG_ERROR ? "https://invalid.supabase.co" : url, CONFIG_ERROR ? "invalid-key-placeholder" : key, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
 
-const DOC_TABLES = ["clinics", "patients", "orders", "notes", "claims", "outbox", "supply_orders"];
+const DOC_TABLES = ["clinics", "patients", "orders", "notes", "claims", "outbox", "supply_orders", "pickups", "invoices"];
 const LAB_ONLY = new Set(["claims", "outbox"]);
 const SETTINGS = ["lab", "fees", "confMap"];
 const PENDING_KEY = "fbg-pending-registration";
@@ -63,7 +63,7 @@ async function flush(S, isLab) {
     for (const [t, list] of Object.entries(byTable)) {
       const toRow = it => t === "settings" ? { key: it.key, data: it.d }
         : t === "notes" ? { id: it.d.id, aud: it.d.aud, data: it.d }
-        : (t === "patients" || t === "orders" || t === "supply_orders") ? { id: it.d.id, clinic_id: it.d.clinicId, data: it.d }
+        : (t === "patients" || t === "orders" || t === "supply_orders" || t === "pickups" || t === "invoices") ? { id: it.d.id, clinic_id: it.d.clinicId, data: it.d }
         : { id: it.d.id, data: it.d };
       if (t === "settings") {
         const { error } = await sb.from(t).upsert(list.map(toRow));
@@ -200,6 +200,22 @@ export const DB = {
     if (data && data.ok === false) throw new Error(data.error || "The test failed.");
     return data;
   },
+  // ---------- instrument inbox and bridge devices ----------
+  functionUrl(name) { return `${url.replace(/\/+$/, "")}/functions/v1/${name}`; },
+  async inboxList() {
+    const { data, error } = await sb.from("instrument_inbox").select("id,instrument,file_name,size,received_at,status").eq("status", "new").order("received_at", { ascending: true }).limit(200);
+    if (error) { if (missingTable(error)) return []; throw error; }
+    return data;
+  },
+  async inboxContent(id) { const { data, error } = await sb.from("instrument_inbox").select("content,file_name,instrument").eq("id", id).single(); if (error) throw error; return data; },
+  async inboxMark(id, status, note) {
+    const { data: { user } } = await sb.auth.getUser();
+    const { error } = await sb.from("instrument_inbox").update({ status, note: note || null, handled_at: new Date().toISOString(), handled_by: user && user.id }).eq("id", id);
+    if (error) throw error;
+  },
+  async devicesList() { const { data, error } = await sb.from("instrument_devices").select("id,name,active,created_at,last_seen").order("created_at"); if (error) { if (missingTable(error)) return []; throw error; } return data; },
+  async deviceAdd(name, tokenHash) { const { error } = await sb.from("instrument_devices").insert({ name, token_hash: tokenHash }); if (error) throw error; },
+  async deviceSetActive(id, active) { const { error } = await sb.from("instrument_devices").update({ active }).eq("id", id); if (error) throw error; },
   // ---------- locked report versions ----------
   async reportVersions(orderId) {
     const { data, error } = await sb.from("report_versions").select("id,version,data,released_at").eq("order_id", orderId).order("version", { ascending: true });
