@@ -1,0 +1,58 @@
+const __path=require('path');const FIX=n=>__path.join(__dirname,'..','fixtures',n),ROOT=n=>__path.join(__dirname,'..','..',n),OUT=n=>{const d=__path.join(__dirname,'..','.out');require('fs').mkdirSync(d,{recursive:true});return __path.join(d,n)},BUNDLE=__path.join(__dirname,'..','.bundle.js'),REL=d=>new Date(Date.now()+d*864e5).toISOString().slice(0,10),MID_LAST_MONTH=(()=>{const d=new Date();d.setDate(15);d.setMonth(d.getMonth()-1);d.setHours(10,0,0,0);return d.getTime()})();
+const {JSDOM,VirtualConsole}=require('jsdom');const fs=require('fs');
+const vc=new VirtualConsole();vc.on("jsdomError",e=>{if(!/getContext|Not implemented/.test(e.message))console.log("JSDOMERR",e.message)});
+const dom=new JSDOM('<!doctype html><body><div id="app"></div><div id="modal-root"></div><div id="toast"></div></body>',{runScripts:'outside-only',pretendToBeVisual:true,url:'https://portal.test/',virtualConsole:vc});
+const w=dom.window;w.confirm=()=>true;w.scrollTo=()=>{};w.matchMedia=()=>({matches:false});
+if(!w.crypto.randomUUID)w.crypto.randomUUID=()=>require('crypto').randomUUID();
+const errs=[];w.addEventListener('error',e=>errs.push(e.message));w.addEventListener('unhandledrejection',e=>errs.push('UNHANDLED '+(e.reason&&e.reason.message)));
+const ctxStub=new Proxy({},{get:(t,k)=>typeof k==='string'?(()=>{}):undefined,set:()=>true});
+w.CSS={escape:s=>String(s).replace(/["\\]/g,'\\$&')};w.HTMLCanvasElement.prototype.getContext=function(){return ctxStub};w.HTMLCanvasElement.prototype.toDataURL=()=>'data:image/png;base64,iVBORw0KGgo=';w.HTMLCanvasElement.prototype.setPointerCapture=()=>{};
+w.__TOXSEED=true;w.eval(fs.readFileSync(BUNDLE,'utf8'));
+const sign=k=>{const c=w.document.querySelector(`canvas.sigc[data-k="${k}"]`);if(!c)return false;for(const t of ['pointerdown','pointermove','pointerup'])c.dispatchEvent(new w.MouseEvent(t,{bubbles:true,clientX:10,clientY:10}));return true};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const q=s=>w.document.querySelector(s),txt=()=>w.document.querySelector('#app').textContent;
+const click=s=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}))};
+const type=(s,v)=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.value=v;el.dispatchEvent(new w.Event('input',{bubbles:true}));el.dispatchEvent(new w.Event('change',{bubbles:true}))};
+const M=()=>w.__mock;
+const toasts=()=>[...w.document.querySelectorAll('#toast .toast')].map(t=>t.textContent).join(' | ');
+async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b="lf.pw"]',pw);click('[data-a="login"]');await sleep(80)}
+(async()=>{
+ await sleep(80);
+ const login=async(e,p)=>{await signIn(e,p);if(q('[data-b="lf.code"]')){type('[data-b="lf.code"]','123456');click('[data-a="mfaVerify"]')};await sleep(300)};
+ const upload=async(kind,path,name)=>{const buf=fs.readFileSync(path);const fi=q(`input[data-imp="${kind}"]`);const file=new w.File([buf],name);file.arrayBuffer=async()=>buf.buffer.slice(buf.byteOffset,buf.byteOffset+buf.byteLength);file.text=async()=>buf.toString('utf8');Object.defineProperty(fi,'files',{value:[file],configurable:true});fi.dispatchEvent(new w.Event('change',{bubbles:true}));await sleep(900)};
+ const mtxt=()=>q('#modal-root').textContent.replace(/\s+/g,' ');
+ const R=acc=>M().store.orders.find(o=>o.data.accession===acc).data.results;
+ await login('luna@fbg.com','lunapassword12');
+ click('[data-a="go"][data-v="instruments"]');await sleep(20);
+ console.log('X0 help mentions cutoffs:',txt().includes('BUP 5'),txt().includes('FENT 2'));
+ await upload('c560',FIX('CSV_Screening_Tox_Patient_Samples.xlsx'),'CSV_Screening_Tox_Patient_Samples.xlsx');
+ console.log('X1 C560 summary:',mtxt().slice(0,700));
+ await sleep(600);
+ const u=R('50018185').UDS||{};console.log('X2 50018185 OXY:',JSON.stringify(u.Oxycodone),'OPI',JSON.stringify(u.Opiates),'BUP',JSON.stringify(u.Buprenorphine));
+ console.log('X3 50018184 BUP (90.7, cutoff 5):',JSON.stringify((R('50018184').UDS||{}).Buprenorphine),'6AM (15.8, cutoff 10):',JSON.stringify((R('50018184').UDS||{})['Heroin (6-MAM)']));
+ console.log('X4 validity 87/88/89:',['50018187','50018188','50018189'].map(a=>JSON.stringify((R(a).UDS||{})['Specimen validity'])).join(' '));
+ console.log('X5 ETG 90/91/92:',['50018190','50018191','50018192'].map(a=>((R(a).UDS||{})['Ethyl glucuronide (EtG), screen only']||{}).v).join(' '));
+ w.document.querySelector('#modal-root').innerHTML='';
+ await upload('c560',FIX('CSV_Screening_Tox_QC.xlsx'),'CSV_Screening_Tox_QC.xlsx');
+ console.log('X6 QC-only file:',mtxt().slice(0,260));
+ w.document.querySelector('#modal-root').innerHTML='';
+ click('[data-a="setUi"][data-k="itab"][data-val="sciex"]');await sleep(20);
+ await upload('sciex',FIX('20260715_JA_Urine_Tox_LCMS.csv'),'20260715_JA_Urine_Tox_LCMS.csv');
+ console.log('Y1 urine LCMS summary:',mtxt().slice(0,600));
+ await sleep(500);
+ const c3=R('60000003').CONF||{},c4=R('60000004').CONF||{};
+ console.log('Y2 60000003 positives:',Object.entries(c3).filter(([k,v])=>v.v==='Positive').map(([k,v])=>k+' ['+v.c+']').join(' | '));
+ console.log('Y3 60000004 positives:',Object.entries(c4).filter(([k,v])=>v.v==='Positive').map(([k,v])=>k+' ['+v.c+']').join(' | ')||'none');
+ w.document.querySelector('#modal-root').innerHTML='';
+ // oral fluid: turn one QC injection into a patient sample name to exercise the matrix path
+ const of=fs.readFileSync(FIX('Oral_Fluid_LCMS.csv'),'utf8').split('QC2 P&A2-1 24 Hours').join('70000001o1');fs.writeFileSync('/tmp/of.csv',of);
+ await upload('sciex','/tmp/of.csv','of.csv');
+ console.log('Z1 oral summary:',mtxt().slice(0,400));
+ await sleep(500);
+ const co=R('70000001').CONFOF||{};console.log('Z2 oral results:',Object.entries(co).map(([k,v])=>k+'='+v.v+(v.c?' ['+v.c+']':'')).join(' | '));
+ w.document.querySelector('#modal-root').innerHTML='';
+ click('[data-a="logout"]');await sleep(600);
+ await login('lab@fbg.com','labpassword12');click('[data-a="go"][data-v="instruments"]');await sleep(20);click('[data-a="setUi"][data-k="itab"][data-val="cutoffs"]');await sleep(20);
+ console.log('C1 cutoffs tab has ULOQ + Hydroxyalprazolam:',txt().includes('ULOQ'),!!q('[value="Hydroxyalprazolam"]'));
+ console.log('errors',errs,M().errors);process.exit(0)
+})();

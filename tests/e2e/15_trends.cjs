@@ -1,0 +1,40 @@
+const __path=require('path');const FIX=n=>__path.join(__dirname,'..','fixtures',n),ROOT=n=>__path.join(__dirname,'..','..',n),OUT=n=>{const d=__path.join(__dirname,'..','.out');require('fs').mkdirSync(d,{recursive:true});return __path.join(d,n)},BUNDLE=__path.join(__dirname,'..','.bundle.js'),REL=d=>new Date(Date.now()+d*864e5).toISOString().slice(0,10),MID_LAST_MONTH=(()=>{const d=new Date();d.setDate(15);d.setMonth(d.getMonth()-1);d.setHours(10,0,0,0);return d.getTime()})();
+const {JSDOM,VirtualConsole}=require('jsdom');const fs=require('fs');
+const vc=new VirtualConsole();vc.on("jsdomError",e=>{if(!/getContext|Not implemented/.test(e.message))console.log("JSDOMERR",e.message)});
+const dom=new JSDOM('<!doctype html><body><div id="app"></div><div id="modal-root"></div><div id="toast"></div></body>',{runScripts:'outside-only',pretendToBeVisual:true,url:'https://portal.test/',virtualConsole:vc});
+const w=dom.window;w.confirm=()=>true;w.scrollTo=()=>{};w.matchMedia=()=>({matches:false});
+if(!w.crypto.randomUUID)w.crypto.randomUUID=()=>require('crypto').randomUUID();
+const errs=[];w.addEventListener('error',e=>errs.push(e.message));w.addEventListener('unhandledrejection',e=>errs.push('UNHANDLED '+(e.reason&&e.reason.message)));
+const ctxStub=new Proxy({},{get:(t,k)=>typeof k==='string'?(()=>{}):undefined,set:()=>true});
+w.CSS={escape:s=>String(s).replace(/["\\]/g,'\\$&')};w.HTMLCanvasElement.prototype.getContext=function(){return ctxStub};w.HTMLCanvasElement.prototype.toDataURL=()=>'data:image/png;base64,iVBORw0KGgo=';w.HTMLCanvasElement.prototype.setPointerCapture=()=>{};
+w.__RPTSEED=true;w.eval(fs.readFileSync(BUNDLE,'utf8'));
+const sign=k=>{const c=w.document.querySelector(`canvas.sigc[data-k="${k}"]`);if(!c)return false;for(const t of ['pointerdown','pointermove','pointerup'])c.dispatchEvent(new w.MouseEvent(t,{bubbles:true,clientX:10,clientY:10}));return true};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const q=s=>w.document.querySelector(s),txt=()=>w.document.querySelector('#app').textContent;
+const click=s=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}))};
+const type=(s,v)=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.value=v;el.dispatchEvent(new w.Event('input',{bubbles:true}));el.dispatchEvent(new w.Event('change',{bubbles:true}))};
+const M=()=>w.__mock;
+const toasts=()=>[...w.document.querySelectorAll('#toast .toast')].map(t=>t.textContent).join(' | ');
+async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b="lf.pw"]',pw);click('[data-a="login"]');await sleep(80)}
+(async()=>{
+ await sleep(10);
+ const st=M().store,now=Date.now(),D=864e5;
+ st.patients.push({id:'ptT',clinic_id:'c1001',updated_at:new Date(now-130*D).toISOString(),data:{id:'ptT',clinicId:'c1001',mrn:'T1',first:'Terry',last:'Trend',dob:'1970-07-07',sex:'M',phone:'',email:'',address:'',city:'',state:'AZ',zip:'',ins:{type:'Self-pay',payer:'',member:'',group:''}}});
+ const base=(id,days)=>({id,clinic_id:'c1001',updated_at:new Date(now-days*D+36e5).toISOString(),data:{id,accession:'FBGT-'+id,clinicId:'c1001',patientId:'ptT',providerId:'p1',confirm:[],meds:[],icd:['Z79.891'],collectedAt:now-days*D,createdAt:now-days*D,status:'Released',releasedAt:now-days*D+36e5,consents:{},history:[{s:'Received',at:now-days*D+1e6,by:'x'}],results:{}}});
+ [[120,4.0,140],[90,4.4,141],[60,4.9,139],[30,5.4,140],[5,5.8,141]].forEach(([d,k,na],i)=>{const o=base('c'+i,d);o.data.tests=['CMP'];o.data.results={CMP:{Potassium:{v:String(k)},Sodium:{v:String(na)}}};st.orders.push(o)});
+ [[110,300,180],[80,180,90],[50,95,160],[20,60,120],[3,null,100]].forEach(([d,thc,cr],i)=>{const o=base('t'+i,d);o.data.tests=['UDS','CONF'];o.data.toxSpec='Urine';o.data.confirm=['THC (Cannabinoids)'];
+  const scr={};['Amphetamines','Barbiturates','Buprenorphine','Benzodiazepines','Cocaine','Ethyl glucuronide (EtG), screen only','MDMA','Methadone','Opiates','Oxycodone','PCP','Fentanyl','Heroin (6-MAM)'].forEach(n=>scr[n]={v:'Negative'});scr['Cannabinoids (THC)']={v:thc?'Positive':'Negative'};scr['Urine creatinine (validity)']={v:String(cr)};
+  o.data.results={UDS:scr,CONF:{'THC (Cannabinoids)':thc?{v:'Positive',c:'THC-COOH '+thc,comps:{thccooh:{pos:true,text:String(thc)}}}:{v:'Negative',c:''}}};st.orders.push(o)});
+ const login=async(e,p)=>{await signIn(e,p);if(q('[data-b="lf.code"]')){type('[data-b="lf.code"]','123456');click('[data-a="mfaVerify"]')};await sleep(500)};
+ const mt=()=>q('#modal-root').textContent.replace(/\s+/g,' ');
+ await login('clinic@pc.com','clinicpass123');
+ click('[data-a="go"][data-v="patients"]');await sleep(30);const pb=q('[data-a="openPatient"][data-id="ptT"]');pb.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(500);
+ console.log('T1 trend button:',!!q('[data-a="trendOpen"]'));click('[data-a="trendOpen"]');await sleep(50);
+ const cards=[...w.document.querySelectorAll('#modal-root .tr-card')].map(c=>c.textContent.replace(/\s+/g,' ').trim());
+ console.log('T2 THC card end:',cards[2].slice(-260));
+ console.log('T3 screen grid:',(mt().match(/Drug screens.{0,200}/)||['none'])[0]);
+ console.log('T4 charts:',w.document.querySelectorAll('#modal-root svg[aria-label]').length,'| ref band:',!!q('#modal-root svg rect'),'| cutoff line:',/cutoff 50/.test(mt()));
+ click('#modal-root [data-a="trMonths"][data-val="6"]');await sleep(30);console.log('T5 last 6 months:',[...w.document.querySelectorAll('#modal-root .tr-card')].length,'cards');
+ fs.writeFileSync(OUT('trend.html'),'<html><head><meta charset="utf-8"><style>'+fs.readFileSync(ROOT('src/styles.css'),'utf8')+'</style></head><body style="background:#fff">'+q('#modal-root .paper').outerHTML.replace(/src="\/logo.png"/,'src="file://'+ROOT('public/logo.png')+'"')+'</body></html>');
+ console.log('errors',errs,M().errors);process.exit(0)
+})();

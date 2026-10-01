@@ -1,0 +1,41 @@
+const __path=require('path');const FIX=n=>__path.join(__dirname,'..','fixtures',n),ROOT=n=>__path.join(__dirname,'..','..',n),OUT=n=>{const d=__path.join(__dirname,'..','.out');require('fs').mkdirSync(d,{recursive:true});return __path.join(d,n)},BUNDLE=__path.join(__dirname,'..','.bundle.js'),REL=d=>new Date(Date.now()+d*864e5).toISOString().slice(0,10),MID_LAST_MONTH=(()=>{const d=new Date();d.setDate(15);d.setMonth(d.getMonth()-1);d.setHours(10,0,0,0);return d.getTime()})();
+const {JSDOM,VirtualConsole}=require('jsdom');const fs=require('fs');
+const vc=new VirtualConsole();vc.on("jsdomError",e=>{if(!/getContext|Not implemented/.test(e.message))console.log("JSDOMERR",e.message)});
+const dom=new JSDOM('<!doctype html><body><div id="app"></div><div id="modal-root"></div><div id="toast"></div></body>',{runScripts:'outside-only',pretendToBeVisual:true,url:'https://portal.test/',virtualConsole:vc});
+const w=dom.window;w.confirm=()=>true;w.scrollTo=()=>{};w.matchMedia=()=>({matches:false});
+if(!w.crypto.randomUUID)w.crypto.randomUUID=()=>require('crypto').randomUUID();
+const errs=[];w.addEventListener('error',e=>errs.push(e.message));w.addEventListener('unhandledrejection',e=>errs.push('UNHANDLED '+(e.reason&&e.reason.message)));
+const ctxStub=new Proxy({},{get:(t,k)=>typeof k==='string'?(()=>{}):undefined,set:()=>true});
+w.CSS={escape:s=>String(s).replace(/["\\]/g,'\\$&')};w.HTMLCanvasElement.prototype.getContext=function(){return ctxStub};w.HTMLCanvasElement.prototype.toDataURL=()=>'data:image/png;base64,iVBORw0KGgo=';w.HTMLCanvasElement.prototype.setPointerCapture=()=>{};
+w.__RPTSEED=true;w.eval(fs.readFileSync(BUNDLE,'utf8'));
+const sign=k=>{const c=w.document.querySelector(`canvas.sigc[data-k="${k}"]`);if(!c)return false;for(const t of ['pointerdown','pointermove','pointerup'])c.dispatchEvent(new w.MouseEvent(t,{bubbles:true,clientX:10,clientY:10}));return true};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const q=s=>w.document.querySelector(s),txt=()=>w.document.querySelector('#app').textContent;
+const click=s=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}))};
+const type=(s,v)=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.value=v;el.dispatchEvent(new w.Event('input',{bubbles:true}));el.dispatchEvent(new w.Event('change',{bubbles:true}))};
+const M=()=>w.__mock;
+const toasts=()=>[...w.document.querySelectorAll('#toast .toast')].map(t=>t.textContent).join(' | ');
+async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b="lf.pw"]',pw);click('[data-a="login"]');await sleep(80)}
+(async()=>{
+ await sleep(80);
+ const login=async(e,p)=>{await signIn(e,p);if(q('[data-b="lf.code"]')){type('[data-b="lf.code"]','123456');click('[data-a="mfaVerify"]')};await sleep(300)};
+ const mt=()=>q('#modal-root').textContent.replace(/\s+/g,' ');
+ const st=M().store;
+ await login('lab@fbg.com','labpassword12');
+ w.document.querySelector('[data-a="go"][data-v="queue"]').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(20);
+ w.document.querySelector('[data-a="openOrder"][data-id="oRPT"]').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(20);
+ click('[data-a="go"][data-v="entry"]');await sleep(20);click('[data-a="release"]');await sleep(900);
+ click('[data-a="ppSlip"]');await sleep(500);const code=(mt().match(/Access code\s*([A-Z0-9]{4}-[A-Z0-9]{4})/)||[])[1];
+ console.log('P1 access slip:',!!code,code,'| instructions:',/View your lab results/.test(mt()),'| portal toggle:',!!q('#modal-root [data-a="ppToggle"]'));
+ q('#modal-root').innerHTML='';click('[data-a="logout"]');await sleep(600);
+ console.log('P2 login screen link:',!!q('[data-a="ppStart"]'));click('[data-a="ppStart"]');await sleep(20);
+ const fill=(c,l,d)=>{type('[data-b="ppf.code"]',c);type('[data-b="ppf.lastName"]',l);type('[data-b="ppf.dob"]',d);type('[data-b="ppf.email"]','jane@example.com');type('[data-b="ppf.pw"]','PatientPass123');type('[data-b="ppf.pw2"]','PatientPass123')};
+ fill(code,'Doe','2000-08-27');click('[data-a="ppRegister"]');await sleep(300);console.log('P3 wrong DOB:',toasts().slice(-110));
+ fill(code,'doe','2000-08-26');click('[data-a="ppRegister"]');await sleep(900);
+ console.log('P4 patient portal:',/Your lab results/.test(txt()),'| reports:',w.document.querySelectorAll('[data-a="ppView"]').length,'| no lab menu:',!q('.nav'));
+ console.log('P5 card:',(txt().replace(/\s+/g,' ').match(/Urine Drug[^A]{0,140}/)||[''])[0].slice(0,160));
+ click('[data-a="ppView"]');await sleep(40);console.log('P6 report opens:',/Medication Compliance Assessment/.test(mt()),/FINAL/.test(mt()));q('#modal-root').innerHTML='';
+ let blob=null;w.URL.createObjectURL=b=>{blob=b;return 'blob:x'};w.URL.revokeObjectURL=()=>{};click('[data-a="ppPdf"]');await sleep(2500);console.log('P7 PDF:',blob&&blob.type,blob&&blob.size);
+ console.log('P8 patient profile:',JSON.stringify(st.profiles.find(p=>p.role==='patient')&&{role:'patient',ids:st.profiles.find(p=>p.role==='patient').patient_ids}));
+ console.log('errors',errs,M().errors);process.exit(0)
+})();

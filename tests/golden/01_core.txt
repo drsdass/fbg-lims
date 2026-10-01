@@ -1,0 +1,37 @@
+1 login screen: true no demo: true
+2 bad pw toast: true
+3 clinic signs in without two-step: true
+4 clinic dashboard: true
+5 patient saved to server: 1 c1001
+6 consent step: true
+7 requires s<ID>: true
+8pre toasts: That email and password don't match an account. | That email and password don't match an account. | Patient added | Collect the patient consent s<ID>. | Order s<ID> | step text:  Pacific Coast Pain DashboardPatientsNew orderOrders & resultsSuppliesPickupsNotificationsTest menuClinic s<ID> You'll be signed out after 15 minutes of inactivity. ML Maria LopezClinic user Orders & results / FBG<YYMMDD>-1001 FBG<YYMMDD>-1001 OrderedDiaz, Ana · Pacific Coast Pain Requisition and lab
+8 order on server: FBG<YYMMDD>-1001 c1001 UDS lab note: 1
+9 audit views: 4
+10 lab dashboard: true sees clinic order: true
+11 received on server: Received
+12 reflex added: Oxycodone,Oxymorphone UDS+CONF
+13b alerts: ["Email:Sent","Text:Sent","Fax:Sent"] invoked 1
+13 released: Released claim: CLM-FBG<YYMMDD>-1001:80307/G0480 outbox: 3 clinic note: 1
+14 clinic sees released result: true new-results count: 1
+15 readAt saved: true mock write errors: []
+P1 clinic picker: true false
+P2 needs clinic: true
+P3 clinic patients listed: true
+P4 step2, provider:  true
+P5 paper consent o<ID>: true true
+P6 needs scan: false
+P7 scan attached: 1
+P8 needs provider paper sig: true
+P9 review: true
+P10 saved: FBG<YYMMDD>-1002 Received c1001 scans 1 patient clinic c1001 consent paper true
+P11 detail shows scan: true true true
+A1 audit page rows: 16 | actions: sign_in,view,sign_out
+A2 sample: <DATE>Jordan EllisViewed OrderFBG261001-1002 Patient, Paperrequisition || <DATE>Jordan EllisViewed OrderFBG261001-1002 Patient, Paper || <DATE>Jordan EllisSigned in PortalPortal || <DATE>Maria LopezSigned out PortalPortal
+A3 filtered by accession rows: 2
+A4 export logged: true
+16 registered clinic: ["c1001:active:FBG-1001","c5002:pending:FBG-5002"] screen:
+  Desert Pain Clinic
+  DashboardPatientsNew orderOrders
+toasts: Choose the clinic on the requisition. | Confirm the provider signed the requisition. | Confirm the provider signed the requisition. | Requisition entered and s<ID> received | File downloaded | Registration s<ID>
+errors []

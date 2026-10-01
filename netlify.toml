@@ -1,6 +1,11 @@
 [build]
-  command = "npm run build"
+  # Tests run before every deploy, so a change that breaks them never goes live.
+  # In an emergency, set SKIP_TESTS=1 in Netlify's environment variables to deploy without them.
+  command = "(if [ \"$SKIP_TESTS\" != \"1\" ]; then npm test; fi) && npm run build"
   publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
 
 [[headers]]
   for = "/*"

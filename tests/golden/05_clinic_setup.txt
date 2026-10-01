@@ -1,0 +1,23 @@
+L0 login screen: no self-registration: false keep-signed-in option: true username label: true
+L1 lab nav: Dashboard, New order, Accessioning, Pickups, Specimen s<ID>, Quality control, Instruments, Billing, Clinics, Test menu, Supply orders, Reports, Compliance, Notification log, Audit log, Users, Lab s<ID>
+L2 s<ID> shown: true true
+L3 clinic saved: active {"o<ID>":false,"s<ID>":true,"resultsScope":"all"} {"onFile":true,"signer":"Ann Ora"}
+L4 provider links o<ID>: true
+L5 username user: true ["p1"] temp pw shown: true
+L6 partial label: 15 of 21 tests s<ID>
+L7 consent step: photo o<ID>: true
+L8 order saved without photo: FBG<YYMMDD>-1001 Received parts: ["CBC"] 15
+L9 edit screen: true starts at step 2: true
+L10 s<ID> consents to review: true
+L11 edited: CBC+THYROID history: Entered from paper requisition | Order edited accession unchanged: true
+L12 partial CBC rows in entry: 15
+L13 released: Released
+L14 reopened: In Process corrections: 1
+L15 corrected report: true true alerts corrected flag: true
+L16 change password: true
+S1 clinic nav: Dashboard, Patients, New order, Orders & results, Supplies, Pickups, Notifications, Test menu, Clinic s<ID>
+S2 supply order: SUP-<ID> STAT [{"name":"Urine collection cups","qty":50},{"name":"Specimen transport bags","qty":20}] 2 Park Plaza
+S3 s<ID>: Shipped 1Z999
+N1 username sign-in reaches password change: true
+toasts: Marked s<ID>
+errors [] []

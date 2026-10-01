@@ -485,7 +485,7 @@ function vPatient(){
  <div class="page-h"><div><h1>${esc(p.first)} ${esc(p.last)}</h1><p class="muted">${p.mrn} · DOB ${fmtDOB(p.dob)} · ${ageOf(p.dob)} yrs · ${p.sex==="M"?"Male":p.sex==="F"?"Female":"Other"}</p></div>
  <div class="row">${isLab()?`<button class="btn ghost" data-a="auditFor" data-q="${esc(p.mrn)}">Access history</button>`:""}<button class="btn" data-a="editPatient" data-id="${p.id}">${I.pen} Edit</button>${isLab()?(can("orders.enter")?`<button class="btn primary" data-a="orderFor" data-id="${p.id}">${I.plus} New order</button>`:""):cset(myClinic(),"ordering")?`<button class="btn primary" data-a="orderFor" data-id="${p.id}">${I.plus} New order</button>`:""}</div></div>
  <div class="stack"><div class="panel"><div class="panel-h"><h2>Demographics and coverage</h2></div><div class="panel-b grid g4">${f("Phone",p.phone)}${f("Email",p.email)}${f("Address",[p.address,p.city,p.state,p.zip].filter(Boolean).join(", "))}${f("Clinic",clinicOf(p.clinicId)?.name)}${f("Coverage",p.ins.type)}${f("Payer",p.ins.payer)}${f("Member ID",p.ins.member)}${f("Group",p.ins.group)}${p.ins.subscriber?f("Subscriber",p.ins.subscriber):""}${p.ins.cardFront||p.ins.cardBack?`<div class="spanall"><div class="xs muted" style="margin-bottom:6px">Insurance card</div><div class="cardthumbs">${["cardFront","cardBack"].filter(k=>p.ins[k]).map(k=>`<img src="${p.ins[k]}" alt="Insurance card ${k==="cardFront"?"front":"back"}" data-a="viewCard">`).join("")}</div></div>`:""}</div></div>
- <div class="panel"><div class="panel-h"><h2>Orders and results</h2></div>${ordersTable(os,{emptyTitle:"No orders for this patient"})}</div>${historyPanel(p)}</div>`}
+ <div class="panel"><div class="panel-h"><h2>Orders and results</h2>${os.some(o=>o.status==="Released")?`<button class="btn sm" data-a="trendOpen" data-id="${p.id}">${I.chart} Trend report</button>`:""}</div>${ordersTable(os,{emptyTitle:"No orders for this patient"})}</div>${historyPanel(p)}</div>`}
 
 function patientForm(){const f=ptForm;const i=(k,l,o={})=>`<div class="field ${o.cls||""}"><label class="${o.req?"req":""}">${l}</label><input class="input" data-b="pt.${k}" value="${esc(k.split(".").reduce((a,x)=>a?.[x],f)??"")}" ${o.type?`type="${o.type}"`:""}></div>`;
  return `<div class="grid g2">${i("first","First name",{req:1})}${i("last","Last name",{req:1})}${i("dob","Date of birth",{req:1,type:"date"})}
@@ -1138,6 +1138,8 @@ const A={
  async rpRebuild(){if(RP.rebuilding)return;RP.rebuilding=true;RP.rebuilt=0;render();
   try{for(let guard=0;guard<500;guard++){const ids=await DB.ordersMissingSummary(S,100);if(!ids.length)break;ids.forEach(id=>{const o=orderOf(id);if(o)o.summary=orderSummary(o)});await DB.flushNow(S,true);RP.rebuilt+=ids.length;render()}toast(`Statistics rebuilt for ${RP.rebuilt} order${RP.rebuilt===1?"":"s"}`)}catch(e){toast(errMsg(e))}
   RP.rebuilding=false;FX.key="";render()},
+ trendOpen:e=>showTrend(e.dataset.id),
+ trMonths:e=>{TR.months=+e.dataset.val;showTrend(e.dataset.id)},
  editOrder:e=>{draft=draftFromOrder(orderOf(e.dataset.id));sigs={};go("order-new")},
  draftNewPt(){draft.newPt=true;ptForm=blankPatient();render()},
  draftPickExisting(){draft.newPt=false;ptForm=null;render()},
@@ -1471,6 +1473,58 @@ async function readCard(){const f=ptForm;if(!f||!f.ins.cardFront||!SAMPLE||cardB
  finally{cardBusy=false;render()}}
 
 const REJECT_REASONS=["Quantity not sufficient","Specimen leaked or container broken","Unlabeled or mislabeled specimen","Name or date of birth doesn't match requisition","Received outside stability window","Temperature out of range","Wrong specimen type or container","Collection device expired","Missing requisition or test order","Missing required signature","Other"];
+/* ---------- patient trend report ---------- */
+const TR={months:0};
+// Direction of change: a straight-line fit over the points, judged against the average level.
+function trendDir(pts){if(pts.length<2)return null;const n=pts.length,x0=pts[0].t,xs=pts.map(p=>(p.t-x0)/DAY),ys=pts.map(p=>p.v),mx=xs.reduce((a,b)=>a+b,0)/n,my=ys.reduce((a,b)=>a+b,0)/n;
+ const sxx=xs.reduce((a,x)=>a+(x-mx)**2,0),slope=sxx?xs.reduce((a,x,i)=>a+(x-mx)*(ys[i]-my),0)/sxx:(ys[n-1]-ys[0]),span=(xs[n-1]-xs[0])||1,change=slope*span,rel=Math.abs(my)>1e-9?change/Math.abs(my):0;
+ const dir=Math.abs(rel)<0.1?"stable":rel>0?"up":"down";return {dir,rel,last:ys[n-1],prev:ys[n-2],lastPct:ys[n-2]?((ys[n-1]-ys[n-2])/Math.abs(ys[n-2]))*100:null}}
+function towardRange(d,rr,last){if(!d||!rr||d.dir==="stable")return "";const [lo,hi]=rr;if(hi!=null&&last>hi)return d.dir==="down"?"moving toward the reference range":"moving further above the range";if(lo!=null&&last<lo)return d.dir==="up"?"moving toward the reference range":"moving further below the range";return "within the reference range"}
+const dirBadge=d=>!d?"":d.dir==="up"?`<span class="badge st-pending">▲ Increasing</span>`:d.dir==="down"?`<span class="badge st-received">▼ Decreasing</span>`:`<span class="badge">► Stable</span>`;
+function sparkline(pts,opt={}){const W=420,H=opt.h||120,P={l:44,r:10,t:10,b:22},n=pts.length;if(!n)return "";const vs=pts.map(p=>p.v),rr=opt.rr||[null,null];
+ let lo=Math.min(...vs,rr[0]!=null?rr[0]:Infinity,opt.cut!=null?opt.cut:Infinity),hi=Math.max(...vs,rr[1]!=null?rr[1]:-Infinity,opt.cut!=null?opt.cut:-Infinity);if(!isFinite(lo))lo=0;if(!isFinite(hi))hi=1;if(hi===lo){hi+=1;lo-=1}const pad=(hi-lo)*.12;lo-=pad;hi+=pad;
+ const t0=pts[0].t,t1=pts[n-1].t,x=t=>P.l+(t1===t0?0.5:(t-t0)/(t1-t0))*(W-P.l-P.r),y=v=>P.t+(H-P.t-P.b)*(1-(v-lo)/(hi-lo));
+ const band=rr[0]!=null||rr[1]!=null?`<rect x="${P.l}" y="${y(rr[1]!=null?rr[1]:hi)}" width="${W-P.l-P.r}" height="${Math.max(0,y(rr[0]!=null?rr[0]:lo)-y(rr[1]!=null?rr[1]:hi))}" fill="#16a37a" opacity=".1"/>`:"";
+ const cut=opt.cut!=null?`<line x1="${P.l}" x2="${W-P.r}" y1="${y(opt.cut)}" y2="${y(opt.cut)}" stroke="#b7791f" stroke-dasharray="4 3"/><text x="${W-P.r}" y="${y(opt.cut)-3}" font-size="9" text-anchor="end" fill="#b7791f">cutoff ${opt.cut}</text>`:"";
+ const col=p=>p.f==="C"?"#d0263b":p.f==="H"||p.f==="L"?"#b7791f":"#1590cf";
+ return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="${esc(opt.label||"Trend")}">${band}${cut}
+  <text x="${P.l-6}" y="${y(hi-pad)+4}" font-size="10" text-anchor="end" fill="currentColor" opacity=".6">${qfmt(hi-pad)}</text><text x="${P.l-6}" y="${y(lo+pad)+4}" font-size="10" text-anchor="end" fill="currentColor" opacity=".6">${qfmt(lo+pad)}</text>
+  ${n>1?`<polyline points="${pts.map(p=>`${x(p.t)},${y(p.v)}`).join(" ")}" fill="none" stroke="#1590cf" stroke-width="1.6"/>`:""}
+  ${pts.map(p=>`<circle cx="${x(p.t)}" cy="${y(p.v)}" r="3.6" fill="${col(p)}"><title>${esc(fmtD(p.t))}: ${esc(p.label||qfmt(p.v))}${p.f?` (${p.f})`:""}</title></circle>`).join("")}
+  <text x="${P.l}" y="${H-6}" font-size="10" fill="currentColor" opacity=".6">${esc(fmtD(t0))}</text><text x="${W-P.r}" y="${H-6}" font-size="10" text-anchor="end" fill="currentColor" opacity=".6">${esc(fmtD(t1))}</text></svg>`}
+function trendData(p){const since=TR.months?Date.now()-TR.months*30.5*DAY:0,os=S.orders.filter(o=>o.patientId===p.id&&o.status==="Released"&&o.collectedAt>=since).sort((a,b)=>a.collectedAt-b.collectedAt);
+ const num={},tox={},scr={},crOf=o=>{const r=((o.results||{}).UDS||{})[VALIDITY.cr];const v=r?parseFloat(r.v):NaN;return isFinite(v)&&v>0?v:null};
+ os.forEach(o=>{o.tests.forEach(code=>{const t=T(code);if(!t||t.dynamic)return;analytesFor(o,t).forEach(a=>{if(a.type!=="quant"&&a.type!=="calc")return;if(code==="UDS")return;const r=((o.results||{})[code]||{})[a.name];const v=r?parseFloat(r.v):NaN;if(!isFinite(v))return;
+   const k=a.name;(num[k]=num[k]||{a,code,unit:a.unit,rr:refRange(a,p.sex),pts:[]}).pts.push({t:o.collectedAt,v,f:flagOf(a,r,p.sex),acc:o.accession})})});
+  if(o.tests.includes("UDS"))SCREEN14.forEach(([c,n])=>{const r=((o.results||{}).UDS||{})[n];if(r&&r.v)(scr[c]=scr[c]||{n,pts:[]}).pts.push({t:o.collectedAt,pos:r.v==="Positive",acc:o.accession})});
+  if(o.tests.some(isDef)){const cr=crOf(o);toxAnalytes(o).forEach(a=>{if(!a.resulted)return;const raw=String(a.meas||""),v=a.pos?parseFloat(raw.replace(/[>,]/g,"")):null;
+   (tox[a.name]=tox[a.name]||{cutoff:a.cutoff,pts:[]}).pts.push({t:o.collectedAt,pos:a.pos,v:a.pos&&isFinite(v)?v:null,above:raw.startsWith(">"),norm:a.pos&&isFinite(v)&&cr?v/cr*100:null,acc:o.accession})})}});
+ return {os,num,tox,scr}}
+function trendReportHTML(p){const {os,num,tox,scr}=trendData(p),L=S.lab;
+ const numKeys=Object.keys(num).filter(k=>num[k].pts.length>=2).sort((a,b)=>{const fa=num[a].pts.some(x=>x.f),fb=num[b].pts.some(x=>x.f);return (fb-fa)||a.localeCompare(b)}),single=Object.keys(num).filter(k=>num[k].pts.length===1);
+ const toxKeys=Object.keys(tox).filter(k=>tox[k].pts.some(x=>x.pos)).sort();
+ const numCards=numKeys.map(k=>{const s2=num[k],d=trendDir(s2.pts),last=s2.pts[s2.pts.length-1],tw=towardRange(d,s2.rr,last.v);
+  return `<div class="tr-card"><div class="tr-h"><div><b>${esc(k)}</b> <span class="muted small">${esc(s2.unit||"")} · ref ${esc(rangeText(s2.a,p.sex))}</span></div>${dirBadge(d)}</div>
+  ${sparkline(s2.pts,{rr:s2.rr,label:k})}
+  <div class="small" style="margin-top:4px">Latest <b>${esc(String(last.v))}</b>${last.f?` <span class="flag ${last.f}">${last.f}</span>`:""} on ${fmtD(last.t)}${d&&d.lastPct!=null?` · ${d.lastPct>=0?"+":""}${d.lastPct.toFixed(0)}% from previous`:""}${tw?` · ${esc(tw)}`:""}</div>
+  <div class="xs muted" style="margin-top:3px">${s2.pts.map(x=>`${fmtD(x.t)}: ${esc(String(x.v))}${x.f?" "+x.f:""}`).join(" · ")}</div></div>`}).join("");
+ const toxCards=toxKeys.map(k=>{const s2=tox[k],posPts=s2.pts.filter(x=>x.v!=null).map(x=>({t:x.t,v:x.v,label:`${x.above?">":""}${qfmt(x.v)} ng/mL`})),normPts=s2.pts.filter(x=>x.norm!=null).map(x=>({t:x.t,v:x.norm,label:`${qfmt(x.norm)} ng/mg creatinine`})),d=trendDir(normPts.length>=2?normPts:posPts),lastPos=s2.pts.filter(x=>x.pos).slice(-1)[0],lastAny=s2.pts[s2.pts.length-1];
+  return `<div class="tr-card"><div class="tr-h"><div><b>${esc(k)}</b> <span class="muted small">cutoff ${esc(String(s2.cutoff))} ng/mL</span></div>${lastAny.pos?(d?dirBadge(d):""):`<span class="badge st-released">Negative most recently</span>`}</div>
+  ${posPts.length?sparkline(posPts,{cut:parseFloat(s2.cutoff),label:k}):""}
+  <div class="tr-dots">${s2.pts.map(x=>`<span class="tr-dot ${x.pos?"pos":"neg"}" title="${esc(fmtD(x.t))}: ${x.pos?`positive${x.v!=null?` ${x.above?">":""}${qfmt(x.v)} ng/mL`:""}`:"negative"}">${x.pos?"+":"–"}</span>`).join("")}</div>
+  <div class="small" style="margin-top:4px">${s2.pts.filter(x=>x.pos).length} of ${s2.pts.length} tests positive${lastPos?` · last positive ${fmtD(lastPos.t)}${lastPos.v!=null?` at ${lastPos.above?">":""}${qfmt(lastPos.v)} ng/mL`:""}`:""}${normPts.length>=2?` · creatinine-normalized ${d.dir==="down"?"decreasing":d.dir==="up"?"increasing":"stable"} (${qfmt(normPts[normPts.length-1].v)} ng/mg most recently)`:""}</div></div>`}).join("");
+ const scrKeys=Object.keys(scr).filter(k=>scr[k].pts.some(x=>x.pos)),scrDates=[...new Set(Object.values(scr).flatMap(x=>x.pts.map(y=>y.t)))].sort((a,b)=>a-b).slice(-10);
+ return `<div class="paper tr"><div class="ph"><div><img src="${LOGO}" alt="First Bio Genetics"></div><div style="text-align:right"><h2 style="font-size:17px">Patient trend report</h2><div style="font-size:11.5px;color:#5d687c">${esc(pname(p))} · DOB ${fmtDOB(p.dob)} · MRN ${esc(p.mrn)}<br>${os.length} released order${os.length===1?"":"s"}${os.length?`, ${fmtD(os[0].collectedAt)} to ${fmtD(os[os.length-1].collectedAt)}`:""} · printed ${fmtDT(Date.now())}</div></div></div>
+ <p class="small" style="margin:10px 0 0;color:#5d687c">Direction is a straight-line fit across the results shown; changes under 10% of the average are called stable. Shaded bands are reference ranges. Urine drug levels are also shown divided by urine creatinine (ng/mg) when creatinine was measured, which corrects for how dilute each sample was.</p>
+ ${numCards?`<h3 class="tr-sec">Blood and chemistry</h3><div class="tr-grid">${numCards}</div>`:""}
+ ${single.length?`<p class="xs muted" style="margin-top:6px">Tested once (no trend yet): ${single.map(esc).join(", ")}.</p>`:""}
+ ${toxCards?`<h3 class="tr-sec">Toxicology confirmations</h3><div class="tr-grid">${toxCards}</div>`:""}
+ ${scrKeys.length?`<h3 class="tr-sec">Drug screens</h3><table><thead><tr><th>Screen</th>${scrDates.map(t=>`<th>${fmtD(t)}</th>`).join("")}</tr></thead><tbody>${scrKeys.map(k=>`<tr><td>${esc(scr[k].n)}</td>${scrDates.map(t=>{const x=scr[k].pts.find(y=>y.t===t);return `<td style="${x&&x.pos?"color:#d0263b;font-weight:700":""}">${x?(x.pos?"POS":"neg"):""}</td>`}).join("")}</tr>`).join("")}</tbody></table>`:""}
+ ${!numCards&&!toxCards&&!scrKeys.length?`<div class="empty">Not enough released results to show trends${TR.months?" in this period":""}. Trends need at least two results for the same test.</div>`:""}
+ <div class="xs muted" style="margin-top:18px;border-top:1px solid #d3dae5;padding-top:6px">${esc(L.name)} · CLIA ${esc(L.clia||"")} · For clinical review; interpret with the full reports and the patient's history.</div></div>`}
+function showTrend(pid){const p=patientOf(pid);DB.logView("patients",pid,"trend report");lastDoc={tbl:"patients",id:pid,what:"trend report"};
+ modal(`Trends: ${pname(p)}`,`<div class="row" style="padding:10px 20px;border-bottom:1px solid var(--border);gap:8px">${[[0,"All results"],[24,"Last 2 years"],[12,"Last 12 months"],[6,"Last 6 months"]].map(([m,l])=>`<span class="pill ${TR.months===m?"on":""}" data-a="trMonths" data-val="${m}" data-id="${pid}">${l}</span>`).join("")}</div>${trendReportHTML(p)}`,{wide:1,print:1})}
+
 /* ---------- loading older records on demand ---------- */
 const LZ={hist:new Set(),orders:new Set(),srvQ:"",srvBusy:false,srvTimer:null,older:{}};
 // A patient's full order history (for the patient page, result history and delta checks).

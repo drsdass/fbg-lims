@@ -1,0 +1,947 @@
+Acq. Time,Sample Name,Sample Type,Component Name,Calculated Concentration,Actual Concentration,Ion Ratio,IS Area,Retention Time
+7/15/2026 4:14:43 PM,Double Blank,Blank,6AM,N/A,,0.60,100000,3.34
+7/15/2026 4:14:43 PM,Double Blank,Blank,Alprazolam,N/A,,0.60,100000,4.11
+7/15/2026 4:14:43 PM,Double Blank,Blank,Aminoclonazepam,N/A,,0.60,100000,4.1
+7/15/2026 4:14:43 PM,Double Blank,Blank,Amitriptyline,N/A,,0.60,100000,3.75
+7/15/2026 4:14:43 PM,Double Blank,Blank,Amphetamine,N/A,,0.60,100000,3.12
+7/15/2026 4:14:43 PM,Double Blank,Blank,Benzoylecgonine,N/A,,0.60,100000,4.66
+7/15/2026 4:14:43 PM,Double Blank,Blank,Buprenorphine,N/A,,0.60,100000,4.74
+7/15/2026 4:14:43 PM,Double Blank,Blank,Carisoprodol,N/A,,0.60,100000,4.75
+7/15/2026 4:14:43 PM,Double Blank,Blank,Codeine,N/A,,0.60,100000,2.08
+7/15/2026 4:14:43 PM,Double Blank,Blank,Cyclobenzaprine,N/A,,0.60,100000,2.88
+7/15/2026 4:14:43 PM,Double Blank,Blank,Desipramine,N/A,,0.60,100000,3.91
+7/15/2026 4:14:43 PM,Double Blank,Blank,Desmethyltramadol,N/A,,0.60,100000,3.67
+7/15/2026 4:14:43 PM,Double Blank,Blank,Doxepin,N/A,,0.60,100000,1.12
+7/15/2026 4:14:43 PM,Double Blank,Blank,EDDP,N/A,,0.60,100000,1.81
+7/15/2026 4:14:43 PM,Double Blank,Blank,Fentanyl,1.50,,0.60,100000,2.89
+7/15/2026 4:14:43 PM,Double Blank,Blank,Hydrocodone,N/A,,0.60,100000,3.23
+7/15/2026 4:14:43 PM,Double Blank,Blank,Hydromorphone,N/A,,0.60,100000,1.62
+7/15/2026 4:14:43 PM,Double Blank,Blank,Hydroxyalprazolam,N/A,,0.60,100000,4.04
+7/15/2026 4:14:43 PM,Double Blank,Blank,Lorazepam,N/A,,0.60,100000,2.71
+7/15/2026 4:14:43 PM,Double Blank,Blank,MDMA,N/A,,0.60,100000,2.91
+7/15/2026 4:14:43 PM,Double Blank,Blank,Meperidine,N/A,,0.60,100000,3.21
+7/15/2026 4:14:43 PM,Double Blank,Blank,Methadone,N/A,,0.60,100000,3.31
+7/15/2026 4:14:43 PM,Double Blank,Blank,Methamphetamine,N/A,,0.60,100000,2.51
+7/15/2026 4:14:43 PM,Double Blank,Blank,Methylphenidate,N/A,,0.60,100000,2.87
+7/15/2026 4:14:43 PM,Double Blank,Blank,Morphine,N/A,,0.60,100000,3.2
+7/15/2026 4:14:43 PM,Double Blank,Blank,Naloxone,N/A,,0.60,100000,4.91
+7/15/2026 4:14:43 PM,Double Blank,Blank,Norbuprenorphine,N/A,,0.60,100000,3.4
+7/15/2026 4:14:43 PM,Double Blank,Blank,Nordiazepam,N/A,,0.60,100000,3.45
+7/15/2026 4:14:43 PM,Double Blank,Blank,Norfentanyl,N/A,,0.60,100000,2.53
+7/15/2026 4:14:43 PM,Double Blank,Blank,Norketamine,N/A,,0.60,100000,4.54
+7/15/2026 4:14:43 PM,Double Blank,Blank,Nortriptyline,N/A,,0.60,100000,4.71
+7/15/2026 4:14:43 PM,Double Blank,Blank,Oxycodone,N/A,,0.60,100000,3.18
+7/15/2026 4:14:43 PM,Double Blank,Blank,Oxymorphone,N/A,,0.60,100000,2.65
+7/15/2026 4:14:43 PM,Double Blank,Blank,Paroxetine,N/A,,0.60,100000,1.43
+7/15/2026 4:14:43 PM,Double Blank,Blank,PCP,N/A,,0.60,100000,1.83
+7/15/2026 4:14:43 PM,Double Blank,Blank,Pregabalin,N/A,,0.60,100000,1.94
+7/15/2026 4:14:43 PM,Double Blank,Blank,Tapentadol,N/A,,0.60,100000,2.73
+7/15/2026 4:14:43 PM,Double Blank,Blank,Temazepam,N/A,,0.60,100000,3.31
+7/15/2026 4:14:43 PM,Double Blank,Blank,Tramadol,N/A,,0.60,100000,3.98
+7/15/2026 4:14:43 PM,Double Blank,Blank,Zolpidem,N/A,,0.60,100000,4.77
+7/15/2026 4:14:43 PM,Double Blank,Blank,Butalbital,N/A,,0.60,100000,1.31
+7/15/2026 4:14:43 PM,Double Blank,Blank,Phenobarbital,N/A,,0.60,100000,4.37
+7/15/2026 4:14:43 PM,Double Blank,Blank,THC-COOH,N/A,,0.60,100000,3.74
+7/15/2026 4:22:37 PM,blank1,Blank,6AM,N/A,,0.60,100000,3.34
+7/15/2026 4:22:37 PM,blank1,Blank,Alprazolam,N/A,,0.60,100000,4.11
+7/15/2026 4:22:37 PM,blank1,Blank,Aminoclonazepam,N/A,,0.60,100000,4.1
+7/15/2026 4:22:37 PM,blank1,Blank,Amitriptyline,N/A,,0.60,100000,3.75
+7/15/2026 4:22:37 PM,blank1,Blank,Amphetamine,N/A,,0.60,100000,3.12
+7/15/2026 4:22:37 PM,blank1,Blank,Benzoylecgonine,N/A,,0.60,100000,4.66
+7/15/2026 4:22:37 PM,blank1,Blank,Buprenorphine,N/A,,0.60,100000,4.74
+7/15/2026 4:22:37 PM,blank1,Blank,Carisoprodol,N/A,,0.60,100000,4.75
+7/15/2026 4:22:37 PM,blank1,Blank,Codeine,N/A,,0.60,100000,2.08
+7/15/2026 4:22:37 PM,blank1,Blank,Cyclobenzaprine,N/A,,0.60,100000,2.88
+7/15/2026 4:22:37 PM,blank1,Blank,Desipramine,N/A,,0.60,100000,3.91
+7/15/2026 4:22:37 PM,blank1,Blank,Desmethyltramadol,N/A,,0.60,100000,3.67
+7/15/2026 4:22:37 PM,blank1,Blank,Doxepin,N/A,,0.60,100000,1.12
+7/15/2026 4:22:37 PM,blank1,Blank,EDDP,N/A,,0.60,100000,1.81
+7/15/2026 4:22:37 PM,blank1,Blank,Fentanyl,1.50,,0.60,100000,2.89
+7/15/2026 4:22:37 PM,blank1,Blank,Hydrocodone,N/A,,0.60,100000,3.23
+7/15/2026 4:22:37 PM,blank1,Blank,Hydromorphone,N/A,,0.60,100000,1.62
+7/15/2026 4:22:37 PM,blank1,Blank,Hydroxyalprazolam,N/A,,0.60,100000,4.04
+7/15/2026 4:22:37 PM,blank1,Blank,Lorazepam,N/A,,0.60,100000,2.71
+7/15/2026 4:22:37 PM,blank1,Blank,MDMA,N/A,,0.60,100000,2.91
+7/15/2026 4:22:37 PM,blank1,Blank,Meperidine,N/A,,0.60,100000,3.21
+7/15/2026 4:22:37 PM,blank1,Blank,Methadone,N/A,,0.60,100000,3.31
+7/15/2026 4:22:37 PM,blank1,Blank,Methamphetamine,N/A,,0.60,100000,2.51
+7/15/2026 4:22:37 PM,blank1,Blank,Methylphenidate,N/A,,0.60,100000,2.87
+7/15/2026 4:22:37 PM,blank1,Blank,Morphine,N/A,,0.60,100000,3.2
+7/15/2026 4:22:37 PM,blank1,Blank,Naloxone,N/A,,0.60,100000,4.91
+7/15/2026 4:22:37 PM,blank1,Blank,Norbuprenorphine,N/A,,0.60,100000,3.4
+7/15/2026 4:22:37 PM,blank1,Blank,Nordiazepam,N/A,,0.60,100000,3.45
+7/15/2026 4:22:37 PM,blank1,Blank,Norfentanyl,N/A,,0.60,100000,2.53
+7/15/2026 4:22:37 PM,blank1,Blank,Norketamine,N/A,,0.60,100000,4.54
+7/15/2026 4:22:37 PM,blank1,Blank,Nortriptyline,N/A,,0.60,100000,4.71
+7/15/2026 4:22:37 PM,blank1,Blank,Oxycodone,N/A,,0.60,100000,3.18
+7/15/2026 4:22:37 PM,blank1,Blank,Oxymorphone,N/A,,0.60,100000,2.65
+7/15/2026 4:22:37 PM,blank1,Blank,Paroxetine,N/A,,0.60,100000,1.43
+7/15/2026 4:22:37 PM,blank1,Blank,PCP,N/A,,0.60,100000,1.83
+7/15/2026 4:22:37 PM,blank1,Blank,Pregabalin,N/A,,0.60,100000,1.94
+7/15/2026 4:22:37 PM,blank1,Blank,Tapentadol,N/A,,0.60,100000,2.73
+7/15/2026 4:22:37 PM,blank1,Blank,Temazepam,N/A,,0.60,100000,3.31
+7/15/2026 4:22:37 PM,blank1,Blank,Tramadol,N/A,,0.60,100000,3.98
+7/15/2026 4:22:37 PM,blank1,Blank,Zolpidem,N/A,,0.60,100000,4.77
+7/15/2026 4:22:37 PM,blank1,Blank,Butalbital,N/A,,0.60,100000,1.31
+7/15/2026 4:22:37 PM,blank1,Blank,Phenobarbital,N/A,,0.60,100000,4.37
+7/15/2026 4:22:37 PM,blank1,Blank,THC-COOH,N/A,,0.60,100000,3.74
+7/15/2026 4:30:30 PM,blank2,Blank,6AM,N/A,,0.60,100000,3.34
+7/15/2026 4:30:30 PM,blank2,Blank,Alprazolam,N/A,,0.60,100000,4.11
+7/15/2026 4:30:30 PM,blank2,Blank,Aminoclonazepam,N/A,,0.60,100000,4.1
+7/15/2026 4:30:30 PM,blank2,Blank,Amitriptyline,N/A,,0.60,100000,3.75
+7/15/2026 4:30:30 PM,blank2,Blank,Amphetamine,N/A,,0.60,100000,3.12
+7/15/2026 4:30:30 PM,blank2,Blank,Benzoylecgonine,N/A,,0.60,100000,4.66
+7/15/2026 4:30:30 PM,blank2,Blank,Buprenorphine,N/A,,0.60,100000,4.74
+7/15/2026 4:30:30 PM,blank2,Blank,Carisoprodol,N/A,,0.60,100000,4.75
+7/15/2026 4:30:30 PM,blank2,Blank,Codeine,N/A,,0.60,100000,2.08
+7/15/2026 4:30:30 PM,blank2,Blank,Cyclobenzaprine,N/A,,0.60,100000,2.88
+7/15/2026 4:30:30 PM,blank2,Blank,Desipramine,N/A,,0.60,100000,3.91
+7/15/2026 4:30:30 PM,blank2,Blank,Desmethyltramadol,N/A,,0.60,100000,3.67
+7/15/2026 4:30:30 PM,blank2,Blank,Doxepin,N/A,,0.60,100000,1.12
+7/15/2026 4:30:30 PM,blank2,Blank,EDDP,N/A,,0.60,100000,1.81
+7/15/2026 4:30:30 PM,blank2,Blank,Fentanyl,1.50,,0.60,100000,2.89
+7/15/2026 4:30:30 PM,blank2,Blank,Hydrocodone,N/A,,0.60,100000,3.23
+7/15/2026 4:30:30 PM,blank2,Blank,Hydromorphone,N/A,,0.60,100000,1.62
+7/15/2026 4:30:30 PM,blank2,Blank,Hydroxyalprazolam,N/A,,0.60,100000,4.04
+7/15/2026 4:30:30 PM,blank2,Blank,Lorazepam,N/A,,0.60,100000,2.71
+7/15/2026 4:30:30 PM,blank2,Blank,MDMA,N/A,,0.60,100000,2.91
+7/15/2026 4:30:30 PM,blank2,Blank,Meperidine,N/A,,0.60,100000,3.21
+7/15/2026 4:30:30 PM,blank2,Blank,Methadone,N/A,,0.60,100000,3.31
+7/15/2026 4:30:30 PM,blank2,Blank,Methamphetamine,N/A,,0.60,100000,2.51
+7/15/2026 4:30:30 PM,blank2,Blank,Methylphenidate,N/A,,0.60,100000,2.87
+7/15/2026 4:30:30 PM,blank2,Blank,Morphine,N/A,,0.60,100000,3.2
+7/15/2026 4:30:30 PM,blank2,Blank,Naloxone,N/A,,0.60,100000,4.91
+7/15/2026 4:30:30 PM,blank2,Blank,Norbuprenorphine,N/A,,0.60,100000,3.4
+7/15/2026 4:30:30 PM,blank2,Blank,Nordiazepam,N/A,,0.60,100000,3.45
+7/15/2026 4:30:30 PM,blank2,Blank,Norfentanyl,N/A,,0.60,100000,2.53
+7/15/2026 4:30:30 PM,blank2,Blank,Norketamine,N/A,,0.60,100000,4.54
+7/15/2026 4:30:30 PM,blank2,Blank,Nortriptyline,N/A,,0.60,100000,4.71
+7/15/2026 4:30:30 PM,blank2,Blank,Oxycodone,N/A,,0.60,100000,3.18
+7/15/2026 4:30:30 PM,blank2,Blank,Oxymorphone,N/A,,0.60,100000,2.65
+7/15/2026 4:30:30 PM,blank2,Blank,Paroxetine,N/A,,0.60,100000,1.43
+7/15/2026 4:30:30 PM,blank2,Blank,PCP,N/A,,0.60,100000,1.83
+7/15/2026 4:30:30 PM,blank2,Blank,Pregabalin,N/A,,0.60,100000,1.94
+7/15/2026 4:30:30 PM,blank2,Blank,Tapentadol,N/A,,0.60,100000,2.73
+7/15/2026 4:30:30 PM,blank2,Blank,Temazepam,N/A,,0.60,100000,3.31
+7/15/2026 4:30:30 PM,blank2,Blank,Tramadol,N/A,,0.60,100000,3.98
+7/15/2026 4:30:30 PM,blank2,Blank,Zolpidem,N/A,,0.60,100000,4.77
+7/15/2026 4:30:30 PM,blank2,Blank,Butalbital,N/A,,0.60,100000,1.31
+7/15/2026 4:30:30 PM,blank2,Blank,Phenobarbital,N/A,,0.60,100000,4.37
+7/15/2026 4:30:30 PM,blank2,Blank,THC-COOH,N/A,,0.60,100000,3.74
+7/15/2026 4:38:24 PM,blank3,Blank,6AM,N/A,,0.60,100000,3.34
+7/15/2026 4:38:24 PM,blank3,Blank,Alprazolam,N/A,,0.60,100000,4.11
+7/15/2026 4:38:24 PM,blank3,Blank,Aminoclonazepam,N/A,,0.60,100000,4.1
+7/15/2026 4:38:24 PM,blank3,Blank,Amitriptyline,N/A,,0.60,100000,3.75
+7/15/2026 4:38:24 PM,blank3,Blank,Amphetamine,N/A,,0.60,100000,3.12
+7/15/2026 4:38:24 PM,blank3,Blank,Benzoylecgonine,N/A,,0.60,100000,4.66
+7/15/2026 4:38:24 PM,blank3,Blank,Buprenorphine,N/A,,0.60,100000,4.74
+7/15/2026 4:38:24 PM,blank3,Blank,Carisoprodol,N/A,,0.60,100000,4.75
+7/15/2026 4:38:24 PM,blank3,Blank,Codeine,N/A,,0.60,100000,2.08
+7/15/2026 4:38:24 PM,blank3,Blank,Cyclobenzaprine,N/A,,0.60,100000,2.88
+7/15/2026 4:38:24 PM,blank3,Blank,Desipramine,N/A,,0.60,100000,3.91
+7/15/2026 4:38:24 PM,blank3,Blank,Desmethyltramadol,N/A,,0.60,100000,3.67
+7/15/2026 4:38:24 PM,blank3,Blank,Doxepin,N/A,,0.60,100000,1.12
+7/15/2026 4:38:24 PM,blank3,Blank,EDDP,N/A,,0.60,100000,1.81
+7/15/2026 4:38:24 PM,blank3,Blank,Fentanyl,1.50,,0.60,100000,2.89
+7/15/2026 4:38:24 PM,blank3,Blank,Hydrocodone,N/A,,0.60,100000,3.23
+7/15/2026 4:38:24 PM,blank3,Blank,Hydromorphone,N/A,,0.60,100000,1.62
+7/15/2026 4:38:24 PM,blank3,Blank,Hydroxyalprazolam,N/A,,0.60,100000,4.04
+7/15/2026 4:38:24 PM,blank3,Blank,Lorazepam,N/A,,0.60,100000,2.71
+7/15/2026 4:38:24 PM,blank3,Blank,MDMA,N/A,,0.60,100000,2.91
+7/15/2026 4:38:24 PM,blank3,Blank,Meperidine,N/A,,0.60,100000,3.21
+7/15/2026 4:38:24 PM,blank3,Blank,Methadone,N/A,,0.60,100000,3.31
+7/15/2026 4:38:24 PM,blank3,Blank,Methamphetamine,N/A,,0.60,100000,2.51
+7/15/2026 4:38:24 PM,blank3,Blank,Methylphenidate,N/A,,0.60,100000,2.87
+7/15/2026 4:38:24 PM,blank3,Blank,Morphine,N/A,,0.60,100000,3.2
+7/15/2026 4:38:24 PM,blank3,Blank,Naloxone,N/A,,0.60,100000,4.91
+7/15/2026 4:38:24 PM,blank3,Blank,Norbuprenorphine,N/A,,0.60,100000,3.4
+7/15/2026 4:38:24 PM,blank3,Blank,Nordiazepam,N/A,,0.60,100000,3.45
+7/15/2026 4:38:24 PM,blank3,Blank,Norfentanyl,N/A,,0.60,100000,2.53
+7/15/2026 4:38:24 PM,blank3,Blank,Norketamine,N/A,,0.60,100000,4.54
+7/15/2026 4:38:24 PM,blank3,Blank,Nortriptyline,N/A,,0.60,100000,4.71
+7/15/2026 4:38:24 PM,blank3,Blank,Oxycodone,N/A,,0.60,100000,3.18
+7/15/2026 4:38:24 PM,blank3,Blank,Oxymorphone,N/A,,0.60,100000,2.65
+7/15/2026 4:38:24 PM,blank3,Blank,Paroxetine,N/A,,0.60,100000,1.43
+7/15/2026 4:38:24 PM,blank3,Blank,PCP,N/A,,0.60,100000,1.83
+7/15/2026 4:38:24 PM,blank3,Blank,Pregabalin,N/A,,0.60,100000,1.94
+7/15/2026 4:38:24 PM,blank3,Blank,Tapentadol,N/A,,0.60,100000,2.73
+7/15/2026 4:38:24 PM,blank3,Blank,Temazepam,N/A,,0.60,100000,3.31
+7/15/2026 4:38:24 PM,blank3,Blank,Tramadol,N/A,,0.60,100000,3.98
+7/15/2026 4:38:24 PM,blank3,Blank,Zolpidem,N/A,,0.60,100000,4.77
+7/15/2026 4:38:24 PM,blank3,Blank,Butalbital,N/A,,0.60,100000,1.31
+7/15/2026 4:38:24 PM,blank3,Blank,Phenobarbital,N/A,,0.60,100000,4.37
+7/15/2026 4:38:24 PM,blank3,Blank,THC-COOH,N/A,,0.60,100000,3.74
+7/15/2026 4:46:19 PM,CAL-1,Standard,6AM,9.80,9.80,0.60,100000,3.34
+7/15/2026 4:46:19 PM,CAL-1,Standard,Alprazolam,99.50,99.50,0.60,100000,4.11
+7/15/2026 4:46:19 PM,CAL-1,Standard,Aminoclonazepam,43.30,43.30,0.60,100000,4.1
+7/15/2026 4:46:19 PM,CAL-1,Standard,Amitriptyline,18.50,18.50,0.60,100000,3.75
+7/15/2026 4:46:19 PM,CAL-1,Standard,Amphetamine,100.20,100.20,0.60,100000,3.12
+7/15/2026 4:46:19 PM,CAL-1,Standard,Benzoylecgonine,10.20,10.20,0.60,100000,4.66
+7/15/2026 4:46:19 PM,CAL-1,Standard,Buprenorphine,20.90,20.90,0.60,100000,4.74
+7/15/2026 4:46:19 PM,CAL-1,Standard,Carisoprodol,107.20,107.20,0.60,100000,4.75
+7/15/2026 4:46:19 PM,CAL-1,Standard,Codeine,19.80,19.80,0.60,100000,2.08
+7/15/2026 4:46:19 PM,CAL-1,Standard,Cyclobenzaprine,82.90,82.90,0.60,100000,2.88
+7/15/2026 4:46:19 PM,CAL-1,Standard,Desipramine,20.70,20.70,0.60,100000,3.91
+7/15/2026 4:46:19 PM,CAL-1,Standard,Desmethyltramadol,46.00,46.00,0.60,100000,3.67
+7/15/2026 4:46:19 PM,CAL-1,Standard,Doxepin,17.60,17.60,0.60,100000,1.12
+7/15/2026 4:46:19 PM,CAL-1,Standard,EDDP,59.00,59.00,0.60,100000,1.81
+7/15/2026 4:46:19 PM,CAL-1,Standard,Fentanyl,5.00,5.00,0.60,100000,2.89
+7/15/2026 4:46:19 PM,CAL-1,Standard,Hydrocodone,20.60,20.60,0.60,100000,3.23
+7/15/2026 4:46:19 PM,CAL-1,Standard,Hydromorphone,19.50,19.50,0.60,100000,1.62
+7/15/2026 4:46:19 PM,CAL-1,Standard,Hydroxyalprazolam,38.80,38.80,0.60,100000,4.04
+7/15/2026 4:46:19 PM,CAL-1,Standard,Lorazepam,20.10,20.10,0.60,100000,2.71
+7/15/2026 4:46:19 PM,CAL-1,Standard,MDMA,21.00,21.00,0.60,100000,2.91
+7/15/2026 4:46:19 PM,CAL-1,Standard,Meperidine,18.30,18.30,0.60,100000,3.21
+7/15/2026 4:46:19 PM,CAL-1,Standard,Methadone,45.90,45.90,0.60,100000,3.31
+7/15/2026 4:46:19 PM,CAL-1,Standard,Methamphetamine,19.90,19.90,0.60,100000,2.51
+7/15/2026 4:46:19 PM,CAL-1,Standard,Methylphenidate,16.60,16.60,0.60,100000,2.87
+7/15/2026 4:46:19 PM,CAL-1,Standard,Morphine,19.90,19.90,0.60,100000,3.2
+7/15/2026 4:46:19 PM,CAL-1,Standard,Naloxone,40.90,40.90,0.60,100000,4.91
+7/15/2026 4:46:19 PM,CAL-1,Standard,Norbuprenorphine,17.70,17.70,0.60,100000,3.4
+7/15/2026 4:46:19 PM,CAL-1,Standard,Nordiazepam,19.80,19.80,0.60,100000,3.45
+7/15/2026 4:46:19 PM,CAL-1,Standard,Norfentanyl,36.00,36.00,0.60,100000,2.53
+7/15/2026 4:46:19 PM,CAL-1,Standard,Norketamine,18.00,18.00,0.60,100000,4.54
+7/15/2026 4:46:19 PM,CAL-1,Standard,Nortriptyline,18.90,18.90,0.60,100000,4.71
+7/15/2026 4:46:19 PM,CAL-1,Standard,Oxycodone,21.70,21.70,0.60,100000,3.18
+7/15/2026 4:46:19 PM,CAL-1,Standard,Oxymorphone,18.90,18.90,0.60,100000,2.65
+7/15/2026 4:46:19 PM,CAL-1,Standard,Paroxetine,18.30,18.30,0.60,100000,1.43
+7/15/2026 4:46:19 PM,CAL-1,Standard,PCP,100.80,100.80,0.60,100000,1.83
+7/15/2026 4:46:19 PM,CAL-1,Standard,Pregabalin,100.70,100.70,0.60,100000,1.94
+7/15/2026 4:46:19 PM,CAL-1,Standard,Tapentadol,19.20,19.20,0.60,100000,2.73
+7/15/2026 4:46:19 PM,CAL-1,Standard,Temazepam,18.60,18.60,0.60,100000,3.31
+7/15/2026 4:46:19 PM,CAL-1,Standard,Tramadol,49.70,49.70,0.60,100000,3.98
+7/15/2026 4:46:19 PM,CAL-1,Standard,Zolpidem,23.60,23.60,0.60,100000,4.77
+7/15/2026 4:46:19 PM,CAL-1,Standard,Butalbital,47.40,47.40,0.60,100000,1.31
+7/15/2026 4:46:19 PM,CAL-1,Standard,Phenobarbital,49.60,49.60,0.60,100000,4.37
+7/15/2026 4:46:19 PM,CAL-1,Standard,THC-COOH,12.10,12.10,0.60,100000,3.74
+7/15/2026 4:54:13 PM,CAL-2,Standard,6AM,19.60,19.60,0.60,100000,3.34
+7/15/2026 4:54:13 PM,CAL-2,Standard,Alprazolam,201.30,201.30,0.60,100000,4.11
+7/15/2026 4:54:13 PM,CAL-2,Standard,Aminoclonazepam,65.20,65.20,0.60,100000,4.1
+7/15/2026 4:54:13 PM,CAL-2,Standard,Amitriptyline,42.50,42.50,0.60,100000,3.75
+7/15/2026 4:54:13 PM,CAL-2,Standard,Amphetamine,191.50,191.50,0.60,100000,3.12
+7/15/2026 4:54:13 PM,CAL-2,Standard,Benzoylecgonine,18.40,18.40,0.60,100000,4.66
+7/15/2026 4:54:13 PM,CAL-2,Standard,Buprenorphine,14.30,14.30,0.60,100000,4.74
+7/15/2026 4:54:13 PM,CAL-2,Standard,Carisoprodol,178.60,178.60,0.60,100000,4.75
+7/15/2026 4:54:13 PM,CAL-2,Standard,Codeine,41.00,41.00,0.60,100000,2.08
+7/15/2026 4:54:13 PM,CAL-2,Standard,Cyclobenzaprine,199.90,199.90,0.60,100000,2.88
+7/15/2026 4:54:13 PM,CAL-2,Standard,Desipramine,36.80,36.80,0.60,100000,3.91
+7/15/2026 4:54:13 PM,CAL-2,Standard,Desmethyltramadol,100.90,100.90,0.60,100000,3.67
+7/15/2026 4:54:13 PM,CAL-2,Standard,Doxepin,47.50,47.50,0.60,100000,1.12
+7/15/2026 4:54:13 PM,CAL-2,Standard,EDDP,86.70,86.70,0.60,100000,1.81
+7/15/2026 4:54:13 PM,CAL-2,Standard,Fentanyl,9.80,9.80,0.60,100000,2.89
+7/15/2026 4:54:13 PM,CAL-2,Standard,Hydrocodone,38.00,38.00,0.60,100000,3.23
+7/15/2026 4:54:13 PM,CAL-2,Standard,Hydromorphone,40.40,40.40,0.60,100000,1.62
+7/15/2026 4:54:13 PM,CAL-2,Standard,Hydroxyalprazolam,83.40,83.40,0.60,100000,4.04
+7/15/2026 4:54:13 PM,CAL-2,Standard,Lorazepam,38.30,38.30,0.60,100000,2.71
+7/15/2026 4:54:13 PM,CAL-2,Standard,MDMA,36.30,36.30,0.60,100000,2.91
+7/15/2026 4:54:13 PM,CAL-2,Standard,Meperidine,42.40,42.40,0.60,100000,3.21
+7/15/2026 4:54:13 PM,CAL-2,Standard,Methadone,115.40,115.40,0.60,100000,3.31
+7/15/2026 4:54:13 PM,CAL-2,Standard,Methamphetamine,39.60,39.60,0.60,100000,2.51
+7/15/2026 4:54:13 PM,CAL-2,Standard,Methylphenidate,47.10,47.10,0.60,100000,2.87
+7/15/2026 4:54:13 PM,CAL-2,Standard,Morphine,28.80,28.80,0.60,100000,3.2
+7/15/2026 4:54:13 PM,CAL-2,Standard,Naloxone,76.10,76.10,0.60,100000,4.91
+7/15/2026 4:54:13 PM,CAL-2,Standard,Norbuprenorphine,24.10,24.10,0.60,100000,3.4
+7/15/2026 4:54:13 PM,CAL-2,Standard,Nordiazepam,40.70,40.70,0.60,100000,3.45
+7/15/2026 4:54:13 PM,CAL-2,Standard,Norfentanyl,93.40,93.40,0.60,100000,2.53
+7/15/2026 4:54:13 PM,CAL-2,Standard,Norketamine,43.70,43.70,0.60,100000,4.54
+7/15/2026 4:54:13 PM,CAL-2,Standard,Nortriptyline,36.10,36.10,0.60,100000,4.71
+7/15/2026 4:54:13 PM,CAL-2,Standard,Oxycodone,32.80,32.80,0.60,100000,3.18
+7/15/2026 4:54:13 PM,CAL-2,Standard,Oxymorphone,45.30,45.30,0.60,100000,2.65
+7/15/2026 4:54:13 PM,CAL-2,Standard,Paroxetine,44.10,44.10,0.60,100000,1.43
+7/15/2026 4:54:13 PM,CAL-2,Standard,PCP,197.50,197.50,0.60,100000,1.83
+7/15/2026 4:54:13 PM,CAL-2,Standard,Pregabalin,205.70,205.70,0.60,100000,1.94
+7/15/2026 4:54:13 PM,CAL-2,Standard,Tapentadol,42.50,42.50,0.60,100000,2.73
+7/15/2026 4:54:13 PM,CAL-2,Standard,Temazepam,45.10,45.10,0.60,100000,3.31
+7/15/2026 4:54:13 PM,CAL-2,Standard,Tramadol,97.10,97.10,0.60,100000,3.98
+7/15/2026 4:54:13 PM,CAL-2,Standard,Zolpidem,N/A,50.00,0.60,100000,4.77
+7/15/2026 4:54:13 PM,CAL-2,Standard,Butalbital,106.10,106.10,0.60,100000,1.31
+7/15/2026 4:54:13 PM,CAL-2,Standard,Phenobarbital,101.00,101.00,0.60,100000,4.37
+7/15/2026 4:54:13 PM,CAL-2,Standard,THC-COOH,15.20,15.20,0.60,100000,3.74
+7/15/2026 5:02:07 PM,CAL-3,Standard,6AM,56.20,56.20,0.60,100000,3.34
+7/15/2026 5:02:07 PM,CAL-3,Standard,Alprazolam,516.50,516.50,0.60,100000,4.11
+7/15/2026 5:02:07 PM,CAL-3,Standard,Aminoclonazepam,202.70,202.70,0.60,100000,4.1
+7/15/2026 5:02:07 PM,CAL-3,Standard,Amitriptyline,98.20,98.20,0.60,100000,3.75
+7/15/2026 5:02:07 PM,CAL-3,Standard,Amphetamine,540.80,540.80,0.60,100000,3.12
+7/15/2026 5:02:07 PM,CAL-3,Standard,Benzoylecgonine,56.20,56.20,0.60,100000,4.66
+7/15/2026 5:02:07 PM,CAL-3,Standard,Buprenorphine,73.90,73.90,0.60,100000,4.74
+7/15/2026 5:02:07 PM,CAL-3,Standard,Carisoprodol,457.50,457.50,0.60,100000,4.75
+7/15/2026 5:02:07 PM,CAL-3,Standard,Codeine,101.80,101.80,0.60,100000,2.08
+7/15/2026 5:02:07 PM,CAL-3,Standard,Cyclobenzaprine,693.90,693.90,0.60,100000,2.88
+7/15/2026 5:02:07 PM,CAL-3,Standard,Desipramine,105.10,105.10,0.60,100000,3.91
+7/15/2026 5:02:07 PM,CAL-3,Standard,Desmethyltramadol,282.90,282.90,0.60,100000,3.67
+7/15/2026 5:02:07 PM,CAL-3,Standard,Doxepin,114.60,114.60,0.60,100000,1.12
+7/15/2026 5:02:07 PM,CAL-3,Standard,EDDP,217.00,217.00,0.60,100000,1.81
+7/15/2026 5:02:07 PM,CAL-3,Standard,Fentanyl,25.10,25.10,0.60,100000,2.89
+7/15/2026 5:02:07 PM,CAL-3,Standard,Hydrocodone,98.60,98.60,0.60,100000,3.23
+7/15/2026 5:02:07 PM,CAL-3,Standard,Hydromorphone,109.90,109.90,0.60,100000,1.62
+7/15/2026 5:02:07 PM,CAL-3,Standard,Hydroxyalprazolam,205.00,205.00,0.60,100000,4.04
+7/15/2026 5:02:07 PM,CAL-3,Standard,Lorazepam,107.40,107.40,0.60,100000,2.71
+7/15/2026 5:02:07 PM,CAL-3,Standard,MDMA,97.70,97.70,0.60,100000,2.91
+7/15/2026 5:02:07 PM,CAL-3,Standard,Meperidine,103.00,103.00,0.60,100000,3.21
+7/15/2026 5:02:07 PM,CAL-3,Standard,Methadone,259.60,259.60,0.60,100000,3.31
+7/15/2026 5:02:07 PM,CAL-3,Standard,Methamphetamine,104.10,104.10,0.60,100000,2.51
+7/15/2026 5:02:07 PM,CAL-3,Standard,Methylphenidate,107.80,107.80,0.60,100000,2.87
+7/15/2026 5:02:07 PM,CAL-3,Standard,Morphine,101.50,101.50,0.60,100000,3.2
+7/15/2026 5:02:07 PM,CAL-3,Standard,Naloxone,201.30,201.30,0.60,100000,4.91
+7/15/2026 5:02:07 PM,CAL-3,Standard,Norbuprenorphine,116.20,116.20,0.60,100000,3.4
+7/15/2026 5:02:07 PM,CAL-3,Standard,Nordiazepam,98.00,98.00,0.60,100000,3.45
+7/15/2026 5:02:07 PM,CAL-3,Standard,Norfentanyl,215.50,215.50,0.60,100000,2.53
+7/15/2026 5:02:07 PM,CAL-3,Standard,Norketamine,102.90,102.90,0.60,100000,4.54
+7/15/2026 5:02:07 PM,CAL-3,Standard,Nortriptyline,120.50,120.50,0.60,100000,4.71
+7/15/2026 5:02:07 PM,CAL-3,Standard,Oxycodone,100.60,100.60,0.60,100000,3.18
+7/15/2026 5:02:07 PM,CAL-3,Standard,Oxymorphone,93.90,93.90,0.60,100000,2.65
+7/15/2026 5:02:07 PM,CAL-3,Standard,Paroxetine,100.20,100.20,0.60,100000,1.43
+7/15/2026 5:02:07 PM,CAL-3,Standard,PCP,504.20,504.20,0.60,100000,1.83
+7/15/2026 5:02:07 PM,CAL-3,Standard,Pregabalin,460.00,460.00,0.60,100000,1.94
+7/15/2026 5:02:07 PM,CAL-3,Standard,Tapentadol,104.10,104.10,0.60,100000,2.73
+7/15/2026 5:02:07 PM,CAL-3,Standard,Temazepam,105.10,105.10,0.60,100000,3.31
+7/15/2026 5:02:07 PM,CAL-3,Standard,Tramadol,281.70,281.70,0.60,100000,3.98
+7/15/2026 5:02:07 PM,CAL-3,Standard,Zolpidem,93.50,93.50,0.60,100000,4.77
+7/15/2026 5:02:07 PM,CAL-3,Standard,Butalbital,282.50,282.50,0.60,100000,1.31
+7/15/2026 5:02:07 PM,CAL-3,Standard,Phenobarbital,261.50,261.50,0.60,100000,4.37
+7/15/2026 5:02:07 PM,CAL-3,Standard,THC-COOH,50.80,50.80,0.60,100000,3.74
+7/15/2026 5:10:01 PM,CAL-4,Standard,6AM,112.60,112.60,0.60,100000,3.34
+7/15/2026 5:10:01 PM,CAL-4,Standard,Alprazolam,947.50,947.50,0.60,100000,4.11
+7/15/2026 5:10:01 PM,CAL-4,Standard,Aminoclonazepam,412.90,412.90,0.60,100000,4.1
+7/15/2026 5:10:01 PM,CAL-4,Standard,Amitriptyline,214.40,214.40,0.60,100000,3.75
+7/15/2026 5:10:01 PM,CAL-4,Standard,Amphetamine,1057.10,1057.10,0.60,100000,3.12
+7/15/2026 5:10:01 PM,CAL-4,Standard,Benzoylecgonine,94.20,94.20,0.60,100000,4.66
+7/15/2026 5:10:01 PM,CAL-4,Standard,Buprenorphine,194.90,194.90,0.60,100000,4.74
+7/15/2026 5:10:01 PM,CAL-4,Standard,Carisoprodol,935.90,935.90,0.60,100000,4.75
+7/15/2026 5:10:01 PM,CAL-4,Standard,Codeine,192.50,192.50,0.60,100000,2.08
+7/15/2026 5:10:01 PM,CAL-4,Standard,Cyclobenzaprine,N/A,50.00,0.60,100000,2.88
+7/15/2026 5:10:01 PM,CAL-4,Standard,Desipramine,200.70,200.70,0.60,100000,3.91
+7/15/2026 5:10:01 PM,CAL-4,Standard,Desmethyltramadol,475.00,475.00,0.60,100000,3.67
+7/15/2026 5:10:01 PM,CAL-4,Standard,Doxepin,208.10,208.10,0.60,100000,1.12
+7/15/2026 5:10:01 PM,CAL-4,Standard,EDDP,545.70,545.70,0.60,100000,1.81
+7/15/2026 5:10:01 PM,CAL-4,Standard,Fentanyl,50.50,50.50,0.60,100000,2.89
+7/15/2026 5:10:01 PM,CAL-4,Standard,Hydrocodone,196.00,196.00,0.60,100000,3.23
+7/15/2026 5:10:01 PM,CAL-4,Standard,Hydromorphone,209.10,209.10,0.60,100000,1.62
+7/15/2026 5:10:01 PM,CAL-4,Standard,Hydroxyalprazolam,423.70,423.70,0.60,100000,4.04
+7/15/2026 5:10:01 PM,CAL-4,Standard,Lorazepam,208.70,208.70,0.60,100000,2.71
+7/15/2026 5:10:01 PM,CAL-4,Standard,MDMA,193.00,193.00,0.60,100000,2.91
+7/15/2026 5:10:01 PM,CAL-4,Standard,Meperidine,203.10,203.10,0.60,100000,3.21
+7/15/2026 5:10:01 PM,CAL-4,Standard,Methadone,499.10,499.10,0.60,100000,3.31
+7/15/2026 5:10:01 PM,CAL-4,Standard,Methamphetamine,205.70,205.70,0.60,100000,2.51
+7/15/2026 5:10:01 PM,CAL-4,Standard,Methylphenidate,175.90,175.90,0.60,100000,2.87
+7/15/2026 5:10:01 PM,CAL-4,Standard,Morphine,208.80,208.80,0.60,100000,3.2
+7/15/2026 5:10:01 PM,CAL-4,Standard,Naloxone,393.70,393.70,0.60,100000,4.91
+7/15/2026 5:10:01 PM,CAL-4,Standard,Norbuprenorphine,194.80,194.80,0.60,100000,3.4
+7/15/2026 5:10:01 PM,CAL-4,Standard,Nordiazepam,213.00,213.00,0.60,100000,3.45
+7/15/2026 5:10:01 PM,CAL-4,Standard,Norfentanyl,422.30,422.30,0.60,100000,2.53
+7/15/2026 5:10:01 PM,CAL-4,Standard,Norketamine,197.70,197.70,0.60,100000,4.54
+7/15/2026 5:10:01 PM,CAL-4,Standard,Nortriptyline,201.60,201.60,0.60,100000,4.71
+7/15/2026 5:10:01 PM,CAL-4,Standard,Oxycodone,207.10,207.10,0.60,100000,3.18
+7/15/2026 5:10:01 PM,CAL-4,Standard,Oxymorphone,203.70,203.70,0.60,100000,2.65
+7/15/2026 5:10:01 PM,CAL-4,Standard,Paroxetine,193.50,193.50,0.60,100000,1.43
+7/15/2026 5:10:01 PM,CAL-4,Standard,PCP,972.90,972.90,0.60,100000,1.83
+7/15/2026 5:10:01 PM,CAL-4,Standard,Pregabalin,912.70,912.70,0.60,100000,1.94
+7/15/2026 5:10:01 PM,CAL-4,Standard,Tapentadol,211.50,211.50,0.60,100000,2.73
+7/15/2026 5:10:01 PM,CAL-4,Standard,Temazepam,201.40,201.40,0.60,100000,3.31
+7/15/2026 5:10:01 PM,CAL-4,Standard,Tramadol,482.40,482.40,0.60,100000,3.98
+7/15/2026 5:10:01 PM,CAL-4,Standard,Zolpidem,214.60,214.60,0.60,100000,4.77
+7/15/2026 5:10:01 PM,CAL-4,Standard,Butalbital,488.60,488.60,0.60,100000,1.31
+7/15/2026 5:10:01 PM,CAL-4,Standard,Phenobarbital,468.10,468.10,0.60,100000,4.37
+7/15/2026 5:10:01 PM,CAL-4,Standard,THC-COOH,100.40,100.40,0.60,100000,3.74
+7/15/2026 5:17:56 PM,CAL-5,Standard,6AM,232.20,232.20,0.60,100000,3.34
+7/15/2026 5:17:56 PM,CAL-5,Standard,Alprazolam,2492.00,2492.00,0.60,100000,4.11
+7/15/2026 5:17:56 PM,CAL-5,Standard,Aminoclonazepam,1135.80,1135.80,0.60,100000,4.1
+7/15/2026 5:17:56 PM,CAL-5,Standard,Amitriptyline,469.10,469.10,0.60,100000,3.75
+7/15/2026 5:17:56 PM,CAL-5,Standard,Amphetamine,2415.20,2415.20,0.60,100000,3.12
+7/15/2026 5:17:56 PM,CAL-5,Standard,Benzoylecgonine,269.30,269.30,0.60,100000,4.66
+7/15/2026 5:17:56 PM,CAL-5,Standard,Buprenorphine,547.50,547.50,0.60,100000,4.74
+7/15/2026 5:17:56 PM,CAL-5,Standard,Carisoprodol,2621.40,2621.40,0.60,100000,4.75
+7/15/2026 5:17:56 PM,CAL-5,Standard,Codeine,500.60,500.60,0.60,100000,2.08
+7/15/2026 5:17:56 PM,CAL-5,Standard,Cyclobenzaprine,2550.90,2550.90,0.60,100000,2.88
+7/15/2026 5:17:56 PM,CAL-5,Standard,Desipramine,490.70,490.70,0.60,100000,3.91
+7/15/2026 5:17:56 PM,CAL-5,Standard,Desmethyltramadol,1225.00,1225.00,0.60,100000,3.67
+7/15/2026 5:17:56 PM,CAL-5,Standard,Doxepin,436.20,436.20,0.60,100000,1.12
+7/15/2026 5:17:56 PM,CAL-5,Standard,EDDP,1247.30,1247.30,0.60,100000,1.81
+7/15/2026 5:17:56 PM,CAL-5,Standard,Fentanyl,117.60,117.60,0.60,100000,2.89
+7/15/2026 5:17:56 PM,CAL-5,Standard,Hydrocodone,493.50,493.50,0.60,100000,3.23
+7/15/2026 5:17:56 PM,CAL-5,Standard,Hydromorphone,482.30,482.30,0.60,100000,1.62
+7/15/2026 5:17:56 PM,CAL-5,Standard,Hydroxyalprazolam,1046.90,1046.90,0.60,100000,4.04
+7/15/2026 5:17:56 PM,CAL-5,Standard,Lorazepam,501.80,501.80,0.60,100000,2.71
+7/15/2026 5:17:56 PM,CAL-5,Standard,MDMA,535.20,535.20,0.60,100000,2.91
+7/15/2026 5:17:56 PM,CAL-5,Standard,Meperidine,482.90,482.90,0.60,100000,3.21
+7/15/2026 5:17:56 PM,CAL-5,Standard,Methadone,1208.00,1208.00,0.60,100000,3.31
+7/15/2026 5:17:56 PM,CAL-5,Standard,Methamphetamine,511.10,511.10,0.60,100000,2.51
+7/15/2026 5:17:56 PM,CAL-5,Standard,Methylphenidate,524.90,524.90,0.60,100000,2.87
+7/15/2026 5:17:56 PM,CAL-5,Standard,Morphine,502.50,502.50,0.60,100000,3.2
+7/15/2026 5:17:56 PM,CAL-5,Standard,Naloxone,1029.80,1029.80,0.60,100000,4.91
+7/15/2026 5:17:56 PM,CAL-5,Standard,Norbuprenorphine,482.50,482.50,0.60,100000,3.4
+7/15/2026 5:17:56 PM,CAL-5,Standard,Nordiazepam,512.80,512.80,0.60,100000,3.45
+7/15/2026 5:17:56 PM,CAL-5,Standard,Norfentanyl,949.60,949.60,0.60,100000,2.53
+7/15/2026 5:17:56 PM,CAL-5,Standard,Norketamine,493.10,493.10,0.60,100000,4.54
+7/15/2026 5:17:56 PM,CAL-5,Standard,Nortriptyline,446.40,446.40,0.60,100000,4.71
+7/15/2026 5:17:56 PM,CAL-5,Standard,Oxycodone,508.10,508.10,0.60,100000,3.18
+7/15/2026 5:17:56 PM,CAL-5,Standard,Oxymorphone,502.20,502.20,0.60,100000,2.65
+7/15/2026 5:17:56 PM,CAL-5,Standard,Paroxetine,506.70,506.70,0.60,100000,1.43
+7/15/2026 5:17:56 PM,CAL-5,Standard,PCP,2672.40,2672.40,0.60,100000,1.83
+7/15/2026 5:17:56 PM,CAL-5,Standard,Pregabalin,2556.10,2556.10,0.60,100000,1.94
+7/15/2026 5:17:56 PM,CAL-5,Standard,Tapentadol,479.70,479.70,0.60,100000,2.73
+7/15/2026 5:17:56 PM,CAL-5,Standard,Temazepam,517.30,517.30,0.60,100000,3.31
+7/15/2026 5:17:56 PM,CAL-5,Standard,Tramadol,1196.70,1196.70,0.60,100000,3.98
+7/15/2026 5:17:56 PM,CAL-5,Standard,Zolpidem,494.40,494.40,0.60,100000,4.77
+7/15/2026 5:17:56 PM,CAL-5,Standard,Butalbital,1246.20,1246.20,0.60,100000,1.31
+7/15/2026 5:17:56 PM,CAL-5,Standard,Phenobarbital,1224.30,1224.30,0.60,100000,4.37
+7/15/2026 5:17:56 PM,CAL-5,Standard,THC-COOH,252.10,252.10,0.60,100000,3.74
+7/15/2026 5:25:51 PM,CAL-6,Standard,6AM,345.70,345.70,0.60,100000,3.34
+7/15/2026 5:25:51 PM,CAL-6,Standard,Alprazolam,4084.50,4084.50,0.60,100000,4.11
+7/15/2026 5:25:51 PM,CAL-6,Standard,Aminoclonazepam,1472.10,1472.10,0.60,100000,4.1
+7/15/2026 5:25:51 PM,CAL-6,Standard,Amitriptyline,818.80,818.80,0.60,100000,3.75
+7/15/2026 5:25:51 PM,CAL-6,Standard,Amphetamine,3742.40,3742.40,0.60,100000,3.12
+7/15/2026 5:25:51 PM,CAL-6,Standard,Benzoylecgonine,366.30,366.30,0.60,100000,4.66
+7/15/2026 5:25:51 PM,CAL-6,Standard,Buprenorphine,915.70,915.70,0.60,100000,4.74
+7/15/2026 5:25:51 PM,CAL-6,Standard,Carisoprodol,4543.70,4543.70,0.60,100000,4.75
+7/15/2026 5:25:51 PM,CAL-6,Standard,Codeine,804.90,804.90,0.60,100000,2.08
+7/15/2026 5:25:51 PM,CAL-6,Standard,Cyclobenzaprine,4018.20,4018.20,0.60,100000,2.88
+7/15/2026 5:25:51 PM,CAL-6,Standard,Desipramine,807.20,807.20,0.60,100000,3.91
+7/15/2026 5:25:51 PM,CAL-6,Standard,Desmethyltramadol,2022.20,2022.20,0.60,100000,3.67
+7/15/2026 5:25:51 PM,CAL-6,Standard,Doxepin,698.20,698.20,0.60,100000,1.12
+7/15/2026 5:25:51 PM,CAL-6,Standard,EDDP,1994.50,1994.50,0.60,100000,1.81
+7/15/2026 5:25:51 PM,CAL-6,Standard,Fentanyl,211.50,211.50,0.60,100000,2.89
+7/15/2026 5:25:51 PM,CAL-6,Standard,Hydrocodone,855.50,855.50,0.60,100000,3.23
+7/15/2026 5:25:51 PM,CAL-6,Standard,Hydromorphone,724.90,724.90,0.60,100000,1.62
+7/15/2026 5:25:51 PM,CAL-6,Standard,Hydroxyalprazolam,1371.40,1371.40,0.60,100000,4.04
+7/15/2026 5:25:51 PM,CAL-6,Standard,Lorazepam,733.30,733.30,0.60,100000,2.71
+7/15/2026 5:25:51 PM,CAL-6,Standard,MDMA,823.30,823.30,0.60,100000,2.91
+7/15/2026 5:25:51 PM,CAL-6,Standard,Meperidine,810.60,810.60,0.60,100000,3.21
+7/15/2026 5:25:51 PM,CAL-6,Standard,Methadone,1848.30,1848.30,0.60,100000,3.31
+7/15/2026 5:25:51 PM,CAL-6,Standard,Methamphetamine,738.60,738.60,0.60,100000,2.51
+7/15/2026 5:25:51 PM,CAL-6,Standard,Methylphenidate,786.70,786.70,0.60,100000,2.87
+7/15/2026 5:25:51 PM,CAL-6,Standard,Morphine,753.90,753.90,0.60,100000,3.2
+7/15/2026 5:25:51 PM,CAL-6,Standard,Naloxone,1608.00,1608.00,0.60,100000,4.91
+7/15/2026 5:25:51 PM,CAL-6,Standard,Norbuprenorphine,809.20,809.20,0.60,100000,3.4
+7/15/2026 5:25:51 PM,CAL-6,Standard,Nordiazepam,737.50,737.50,0.60,100000,3.45
+7/15/2026 5:25:51 PM,CAL-6,Standard,Norfentanyl,1358.00,1358.00,0.60,100000,2.53
+7/15/2026 5:25:51 PM,CAL-6,Standard,Norketamine,804.70,804.70,0.60,100000,4.54
+7/15/2026 5:25:51 PM,CAL-6,Standard,Nortriptyline,851.60,851.60,0.60,100000,4.71
+7/15/2026 5:25:51 PM,CAL-6,Standard,Oxycodone,831.80,831.80,0.60,100000,3.18
+7/15/2026 5:25:51 PM,CAL-6,Standard,Oxymorphone,768.00,768.00,0.60,100000,2.65
+7/15/2026 5:25:51 PM,CAL-6,Standard,Paroxetine,797.10,797.10,0.60,100000,1.43
+7/15/2026 5:25:51 PM,CAL-6,Standard,PCP,3833.50,3833.50,0.60,100000,1.83
+7/15/2026 5:25:51 PM,CAL-6,Standard,Pregabalin,4438.70,4438.70,0.60,100000,1.94
+7/15/2026 5:25:51 PM,CAL-6,Standard,Tapentadol,737.10,737.10,0.60,100000,2.73
+7/15/2026 5:25:51 PM,CAL-6,Standard,Temazepam,682.10,682.10,0.60,100000,3.31
+7/15/2026 5:25:51 PM,CAL-6,Standard,Tramadol,1970.90,1970.90,0.60,100000,3.98
+7/15/2026 5:25:51 PM,CAL-6,Standard,Zolpidem,800.90,800.90,0.60,100000,4.77
+7/15/2026 5:25:51 PM,CAL-6,Standard,Butalbital,1772.50,1772.50,0.60,100000,1.31
+7/15/2026 5:25:51 PM,CAL-6,Standard,Phenobarbital,2072.20,2072.20,0.60,100000,4.37
+7/15/2026 5:25:51 PM,CAL-6,Standard,THC-COOH,398.90,398.90,0.60,100000,3.74
+7/15/2026 5:33:45 PM,blank4,Blank,6AM,N/A,,0.60,100000,3.34
+7/15/2026 5:33:45 PM,blank4,Blank,Alprazolam,N/A,,0.60,100000,4.11
+7/15/2026 5:33:45 PM,blank4,Blank,Aminoclonazepam,N/A,,0.60,100000,4.1
+7/15/2026 5:33:45 PM,blank4,Blank,Amitriptyline,N/A,,0.60,100000,3.75
+7/15/2026 5:33:45 PM,blank4,Blank,Amphetamine,N/A,,0.60,100000,3.12
+7/15/2026 5:33:45 PM,blank4,Blank,Benzoylecgonine,N/A,,0.60,100000,4.66
+7/15/2026 5:33:45 PM,blank4,Blank,Buprenorphine,N/A,,0.60,100000,4.74
+7/15/2026 5:33:45 PM,blank4,Blank,Carisoprodol,N/A,,0.60,100000,4.75
+7/15/2026 5:33:45 PM,blank4,Blank,Codeine,N/A,,0.60,100000,2.08
+7/15/2026 5:33:45 PM,blank4,Blank,Cyclobenzaprine,N/A,,0.60,100000,2.88
+7/15/2026 5:33:45 PM,blank4,Blank,Desipramine,N/A,,0.60,100000,3.91
+7/15/2026 5:33:45 PM,blank4,Blank,Desmethyltramadol,N/A,,0.60,100000,3.67
+7/15/2026 5:33:45 PM,blank4,Blank,Doxepin,N/A,,0.60,100000,1.12
+7/15/2026 5:33:45 PM,blank4,Blank,EDDP,N/A,,0.60,100000,1.81
+7/15/2026 5:33:45 PM,blank4,Blank,Fentanyl,1.50,,0.60,100000,2.89
+7/15/2026 5:33:45 PM,blank4,Blank,Hydrocodone,N/A,,0.60,100000,3.23
+7/15/2026 5:33:45 PM,blank4,Blank,Hydromorphone,N/A,,0.60,100000,1.62
+7/15/2026 5:33:45 PM,blank4,Blank,Hydroxyalprazolam,N/A,,0.60,100000,4.04
+7/15/2026 5:33:45 PM,blank4,Blank,Lorazepam,N/A,,0.60,100000,2.71
+7/15/2026 5:33:45 PM,blank4,Blank,MDMA,N/A,,0.60,100000,2.91
+7/15/2026 5:33:45 PM,blank4,Blank,Meperidine,N/A,,0.60,100000,3.21
+7/15/2026 5:33:45 PM,blank4,Blank,Methadone,N/A,,0.60,100000,3.31
+7/15/2026 5:33:45 PM,blank4,Blank,Methamphetamine,N/A,,0.60,100000,2.51
+7/15/2026 5:33:45 PM,blank4,Blank,Methylphenidate,N/A,,0.60,100000,2.87
+7/15/2026 5:33:45 PM,blank4,Blank,Morphine,N/A,,0.60,100000,3.2
+7/15/2026 5:33:45 PM,blank4,Blank,Naloxone,N/A,,0.60,100000,4.91
+7/15/2026 5:33:45 PM,blank4,Blank,Norbuprenorphine,N/A,,0.60,100000,3.4
+7/15/2026 5:33:45 PM,blank4,Blank,Nordiazepam,N/A,,0.60,100000,3.45
+7/15/2026 5:33:45 PM,blank4,Blank,Norfentanyl,N/A,,0.60,100000,2.53
+7/15/2026 5:33:45 PM,blank4,Blank,Norketamine,N/A,,0.60,100000,4.54
+7/15/2026 5:33:45 PM,blank4,Blank,Nortriptyline,N/A,,0.60,100000,4.71
+7/15/2026 5:33:45 PM,blank4,Blank,Oxycodone,N/A,,0.60,100000,3.18
+7/15/2026 5:33:45 PM,blank4,Blank,Oxymorphone,N/A,,0.60,100000,2.65
+7/15/2026 5:33:45 PM,blank4,Blank,Paroxetine,N/A,,0.60,100000,1.43
+7/15/2026 5:33:45 PM,blank4,Blank,PCP,N/A,,0.60,100000,1.83
+7/15/2026 5:33:45 PM,blank4,Blank,Pregabalin,N/A,,0.60,100000,1.94
+7/15/2026 5:33:45 PM,blank4,Blank,Tapentadol,N/A,,0.60,100000,2.73
+7/15/2026 5:33:45 PM,blank4,Blank,Temazepam,N/A,,0.60,100000,3.31
+7/15/2026 5:33:45 PM,blank4,Blank,Tramadol,N/A,,0.60,100000,3.98
+7/15/2026 5:33:45 PM,blank4,Blank,Zolpidem,N/A,,0.60,100000,4.77
+7/15/2026 5:33:45 PM,blank4,Blank,Butalbital,N/A,,0.60,100000,1.31
+7/15/2026 5:33:45 PM,blank4,Blank,Phenobarbital,N/A,,0.60,100000,4.37
+7/15/2026 5:33:45 PM,blank4,Blank,THC-COOH,N/A,,0.60,100000,3.74
+7/15/2026 5:41:40 PM,QC1A,Quality Control,6AM,44.10,44.10,0.60,100000,3.34
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Alprazolam,427.10,427.10,0.60,100000,4.11
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Aminoclonazepam,137.60,137.60,0.60,100000,4.1
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Amitriptyline,78.10,78.10,0.60,100000,3.75
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Amphetamine,451.20,451.20,0.60,100000,3.12
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Benzoylecgonine,40.40,40.40,0.60,100000,4.66
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Buprenorphine,80.50,80.50,0.60,100000,4.74
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Carisoprodol,387.30,387.30,0.60,100000,4.75
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Codeine,91.70,91.70,0.60,100000,2.08
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Cyclobenzaprine,N/A,100.00,0.60,100000,2.88
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Desipramine,83.70,83.70,0.60,100000,3.91
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Desmethyltramadol,218.90,218.90,0.60,100000,3.67
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Doxepin,100.00,100.00,0.60,100000,1.12
+7/15/2026 5:41:40 PM,QC1A,Quality Control,EDDP,197.80,197.80,0.60,100000,1.81
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Fentanyl,20.90,20.90,0.60,100000,2.89
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Hydrocodone,79.80,79.80,0.60,100000,3.23
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Hydromorphone,84.50,84.50,0.60,100000,1.62
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Hydroxyalprazolam,191.50,191.50,0.60,100000,4.04
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Lorazepam,83.90,83.90,0.60,100000,2.71
+7/15/2026 5:41:40 PM,QC1A,Quality Control,MDMA,101.80,101.80,0.60,100000,2.91
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Meperidine,73.50,73.50,0.60,100000,3.21
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Methadone,199.50,199.50,0.60,100000,3.31
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Methamphetamine,97.90,97.90,0.60,100000,2.51
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Methylphenidate,84.00,84.00,0.60,100000,2.87
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Morphine,86.30,86.30,0.60,100000,3.2
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Naloxone,168.50,168.50,0.60,100000,4.91
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Norbuprenorphine,93.20,93.20,0.60,100000,3.4
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Nordiazepam,89.90,89.90,0.60,100000,3.45
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Norfentanyl,183.70,183.70,0.60,100000,2.53
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Norketamine,83.50,83.50,0.60,100000,4.54
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Nortriptyline,79.50,79.50,0.60,100000,4.71
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Oxycodone,91.90,153.17,0.60,100000,3.18
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Oxymorphone,81.00,81.00,0.60,100000,2.65
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Paroxetine,80.20,80.20,0.60,100000,1.43
+7/15/2026 5:41:40 PM,QC1A,Quality Control,PCP,403.70,403.70,0.60,100000,1.83
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Pregabalin,401.90,401.90,0.60,100000,1.94
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Tapentadol,77.90,77.90,0.60,100000,2.73
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Temazepam,97.60,97.60,0.60,100000,3.31
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Tramadol,218.30,218.30,0.60,100000,3.98
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Zolpidem,85.50,85.50,0.60,100000,4.77
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Butalbital,236.30,236.30,0.60,100000,1.31
+7/15/2026 5:41:40 PM,QC1A,Quality Control,Phenobarbital,200.40,200.40,0.60,100000,4.37
+7/15/2026 5:41:40 PM,QC1A,Quality Control,THC-COOH,47.40,47.40,0.60,100000,3.74
+7/15/2026 5:49:34 PM,QC2A,Quality Control,6AM,100.90,100.90,0.60,100000,3.34
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Alprazolam,997.90,997.90,0.60,100000,4.11
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Aminoclonazepam,432.90,432.90,0.60,100000,4.1
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Amitriptyline,206.60,206.60,0.60,100000,3.75
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Amphetamine,1069.20,1069.20,0.60,100000,3.12
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Benzoylecgonine,108.00,108.00,0.60,100000,4.66
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Buprenorphine,172.50,172.50,0.60,100000,4.74
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Carisoprodol,1044.80,1044.80,0.60,100000,4.75
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Codeine,210.40,210.40,0.60,100000,2.08
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Cyclobenzaprine,789.30,789.30,0.60,100000,2.88
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Desipramine,196.70,196.70,0.60,100000,3.91
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Desmethyltramadol,558.90,558.90,0.60,100000,3.67
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Doxepin,249.70,249.70,0.60,100000,1.12
+7/15/2026 5:49:34 PM,QC2A,Quality Control,EDDP,555.90,555.90,0.60,100000,1.81
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Fentanyl,51.90,51.90,0.60,100000,2.89
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Hydrocodone,207.20,207.20,0.60,100000,3.23
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Hydromorphone,216.30,216.30,0.60,100000,1.62
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Hydroxyalprazolam,454.10,454.10,0.60,100000,4.04
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Lorazepam,200.00,200.00,0.60,100000,2.71
+7/15/2026 5:49:34 PM,QC2A,Quality Control,MDMA,248.50,248.50,0.60,100000,2.91
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Meperidine,209.50,209.50,0.60,100000,3.21
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Methadone,455.20,455.20,0.60,100000,3.31
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Methamphetamine,237.10,237.10,0.60,100000,2.51
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Methylphenidate,201.40,201.40,0.60,100000,2.87
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Morphine,214.90,214.90,0.60,100000,3.2
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Naloxone,425.60,425.60,0.60,100000,4.91
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Norbuprenorphine,286.10,286.10,0.60,100000,3.4
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Nordiazepam,226.70,226.70,0.60,100000,3.45
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Norfentanyl,470.70,470.70,0.60,100000,2.53
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Norketamine,204.00,204.00,0.60,100000,4.54
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Nortriptyline,195.40,195.40,0.60,100000,4.71
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Oxycodone,226.10,376.83,0.60,100000,3.18
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Oxymorphone,212.20,212.20,0.60,100000,2.65
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Paroxetine,238.50,238.50,0.60,100000,1.43
+7/15/2026 5:49:34 PM,QC2A,Quality Control,PCP,1068.60,1068.60,0.60,100000,1.83
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Pregabalin,1014.70,1014.70,0.60,100000,1.94
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Tapentadol,214.80,214.80,0.60,100000,2.73
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Temazepam,210.60,210.60,0.60,100000,3.31
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Tramadol,634.30,634.30,0.60,100000,3.98
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Zolpidem,207.60,207.60,0.60,100000,4.77
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Butalbital,568.00,568.00,0.60,100000,1.31
+7/15/2026 5:49:34 PM,QC2A,Quality Control,Phenobarbital,533.90,533.90,0.60,100000,4.37
+7/15/2026 5:49:34 PM,QC2A,Quality Control,THC-COOH,123.20,123.20,0.60,100000,3.74
+7/15/2026 5:57:30 PM,QC3A,Quality Control,6AM,244.60,244.60,0.60,100000,3.34
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Alprazolam,2482.00,2482.00,0.60,100000,4.11
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Aminoclonazepam,1078.70,1078.70,0.60,100000,4.1
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Amitriptyline,534.40,534.40,0.60,100000,3.75
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Amphetamine,2599.90,2599.90,0.60,100000,3.12
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Benzoylecgonine,264.80,264.80,0.60,100000,4.66
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Buprenorphine,438.10,438.10,0.60,100000,4.74
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Carisoprodol,2671.70,2671.70,0.60,100000,4.75
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Codeine,567.80,567.80,0.60,100000,2.08
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Cyclobenzaprine,1845.20,1845.20,0.60,100000,2.88
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Desipramine,399.10,399.10,0.60,100000,3.91
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Desmethyltramadol,1249.50,1249.50,0.60,100000,3.67
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Doxepin,429.50,429.50,0.60,100000,1.12
+7/15/2026 5:57:30 PM,QC3A,Quality Control,EDDP,1250.10,1250.10,0.60,100000,1.81
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Fentanyl,158.00,158.00,0.60,100000,2.89
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Hydrocodone,541.60,541.60,0.60,100000,3.23
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Hydromorphone,517.70,517.70,0.60,100000,1.62
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Hydroxyalprazolam,1092.70,1092.70,0.60,100000,4.04
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Lorazepam,538.20,538.20,0.60,100000,2.71
+7/15/2026 5:57:30 PM,QC3A,Quality Control,MDMA,620.20,620.20,0.60,100000,2.91
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Meperidine,469.50,469.50,0.60,100000,3.21
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Methadone,1242.30,1242.30,0.60,100000,3.31
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Methamphetamine,582.60,582.60,0.60,100000,2.51
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Methylphenidate,575.00,575.00,0.60,100000,2.87
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Morphine,554.60,554.60,0.60,100000,3.2
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Naloxone,1099.70,1099.70,0.60,100000,4.91
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Norbuprenorphine,564.50,564.50,0.60,100000,3.4
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Nordiazepam,531.30,531.30,0.60,100000,3.45
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Norfentanyl,1007.20,1007.20,0.60,100000,2.53
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Norketamine,492.20,492.20,0.60,100000,4.54
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Nortriptyline,478.90,478.90,0.60,100000,4.71
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Oxycodone,589.50,982.50,0.60,100000,3.18
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Oxymorphone,568.70,568.70,0.60,100000,2.65
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Paroxetine,464.60,464.60,0.60,100000,1.43
+7/15/2026 5:57:30 PM,QC3A,Quality Control,PCP,2311.10,2311.10,0.60,100000,1.83
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Pregabalin,2875.20,2875.20,0.60,100000,1.94
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Tapentadol,495.10,495.10,0.60,100000,2.73
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Temazepam,558.30,558.30,0.60,100000,3.31
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Tramadol,1299.00,1299.00,0.60,100000,3.98
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Zolpidem,572.10,572.10,0.60,100000,4.77
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Butalbital,1463.20,1463.20,0.60,100000,1.31
+7/15/2026 5:57:30 PM,QC3A,Quality Control,Phenobarbital,1431.50,1431.50,0.60,100000,4.37
+7/15/2026 5:57:30 PM,QC3A,Quality Control,THC-COOH,317.10,317.10,0.60,100000,3.74
+7/15/2026 6:05:25 PM,EC,Unknown,6AM,N/A,,0.60,100000,3.34
+7/15/2026 6:05:25 PM,EC,Unknown,Alprazolam,N/A,,0.60,100000,4.11
+7/15/2026 6:05:25 PM,EC,Unknown,Aminoclonazepam,N/A,,0.60,100000,4.1
+7/15/2026 6:05:25 PM,EC,Unknown,Amitriptyline,N/A,,0.60,100000,3.75
+7/15/2026 6:05:25 PM,EC,Unknown,Amphetamine,N/A,,0.60,100000,3.12
+7/15/2026 6:05:25 PM,EC,Unknown,Benzoylecgonine,N/A,,0.60,100000,4.66
+7/15/2026 6:05:25 PM,EC,Unknown,Buprenorphine,N/A,,0.60,100000,4.74
+7/15/2026 6:05:25 PM,EC,Unknown,Carisoprodol,N/A,,0.60,100000,4.75
+7/15/2026 6:05:25 PM,EC,Unknown,Codeine,N/A,,0.60,100000,2.08
+7/15/2026 6:05:25 PM,EC,Unknown,Cyclobenzaprine,N/A,,0.60,100000,2.88
+7/15/2026 6:05:25 PM,EC,Unknown,Desipramine,N/A,,0.60,100000,3.91
+7/15/2026 6:05:25 PM,EC,Unknown,Desmethyltramadol,N/A,,0.60,100000,3.67
+7/15/2026 6:05:25 PM,EC,Unknown,Doxepin,N/A,,0.60,100000,1.12
+7/15/2026 6:05:25 PM,EC,Unknown,EDDP,N/A,,0.60,100000,1.81
+7/15/2026 6:05:25 PM,EC,Unknown,Fentanyl,N/A,,0.60,100000,2.89
+7/15/2026 6:05:25 PM,EC,Unknown,Hydrocodone,N/A,,0.60,100000,3.23
+7/15/2026 6:05:25 PM,EC,Unknown,Hydromorphone,N/A,,0.60,100000,1.62
+7/15/2026 6:05:25 PM,EC,Unknown,Hydroxyalprazolam,N/A,,0.60,100000,4.04
+7/15/2026 6:05:25 PM,EC,Unknown,Lorazepam,N/A,,0.60,100000,2.71
+7/15/2026 6:05:25 PM,EC,Unknown,MDMA,N/A,,0.60,100000,2.91
+7/15/2026 6:05:25 PM,EC,Unknown,Meperidine,N/A,,0.60,100000,3.21
+7/15/2026 6:05:25 PM,EC,Unknown,Methadone,N/A,,0.60,100000,3.31
+7/15/2026 6:05:25 PM,EC,Unknown,Methamphetamine,N/A,,0.60,100000,2.51
+7/15/2026 6:05:25 PM,EC,Unknown,Methylphenidate,N/A,,0.60,100000,2.87
+7/15/2026 6:05:25 PM,EC,Unknown,Morphine,28.40,,0.60,100000,3.2
+7/15/2026 6:05:25 PM,EC,Unknown,Naloxone,N/A,,0.60,100000,4.91
+7/15/2026 6:05:25 PM,EC,Unknown,Norbuprenorphine,N/A,,0.60,100000,3.4
+7/15/2026 6:05:25 PM,EC,Unknown,Nordiazepam,N/A,,0.60,100000,3.45
+7/15/2026 6:05:25 PM,EC,Unknown,Norfentanyl,N/A,,0.60,100000,2.53
+7/15/2026 6:05:25 PM,EC,Unknown,Norketamine,N/A,,0.60,100000,4.54
+7/15/2026 6:05:25 PM,EC,Unknown,Nortriptyline,N/A,,0.60,100000,4.71
+7/15/2026 6:05:25 PM,EC,Unknown,Oxycodone,N/A,,0.60,100000,3.18
+7/15/2026 6:05:25 PM,EC,Unknown,Oxymorphone,N/A,,0.60,100000,2.65
+7/15/2026 6:05:25 PM,EC,Unknown,Paroxetine,N/A,,0.60,100000,1.43
+7/15/2026 6:05:25 PM,EC,Unknown,PCP,N/A,,0.60,100000,1.83
+7/15/2026 6:05:25 PM,EC,Unknown,Pregabalin,N/A,,0.60,100000,1.94
+7/15/2026 6:05:25 PM,EC,Unknown,Tapentadol,N/A,,0.60,100000,2.73
+7/15/2026 6:05:25 PM,EC,Unknown,Temazepam,N/A,,0.60,100000,3.31
+7/15/2026 6:05:25 PM,EC,Unknown,Tramadol,N/A,,0.60,100000,3.98
+7/15/2026 6:05:25 PM,EC,Unknown,Zolpidem,N/A,,0.60,100000,4.77
+7/15/2026 6:05:25 PM,EC,Unknown,Butalbital,N/A,,0.60,100000,1.31
+7/15/2026 6:05:25 PM,EC,Unknown,Phenobarbital,N/A,,0.60,100000,4.37
+7/15/2026 6:05:25 PM,EC,Unknown,THC-COOH,N/A,,0.60,100000,3.74
+7/15/2026 6:13:18 PM,60000003u1,Unknown,6AM,43.10,,0.60,100000,3.34
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Alprazolam,412.00,,0.60,100000,4.11
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Aminoclonazepam,153.70,,0.60,100000,4.1
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Amitriptyline,97.00,,0.60,100000,3.75
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Amphetamine,437.60,,0.90,100000,3.12
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Benzoylecgonine,44.60,,0.60,100000,4.66
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Buprenorphine,80.70,,0.60,100000,4.74
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Carisoprodol,391.70,,0.60,100000,4.75
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Codeine,90.80,,0.60,100000,2.08
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Cyclobenzaprine,389.80,,0.60,100000,2.88
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Desipramine,100.70,,0.60,100000,3.91
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Desmethyltramadol,228.50,,0.60,100000,3.67
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Doxepin,85.40,,0.60,100000,1.12
+7/15/2026 6:13:18 PM,60000003u1,Unknown,EDDP,211.60,,0.60,100000,1.81
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Fentanyl,20.80,,0.60,100000,2.89
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Hydrocodone,81.10,,0.60,100000,3.23
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Hydromorphone,90.70,,0.60,100000,1.62
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Hydroxyalprazolam,172.60,,0.60,100000,4.04
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Lorazepam,90.90,,0.60,100000,2.71
+7/15/2026 6:13:18 PM,60000003u1,Unknown,MDMA,105.10,,0.60,100000,2.91
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Meperidine,75.50,,0.60,100000,3.21
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Methadone,224.20,,0.60,100000,3.31
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Methamphetamine,93.00,,0.60,100000,2.51
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Methylphenidate,88.80,,0.60,100000,2.87
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Morphine,78.90,,0.60,100000,3.2
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Naloxone,165.70,,0.60,100000,4.91
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Norbuprenorphine,108.70,,0.60,100000,3.4
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Nordiazepam,90.90,,0.60,100000,3.45
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Norfentanyl,186.70,,0.60,100000,2.53
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Norketamine,83.40,,0.60,100000,4.54
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Nortriptyline,115.10,,0.60,100000,4.71
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Oxycodone,79.70,,0.60,100000,3.18
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Oxymorphone,70.60,,0.60,100000,2.65
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Paroxetine,70.80,,0.60,100000,1.43
+7/15/2026 6:13:18 PM,60000003u1,Unknown,PCP,442.20,,0.60,100000,1.83
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Pregabalin,408.80,,0.60,100000,1.94
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Tapentadol,89.00,,0.60,100000,2.73
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Temazepam,94.70,,0.60,100000,3.31
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Tramadol,233.10,,0.60,100000,3.98
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Zolpidem,N/A,,0.60,100000,4.77
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Butalbital,209.60,,0.60,100000,1.31
+7/15/2026 6:13:18 PM,60000003u1,Unknown,Phenobarbital,201.50,,0.60,100000,4.37
+7/15/2026 6:13:18 PM,60000003u1,Unknown,THC-COOH,48.00,,0.60,100000,3.74
+7/15/2026 6:21:14 PM,60000004u1,Unknown,6AM,233.70,,0.60,30000,3.34
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Alprazolam,2723.20,,0.60,30000,4.11
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Aminoclonazepam,1063.10,,0.60,30000,4.1
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Amitriptyline,470.20,,0.60,30000,3.75
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Amphetamine,2376.30,,0.60,30000,3.12
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Benzoylecgonine,270.20,,0.60,30000,4.66
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Buprenorphine,601.10,,0.60,30000,4.74
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Carisoprodol,2924.30,,0.60,30000,4.75
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Codeine,561.30,,0.60,30000,2.08
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Cyclobenzaprine,1805.90,,0.60,30000,2.88
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Desipramine,448.20,,0.60,30000,3.91
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Desmethyltramadol,1374.40,,0.60,30000,3.67
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Doxepin,444.40,,0.60,30000,1.12
+7/15/2026 6:21:14 PM,60000004u1,Unknown,EDDP,1457.50,,0.60,30000,1.81
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Fentanyl,151.30,,0.60,30000,2.89
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Hydrocodone,506.10,,0.60,30000,3.23
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Hydromorphone,524.40,,0.60,30000,1.62
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Hydroxyalprazolam,1174.10,,0.60,30000,4.04
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Lorazepam,552.80,,0.60,30000,2.71
+7/15/2026 6:21:14 PM,60000004u1,Unknown,MDMA,549.90,,0.60,30000,2.91
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Meperidine,550.00,,0.60,30000,3.21
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Methadone,1193.50,,0.60,30000,3.31
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Methamphetamine,528.50,,0.60,30000,2.51
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Methylphenidate,492.40,,0.60,30000,2.87
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Morphine,521.40,,0.60,30000,3.2
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Naloxone,1068.50,,0.60,30000,4.91
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Norbuprenorphine,562.90,,0.60,30000,3.4
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Nordiazepam,591.30,,0.60,30000,3.45
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Norfentanyl,1014.80,,0.60,30000,2.53
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Norketamine,504.20,,0.60,30000,4.54
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Nortriptyline,400.10,,0.60,30000,4.71
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Oxycodone,573.10,,0.60,30000,3.18
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Oxymorphone,543.60,,0.60,30000,2.65
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Paroxetine,530.80,,0.60,30000,1.43
+7/15/2026 6:21:14 PM,60000004u1,Unknown,PCP,2905.90,,0.60,30000,1.83
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Pregabalin,2834.10,,0.60,30000,1.94
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Tapentadol,498.90,,0.60,30000,2.73
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Temazepam,571.30,,0.60,30000,3.31
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Tramadol,1446.50,,0.60,30000,3.98
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Zolpidem,572.60,,0.60,30000,4.77
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Butalbital,1358.00,,0.60,30000,1.31
+7/15/2026 6:21:14 PM,60000004u1,Unknown,Phenobarbital,1349.80,,0.60,30000,4.37
+7/15/2026 6:21:14 PM,60000004u1,Unknown,THC-COOH,327.80,,0.60,30000,3.74
+7/15/2026 6:29:08 PM,blank5,Blank,6AM,N/A,,0.60,100000,3.34
+7/15/2026 6:29:08 PM,blank5,Blank,Alprazolam,N/A,,0.60,100000,4.11
+7/15/2026 6:29:08 PM,blank5,Blank,Aminoclonazepam,N/A,,0.60,100000,4.1
+7/15/2026 6:29:08 PM,blank5,Blank,Amitriptyline,N/A,,0.60,100000,3.75
+7/15/2026 6:29:08 PM,blank5,Blank,Amphetamine,N/A,,0.60,100000,3.12
+7/15/2026 6:29:08 PM,blank5,Blank,Benzoylecgonine,N/A,,0.60,100000,4.66
+7/15/2026 6:29:08 PM,blank5,Blank,Buprenorphine,N/A,,0.60,100000,4.74
+7/15/2026 6:29:08 PM,blank5,Blank,Carisoprodol,N/A,,0.60,100000,4.75
+7/15/2026 6:29:08 PM,blank5,Blank,Codeine,N/A,,0.60,100000,2.08
+7/15/2026 6:29:08 PM,blank5,Blank,Cyclobenzaprine,N/A,,0.60,100000,2.88
+7/15/2026 6:29:08 PM,blank5,Blank,Desipramine,N/A,,0.60,100000,3.91
+7/15/2026 6:29:08 PM,blank5,Blank,Desmethyltramadol,N/A,,0.60,100000,3.67
+7/15/2026 6:29:08 PM,blank5,Blank,Doxepin,N/A,,0.60,100000,1.12
+7/15/2026 6:29:08 PM,blank5,Blank,EDDP,N/A,,0.60,100000,1.81
+7/15/2026 6:29:08 PM,blank5,Blank,Fentanyl,1.50,,0.60,100000,2.89
+7/15/2026 6:29:08 PM,blank5,Blank,Hydrocodone,N/A,,0.60,100000,3.23
+7/15/2026 6:29:08 PM,blank5,Blank,Hydromorphone,N/A,,0.60,100000,1.62
+7/15/2026 6:29:08 PM,blank5,Blank,Hydroxyalprazolam,N/A,,0.60,100000,4.04
+7/15/2026 6:29:08 PM,blank5,Blank,Lorazepam,N/A,,0.60,100000,2.71
+7/15/2026 6:29:08 PM,blank5,Blank,MDMA,N/A,,0.60,100000,2.91
+7/15/2026 6:29:08 PM,blank5,Blank,Meperidine,N/A,,0.60,100000,3.21
+7/15/2026 6:29:08 PM,blank5,Blank,Methadone,N/A,,0.60,100000,3.31
+7/15/2026 6:29:08 PM,blank5,Blank,Methamphetamine,N/A,,0.60,100000,2.51
+7/15/2026 6:29:08 PM,blank5,Blank,Methylphenidate,N/A,,0.60,100000,2.87
+7/15/2026 6:29:08 PM,blank5,Blank,Morphine,N/A,,0.60,100000,3.2
+7/15/2026 6:29:08 PM,blank5,Blank,Naloxone,N/A,,0.60,100000,4.91
+7/15/2026 6:29:08 PM,blank5,Blank,Norbuprenorphine,N/A,,0.60,100000,3.4
+7/15/2026 6:29:08 PM,blank5,Blank,Nordiazepam,N/A,,0.60,100000,3.45
+7/15/2026 6:29:08 PM,blank5,Blank,Norfentanyl,N/A,,0.60,100000,2.53
+7/15/2026 6:29:08 PM,blank5,Blank,Norketamine,N/A,,0.60,100000,4.54
+7/15/2026 6:29:08 PM,blank5,Blank,Nortriptyline,N/A,,0.60,100000,4.71
+7/15/2026 6:29:08 PM,blank5,Blank,Oxycodone,N/A,,0.60,100000,3.18
+7/15/2026 6:29:08 PM,blank5,Blank,Oxymorphone,N/A,,0.60,100000,2.65
+7/15/2026 6:29:08 PM,blank5,Blank,Paroxetine,N/A,,0.60,100000,1.43
+7/15/2026 6:29:08 PM,blank5,Blank,PCP,N/A,,0.60,100000,1.83
+7/15/2026 6:29:08 PM,blank5,Blank,Pregabalin,N/A,,0.60,100000,1.94
+7/15/2026 6:29:08 PM,blank5,Blank,Tapentadol,N/A,,0.60,100000,2.73
+7/15/2026 6:29:08 PM,blank5,Blank,Temazepam,N/A,,0.60,100000,3.31
+7/15/2026 6:29:08 PM,blank5,Blank,Tramadol,N/A,,0.60,100000,3.98
+7/15/2026 6:29:08 PM,blank5,Blank,Zolpidem,N/A,,0.60,100000,4.77
+7/15/2026 6:29:08 PM,blank5,Blank,Butalbital,N/A,,0.60,100000,1.31
+7/15/2026 6:29:08 PM,blank5,Blank,Phenobarbital,N/A,,0.60,100000,4.37
+7/15/2026 6:29:08 PM,blank5,Blank,THC-COOH,N/A,,0.60,100000,3.74
+7/15/2026 6:37:04 PM,QC1B,Quality Control,6AM,45.00,45.00,0.60,100000,3.34
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Alprazolam,402.60,402.60,0.60,100000,4.11
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Aminoclonazepam,181.40,181.40,0.60,100000,4.1
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Amitriptyline,95.60,95.60,0.60,100000,3.75
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Amphetamine,424.50,424.50,0.60,100000,3.12
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Benzoylecgonine,37.10,37.10,0.60,100000,4.66
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Buprenorphine,80.70,80.70,0.60,100000,4.74
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Carisoprodol,379.90,379.90,0.60,100000,4.75
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Codeine,86.80,86.80,0.60,100000,2.08
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Cyclobenzaprine,N/A,100.00,0.60,100000,2.88
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Desipramine,80.50,80.50,0.60,100000,3.91
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Desmethyltramadol,211.70,211.70,0.60,100000,3.67
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Doxepin,99.10,99.10,0.60,100000,1.12
+7/15/2026 6:37:04 PM,QC1B,Quality Control,EDDP,203.00,203.00,0.60,100000,1.81
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Fentanyl,21.30,21.30,0.60,100000,2.89
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Hydrocodone,79.10,79.10,0.60,100000,3.23
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Hydromorphone,92.70,92.70,0.60,100000,1.62
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Hydroxyalprazolam,171.60,171.60,0.60,100000,4.04
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Lorazepam,92.00,92.00,0.60,100000,2.71
+7/15/2026 6:37:04 PM,QC1B,Quality Control,MDMA,98.60,98.60,0.60,100000,2.91
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Meperidine,78.30,78.30,0.60,100000,3.21
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Methadone,201.40,201.40,0.60,100000,3.31
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Methamphetamine,95.50,95.50,0.60,100000,2.51
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Methylphenidate,95.30,95.30,0.60,100000,2.87
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Morphine,76.60,76.60,0.60,100000,3.2
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Naloxone,161.00,161.00,0.60,100000,4.91
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Norbuprenorphine,118.80,118.80,0.60,100000,3.4
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Nordiazepam,91.40,91.40,0.60,100000,3.45
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Norfentanyl,193.30,193.30,0.60,100000,2.53
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Norketamine,82.30,82.30,0.60,100000,4.54
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Nortriptyline,117.20,117.20,0.60,100000,4.71
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Oxycodone,84.60,141.00,0.60,100000,3.18
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Oxymorphone,81.30,81.30,0.60,100000,2.65
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Paroxetine,62.70,62.70,0.60,100000,1.43
+7/15/2026 6:37:04 PM,QC1B,Quality Control,PCP,357.00,357.00,0.60,100000,1.83
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Pregabalin,399.70,399.70,0.60,100000,1.94
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Tapentadol,84.00,84.00,0.60,100000,2.73
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Temazepam,100.30,100.30,0.60,100000,3.31
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Tramadol,242.00,242.00,0.60,100000,3.98
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Zolpidem,91.20,91.20,0.60,100000,4.77
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Butalbital,212.20,212.20,0.60,100000,1.31
+7/15/2026 6:37:04 PM,QC1B,Quality Control,Phenobarbital,203.70,203.70,0.60,100000,4.37
+7/15/2026 6:37:04 PM,QC1B,Quality Control,THC-COOH,47.70,47.70,0.60,100000,3.74
+7/15/2026 6:44:58 PM,QC2B,Quality Control,6AM,108.50,108.50,0.60,100000,3.34
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Alprazolam,1049.50,1049.50,0.60,100000,4.11
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Aminoclonazepam,344.10,344.10,0.60,100000,4.1
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Amitriptyline,211.20,211.20,0.60,100000,3.75
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Amphetamine,1053.10,1053.10,0.60,100000,3.12
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Benzoylecgonine,92.20,92.20,0.60,100000,4.66
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Buprenorphine,184.90,184.90,0.60,100000,4.74
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Carisoprodol,954.90,954.90,0.60,100000,4.75
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Codeine,213.40,213.40,0.60,100000,2.08
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Cyclobenzaprine,N/A,100.00,0.60,100000,2.88
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Desipramine,178.40,178.40,0.60,100000,3.91
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Desmethyltramadol,511.20,511.20,0.60,100000,3.67
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Doxepin,268.00,268.00,0.60,100000,1.12
+7/15/2026 6:44:58 PM,QC2B,Quality Control,EDDP,511.40,511.40,0.60,100000,1.81
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Fentanyl,53.40,53.40,0.60,100000,2.89
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Hydrocodone,202.10,202.10,0.60,100000,3.23
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Hydromorphone,216.20,216.20,0.60,100000,1.62
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Hydroxyalprazolam,488.40,488.40,0.60,100000,4.04
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Lorazepam,220.20,220.20,0.60,100000,2.71
+7/15/2026 6:44:58 PM,QC2B,Quality Control,MDMA,255.10,255.10,0.60,100000,2.91
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Meperidine,194.30,194.30,0.60,100000,3.21
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Methadone,534.30,534.30,0.60,100000,3.31
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Methamphetamine,234.00,234.00,0.60,100000,2.51
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Methylphenidate,205.00,205.00,0.60,100000,2.87
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Morphine,207.50,207.50,0.60,100000,3.2
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Naloxone,431.50,431.50,0.60,100000,4.91
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Norbuprenorphine,247.90,247.90,0.60,100000,3.4
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Nordiazepam,231.00,231.00,0.60,100000,3.45
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Norfentanyl,464.70,464.70,0.60,100000,2.53
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Norketamine,204.80,204.80,0.60,100000,4.54
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Nortriptyline,222.60,222.60,0.60,100000,4.71
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Oxycodone,226.90,378.17,0.60,100000,3.18
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Oxymorphone,190.90,190.90,0.60,100000,2.65
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Paroxetine,221.90,221.90,0.60,100000,1.43
+7/15/2026 6:44:58 PM,QC2B,Quality Control,PCP,1063.70,1063.70,0.60,100000,1.83
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Pregabalin,1068.90,1068.90,0.60,100000,1.94
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Tapentadol,225.50,225.50,0.60,100000,2.73
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Temazepam,234.20,234.20,0.60,100000,3.31
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Tramadol,610.00,610.00,0.60,100000,3.98
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Zolpidem,218.80,218.80,0.60,100000,4.77
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Butalbital,517.50,517.50,0.60,100000,1.31
+7/15/2026 6:44:58 PM,QC2B,Quality Control,Phenobarbital,513.30,513.30,0.60,100000,4.37
+7/15/2026 6:44:58 PM,QC2B,Quality Control,THC-COOH,115.40,115.40,0.60,100000,3.74
+7/15/2026 6:52:53 PM,QC3B,Quality Control,6AM,253.40,253.40,0.60,100000,3.34
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Alprazolam,2759.50,2759.50,0.60,100000,4.11
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Aminoclonazepam,957.30,957.30,0.60,100000,4.1
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Amitriptyline,483.10,483.10,0.60,100000,3.75
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Amphetamine,2419.90,2419.90,0.60,100000,3.12
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Benzoylecgonine,271.60,271.60,0.60,100000,4.66
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Buprenorphine,523.40,523.40,0.60,100000,4.74
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Carisoprodol,2742.00,2742.00,0.60,100000,4.75
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Codeine,602.10,602.10,0.60,100000,2.08
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Cyclobenzaprine,2380.40,2380.40,0.60,100000,2.88
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Desipramine,484.00,484.00,0.60,100000,3.91
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Desmethyltramadol,1514.90,1514.90,0.60,100000,3.67
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Doxepin,512.70,512.70,0.60,100000,1.12
+7/15/2026 6:52:53 PM,QC3B,Quality Control,EDDP,1355.30,1355.30,0.60,100000,1.81
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Fentanyl,147.70,147.70,0.60,100000,2.89
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Hydrocodone,563.90,563.90,0.60,100000,3.23
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Hydromorphone,518.00,518.00,0.60,100000,1.62
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Hydroxyalprazolam,1101.30,1101.30,0.60,100000,4.04
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Lorazepam,576.50,576.50,0.60,100000,2.71
+7/15/2026 6:52:53 PM,QC3B,Quality Control,MDMA,547.20,547.20,0.60,100000,2.91
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Meperidine,596.70,596.70,0.60,100000,3.21
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Methadone,1292.00,1292.00,0.60,100000,3.31
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Methamphetamine,533.10,533.10,0.60,100000,2.51
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Methylphenidate,521.00,521.00,0.60,100000,2.87
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Morphine,544.80,544.80,0.60,100000,3.2
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Naloxone,1099.90,1099.90,0.60,100000,4.91
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Norbuprenorphine,675.80,675.80,0.60,100000,3.4
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Nordiazepam,615.00,615.00,0.60,100000,3.45
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Norfentanyl,978.00,978.00,0.60,100000,2.53
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Norketamine,503.80,503.80,0.60,100000,4.54
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Nortriptyline,680.50,680.50,0.60,100000,4.71
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Oxycodone,555.00,925.00,0.60,100000,3.18
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Oxymorphone,513.10,513.10,0.60,100000,2.65
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Paroxetine,500.20,500.20,0.60,100000,1.43
+7/15/2026 6:52:53 PM,QC3B,Quality Control,PCP,2990.50,2990.50,0.60,100000,1.83
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Pregabalin,2820.50,2820.50,0.60,100000,1.94
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Tapentadol,533.90,533.90,0.60,100000,2.73
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Temazepam,574.20,574.20,0.60,100000,3.31
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Tramadol,1491.70,1491.70,0.60,100000,3.98
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Zolpidem,540.60,540.60,0.60,100000,4.77
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Butalbital,1298.70,1298.70,0.60,100000,1.31
+7/15/2026 6:52:53 PM,QC3B,Quality Control,Phenobarbital,1501.40,1501.40,0.60,100000,4.37
+7/15/2026 6:52:53 PM,QC3B,Quality Control,THC-COOH,332.70,332.70,0.60,100000,3.74
+7/15/2026 7:00:48 PM,blank6,Blank,6AM,N/A,,0.60,100000,3.34
+7/15/2026 7:00:48 PM,blank6,Blank,Alprazolam,N/A,,0.60,100000,4.11
+7/15/2026 7:00:48 PM,blank6,Blank,Aminoclonazepam,N/A,,0.60,100000,4.1
+7/15/2026 7:00:48 PM,blank6,Blank,Amitriptyline,N/A,,0.60,100000,3.75
+7/15/2026 7:00:48 PM,blank6,Blank,Amphetamine,N/A,,0.60,100000,3.12
+7/15/2026 7:00:48 PM,blank6,Blank,Benzoylecgonine,N/A,,0.60,100000,4.66
+7/15/2026 7:00:48 PM,blank6,Blank,Buprenorphine,N/A,,0.60,100000,4.74
+7/15/2026 7:00:48 PM,blank6,Blank,Carisoprodol,N/A,,0.60,100000,4.75
+7/15/2026 7:00:48 PM,blank6,Blank,Codeine,N/A,,0.60,100000,2.08
+7/15/2026 7:00:48 PM,blank6,Blank,Cyclobenzaprine,N/A,,0.60,100000,2.88
+7/15/2026 7:00:48 PM,blank6,Blank,Desipramine,N/A,,0.60,100000,3.91
+7/15/2026 7:00:48 PM,blank6,Blank,Desmethyltramadol,N/A,,0.60,100000,3.67
+7/15/2026 7:00:48 PM,blank6,Blank,Doxepin,N/A,,0.60,100000,1.12
+7/15/2026 7:00:48 PM,blank6,Blank,EDDP,N/A,,0.60,100000,1.81
+7/15/2026 7:00:48 PM,blank6,Blank,Fentanyl,1.50,,0.60,100000,2.89
+7/15/2026 7:00:48 PM,blank6,Blank,Hydrocodone,N/A,,0.60,100000,3.23
+7/15/2026 7:00:48 PM,blank6,Blank,Hydromorphone,N/A,,0.60,100000,1.62
+7/15/2026 7:00:48 PM,blank6,Blank,Hydroxyalprazolam,N/A,,0.60,100000,4.04
+7/15/2026 7:00:48 PM,blank6,Blank,Lorazepam,N/A,,0.60,100000,2.71
+7/15/2026 7:00:48 PM,blank6,Blank,MDMA,N/A,,0.60,100000,2.91
+7/15/2026 7:00:48 PM,blank6,Blank,Meperidine,N/A,,0.60,100000,3.21
+7/15/2026 7:00:48 PM,blank6,Blank,Methadone,N/A,,0.60,100000,3.31
+7/15/2026 7:00:48 PM,blank6,Blank,Methamphetamine,N/A,,0.60,100000,2.51
+7/15/2026 7:00:48 PM,blank6,Blank,Methylphenidate,N/A,,0.60,100000,2.87
+7/15/2026 7:00:48 PM,blank6,Blank,Morphine,N/A,,0.60,100000,3.2
+7/15/2026 7:00:48 PM,blank6,Blank,Naloxone,N/A,,0.60,100000,4.91
+7/15/2026 7:00:48 PM,blank6,Blank,Norbuprenorphine,N/A,,0.60,100000,3.4
+7/15/2026 7:00:48 PM,blank6,Blank,Nordiazepam,N/A,,0.60,100000,3.45
+7/15/2026 7:00:48 PM,blank6,Blank,Norfentanyl,N/A,,0.60,100000,2.53
+7/15/2026 7:00:48 PM,blank6,Blank,Norketamine,N/A,,0.60,100000,4.54
+7/15/2026 7:00:48 PM,blank6,Blank,Nortriptyline,N/A,,0.60,100000,4.71
+7/15/2026 7:00:48 PM,blank6,Blank,Oxycodone,N/A,,0.60,100000,3.18
+7/15/2026 7:00:48 PM,blank6,Blank,Oxymorphone,N/A,,0.60,100000,2.65
+7/15/2026 7:00:48 PM,blank6,Blank,Paroxetine,N/A,,0.60,100000,1.43
+7/15/2026 7:00:48 PM,blank6,Blank,PCP,N/A,,0.60,100000,1.83
+7/15/2026 7:00:48 PM,blank6,Blank,Pregabalin,N/A,,0.60,100000,1.94
+7/15/2026 7:00:48 PM,blank6,Blank,Tapentadol,N/A,,0.60,100000,2.73
+7/15/2026 7:00:48 PM,blank6,Blank,Temazepam,N/A,,0.60,100000,3.31
+7/15/2026 7:00:48 PM,blank6,Blank,Tramadol,N/A,,0.60,100000,3.98
+7/15/2026 7:00:48 PM,blank6,Blank,Zolpidem,N/A,,0.60,100000,4.77
+7/15/2026 7:00:48 PM,blank6,Blank,Butalbital,N/A,,0.60,100000,1.31
+7/15/2026 7:00:48 PM,blank6,Blank,Phenobarbital,N/A,,0.60,100000,4.37
+7/15/2026 7:00:48 PM,blank6,Blank,THC-COOH,N/A,,0.60,100000,3.74

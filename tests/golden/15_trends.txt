@@ -1,0 +1,6 @@
+T1 trend button: true
+T2 THC card end: <DATE>: 300.0 ng/mL<DATE>: 180.0 ng/mL<DATE>: 95.00 ng/mL<DATE>: 60.00 ng/mL <DATE><DATE> ++++– 4 of 5 tests positive · last positive <DATE> at 60.00 ng/mL · creatinine-normalized decreasing (50.00 ng/mg most recently)
+T3 screen grid: Drug screensScreen<DATE><DATE><DATE><DATE><DATE>Cannabinoids (THC)POSPOSPOSPOSneg First Bio Genetics · CLIA 03D2287865 · For clinical review; interpret with the full reports and the
+T4 charts: 3 | ref band: true | cutoff line: false
+T5 last 6 months: 3 cards
+errors [] []

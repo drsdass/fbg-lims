@@ -1,0 +1,18 @@
+C0 nav has Compliance: true
+R1 locked copy saved: ["oRPT-v1:FINAL"]
+R2 version bar: Locked copies:Version 1 · —FINAL(480) 847-1916CLIA 03D2287865 Patient:Doe,
+R3 versions after correction: ["oRPT-v1:FINAL","oRPT-v2:CORRECTED"]
+R4 shows both versions: true true
+R5 version 1 view status FINAL: true | pills: pill on:Version 1 · — / pill :Version 2 (corrected) · — | status el: FINAL
+Q1 o<ID> due items: 0Overdue | first: Due soonSecurityNo HIPAA risk assessment recorded yet
+E1 equipment saved: true
+E2 out-of-range needs action: true
+E3 temp logged: 1 | s<ID> rows: 3
+L1 lot saved: ["In use"]
+S1 SOP ack<ID>: 1 true
+V1 vendors seeded: 7
+O1 o<ID> now: OverdueEquipmentLab refrigerator 1: Clean and defrost (monthly) never logged || OverdueEquipmentLab refrigerator 1: Thermometer check (annual) never logged || OverdueCompetencyLuna Sci: competency assessment o<ID> since <DATE> || OverdueSecuritySupabase handles PHI but has no BAA recorded || OverdueSecurityResend handles PHI but has no BAA recorded || OverdueSecurityTwilio handles PHI but has no BAA recorded || OverdueSecuritySmartFax handles PHI but has no BAA recorded || OverdueSecurityBilling company handles PHI but has no BAA recorded || OverdueSecurityReference laboratory handles PHI but has no BAA recorded
+QI1 indicators: All ordersOrdersReleasedMedian collection to releaseMedian receipt to releaseRejectedCorrectedAll1124.0 h22.2 h0.0%100.0% By test typeOrdersReleasedMe
+X1 export logged: true
+B1 nav compliance badge: Compliance9
+errors [] []

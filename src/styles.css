@@ -359,3 +359,12 @@ table.rp-t{width:100%;border-collapse:collapse;table-layout:fixed;margin:0}
 .pp-top{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--panel,#fff)}
 .pp-top img{height:36px}
 .pp-main{max-width:860px;margin:0 auto;padding:28px 20px 60px}
+
+.tr .tr-sec{font-size:14px;margin:20px 0 8px;border-bottom:1px solid #d3dae5;padding-bottom:4px}
+.tr .tr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px}
+.tr .tr-card{border:1px solid #d3dae5;border-radius:8px;padding:10px 12px;break-inside:avoid}
+.tr .tr-h{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:4px}
+.tr .tr-dots{display:flex;flex-wrap:wrap;gap:3px;margin-top:6px}
+.tr .tr-dot{width:18px;height:18px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.tr .tr-dot.pos{background:#fde8ea;color:#d0263b}.tr .tr-dot.neg{background:#e8f5ef;color:#16803a}
+@media print{.tr .tr-grid{grid-template-columns:1fr 1fr}}

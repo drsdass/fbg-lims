@@ -1,0 +1,16 @@
+I1 inbox shown: true | file: true
+I2 toasts:
+I2 imported from inbox: 0 result rows matched to 0 orders | inbox status: imported
+B1 device stored (hash only): Lab PC C560 64 | key shown: 64
+B2 script has URL and key: true true true
+L1 browser labels: true | label html: Reflab, RitaDOB <DATE> · Whole blood, EDTA (lavender)FBG<YYMMDD>-7777-1 · <DATE>,  | @page: true
+H1 import: 1 result row matched to 1 order | unmapped: 1 result code wasn't matched to a test: 789-8 ErythrocytesMap these codes and import the
+H2 WBC filled by name: {"WBC":{"v":"7.2"}}
+H3 after mapping: {"WBC":{"v":"7.2"},"RBC":{"v":"4.6"}} | map: undefined
+C1 NPI check-digit: valid 1234567893 = undefined
+C2 billing rows: On hold (0)Exported (0)All claimsClient invoices (0 unpaid)Charge master0 claims No claims hereNothing in this view.
+P1 button: true | modal: Possible duplicate patientsSame clinic, name and date of birth. Choose the record to keep; orders from the others move to it and the others are retired. This can't be undone.Reflab, Rita · DOB 02/02/1
+P1 duplicates found: 2
+P2 merged: order moved to ptR | ptR2 merged into ptR
+P3 duplicate warning: true | new record created: false
+errors [] []

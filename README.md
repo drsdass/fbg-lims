@@ -274,6 +274,29 @@ released before this change. Exports in Compliance → Downtime and export inclu
 
 These need `0011_scale.sql`. Until it is run, the portal falls back to loading everything, as before.
 
+## 20. Patient trend report
+
+Each patient page with released results has **Trend report**: a chart per test with two or more results, the reference
+range shaded, and a direction (increasing, decreasing, stable: a straight-line fit across the results, under 10% change
+of the average counts as stable), plus whether the latest value is moving toward or away from the range. Confirmed drug
+levels are charted with the cutoff, a positive/negative history, and creatinine-normalized values (ng/mg) when urine
+creatinine was measured. Periods: all, 2 years, 12 months, 6 months. Printable.
+
+## 21. Production setup and automated tests
+
+**New production project.** Run `supabase/setup_production.sql` once in the SQL Editor of a new, empty project (it is
+migrations 0001 to 0011 in order). Then deploy the four Edge Functions (manage-users, send-alerts, instrument-upload,
+patient-access, each with JWT verification off), set their secrets, create the first admin, and point Netlify's
+`VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at the new project.
+
+**Automated tests.** `npm test` runs 16 end-to-end suites (tests/e2e) against an in-memory stand-in for Supabase and
+compares each suite's output with the approved copy in tests/golden. GitHub Actions runs them on every push
+(.github/workflows/ci.yml), and Netlify runs them before every deploy, so a change that breaks them never goes live.
+In an emergency, set `SKIP_TESTS=1` in Netlify's environment variables to deploy without them, then remove it.
+When a change is meant to alter behavior, review the difference the runner prints, then run `npm run test:update` and
+commit the updated tests/golden files with the change. Test files in tests/fixtures are instrument exports identified
+only by sample barcodes; never add files containing patient names.
+
 ## Before go-live
 
 - [ ] Supabase Team plan, HIPAA add-on, signed BAA, project marked High Compliance
@@ -291,6 +314,7 @@ These need `0011_scale.sql`. Until it is run, the portal falls back to loading e
 - [ ] Patient portal delay agreed with providers; access-code slips added to the collection workflow
 - [ ] Offline entry tested on a collector phone (airplane mode)
 - [ ] 837P test file accepted by the clearinghouse before switching to Production
+- [ ] Validation package executed and signed by the laboratory director
 - [ ] Delta check limits, retention periods and batch review limits confirmed by the lab director
 - [ ] Compliance: equipment, lots, personnel, SOPs, vendors and BAAs entered; first risk assessment and access review recorded
 - [ ] Someone assigned to review the audit log on a regular schedule (for example, monthly)

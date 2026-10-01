@@ -1,0 +1,7 @@
+S1 words "low back pain": M54.59 Other low back pain | M54.50 Low back pain, unspecified | M54.51 Vertebrogenic low back pain | M51.362 Other intervertebral disc degeneration, lumbar region with discogenic back pain and lower extremity pain
+S2 code "M545": M54.50 Low back pain, unspecified | M54.51 Vertebrogenic low back pain | M54.59 Other low back pain
+S3 words "opioid dependence uncomplicated": F11.20 Opioid dependence, uncomplicated | F11.220 Opioid dependence with intoxication, uncomplicated
+S4 picked + description: F11.20 Opioid dependence, uncomplicated
+S5 non-billable rejected: F11 isn't a billable ICD-10-CM code. Choose a more s<ID> code from the list.
+S6 typed without dot: Z79.891 Long term (current) use of opiate analgesic
+errors [] []

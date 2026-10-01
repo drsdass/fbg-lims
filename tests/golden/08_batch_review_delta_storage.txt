@@ -1,0 +1,16 @@
+N0 nav has s<ID>: true
+B1 s<ID>: Batch review: 13 batch issues and 23 patient result issues. Patient issues are flagged on each order and must be reviewed before verifying.QC QC1A, Oxycodone: accuracy 60% (limit ±20%)QC QC2A, Oxycodone: accuracy 60% (limit ±20%)QC QC3A, Oxycodone: accuracy 60% (limit ±20%)QC QC1B, Oxycodone: accuracy 60% (limit ±20%)QC QC2B, Oxycodone: accuracy 60% (limit ±20%)QC QC3B, Oxycodone: accuracy 60% (limit ±20%)Carryover:
+B2 order 60000003 review: ["Amphetamine: ion ratio 0.9 vs 0.6 (50% off)"]
+B3 order 60000004 IS flags: 17
+B4 entry shows note: false
+B5 verify asked to confirm: Review before you verify: |  | - Amphetamine: ion ratio 0.9 vs 0.6 (50% off) |  | Confirm you have reviewed these and they are acceptable to report?
+B6 verified: true | history note: Reviewed before verify: Amphetamine: ion ratio 0.9 vs 0.6 (50% off) | toasts: Verified. Ready to report out.
+D1 previous shown: true | delta flag: true
+D2 review items text: Previous 140 on <DATE>mmol/L1
+H1 result history: true | potassium row: Potassium43.5–5.1 mmol/
+S1 needs s<ID>: Needs s<ID> (11)
+S2 stored: Specimen fridge 1 Rack A B4 | default keep-until was <YMD>
+S3 disposed: {"disposalMethod":"Biohazard waste","disposedBy":"Luna Sci"}
+L1 s<ID> s<ID>: true,true,true | delta rows: 13
+L2 saved K limit: {"analyte":"Potassium","type":"abs","limit":0.8,"days":7}
+errors [] []
