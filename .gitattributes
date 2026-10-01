@@ -1,0 +1,6 @@
+# Store and check out text files with LF line endings on every system (Windows included),
+# so the approved test outputs compare exactly on Netlify and GitHub.
+* text=auto eol=lf
+*.png binary
+*.xlsx binary
+*.pdf binary

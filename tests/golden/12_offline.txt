@@ -1,11 +1,11 @@
 O1 toggle shown: true
 O2 enabled: true | Offline entry on. 15 accession numbers reserved.
 O0 errors: []
-F1 o<ID> boot: true | menu: Offline orders, New order
-F2 o<ID> order: FBG<YYMMDD>-1001 | Requisition entered
+F1 offline boot: true | menu: Offline orders, New order
+F2 offline order: FBG<YYMMDD>-1001 | Requisition entered
 F3 stored encrypted: true | plaintext visible: false | keys: key,queue:uL,ref,seq
-F4 o<ID> list: Offline orders1New order Offline order entry on this device: onYou'll be signed out after 15 minutes of inactivity. JE Jordan EllisAdmin You're o<ID>. New ord
+F4 offline list: Offline orders1New order Offline order entry on this device: onYou'll be signed out after 15 minutes of inactivity. JE Jordan EllisAdmin You're offline. New ord
 F0 errors: []
-U1 uploaded: FBG<YYMMDD>-1001 Ordered | 1 order entered o<ID> uploaded
+U1 uploaded: FBG<YYMMDD>-1001 Ordered | 1 order entered offline uploaded
 U2 queue cleared: true | keys: key,ref,seq
 U0 errors: [] []

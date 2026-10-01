@@ -1,9 +1,9 @@
 W1 store orders: 41 | old orders on the server: 40
-W2 search: all records s<ID> | old orders found: 12 | patient found: true
+W2 search: all records searched | old orders found: 12 | patient found: true
 W3 patient page orders listed: 66 | result history: true
 W4 reports 12 months, orders counted: 41 | expected at least 40
-W5 rebuild button: Rebuild s<ID> (20 older orders)
-W6 s<ID> stored: 40 | toasts: Statistics rebuilt for 40 orders
+W5 rebuild button: Rebuild statistics (20 older orders)
+W6 summaries stored: 40 | toasts: Statistics rebuilt for 40 orders
 W7a target: oRPT 239575
 W7b order link: true
 W7c STAT shown: true

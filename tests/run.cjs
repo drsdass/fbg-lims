@@ -18,7 +18,7 @@ async function build() {
 // Remove what legitimately changes between runs: dates, times, generated IDs and sizes that depend on them.
 const MON = "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)";
 function normalize(t) {
-  return t.split("\n").filter((l) => l.trim() && !/Not implemented|^\s+at |^JSDOMERR/.test(l)).map((l) => l
+  return String(t).replace(/\r/g, "").split("\n").filter((l) => l.trim() && !/Not implemented|^\s+at |^JSDOMERR/.test(l)).map((l) => l
     .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z/g, "<ISO>")
     .replace(new RegExp(`${MON} \\d{1,2}, \\d{4}(, \\d{1,2}:\\d{2} [AP]M)?`, "g"), "<DATE>")
     .replace(new RegExp(`${MON} '?\\d{2}\\b`, "g"), "<MONTH>")
@@ -26,7 +26,7 @@ function normalize(t) {
     .replace(/\b\d{1,2}:\d{2}(:\d{2})? ?[AP]M\b/g, "<TIME>").replace(/<DATE>, \d{1,2}(:\d{0,2})?/g, "<DATE>")
     .replace(/\b\d{4}-\d{2}-\d{2}\b/g, "<YMD>").replace(/\b20\d{2}-(0[1-9]|1[0-2])\b/g, "<YM>")
     .replace(/\bFBG\d{6}\b/g, "FBG<YYMMDD>").replace(/\b(PU|SUP|BAT)-?\d{6}-[A-Z0-9]+\b/g, "$1-<ID>").replace(/\bINV-\d{4}-/g, "INV-<YYMM>-")
-    .replace(/\b[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}\b/g, "<CODE>").replace(/\b(pk|pt|o|s|qr|ack|run|vendor|equipment|lot|sop|personnel|auto|uN|uP)[a-z0-9]{6,}\b/g, "$1<ID>")
+    .replace(/\b[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}\b/g, "<CODE>").replace(/\b(pk|pt|o|s|qr|ack|run|vendor|equipment|lot|sop|personnel|auto|uN|uP)(?=[a-z0-9]*\d)[a-z0-9]{6,}\b/g, "$1<ID>")
     .replace(/\b(application\/pdf) \d+/g, "$1 <BYTES>").replace(/\*(\d{6})\*(\d{4})\*/g, "*<YYMMDD>*<HHMM>*").replace(/\*\d{9}\*/g, "*<CTRL>*").replace(/\*\d{8}\*\d{4}\*\d+\*X\*/g, "*<YYYYMMDD>*<HHMM>*<G>*X*")
     .replace(/\b\d{14}\b/g, "<TS>").replace(/\b20\d{6}\b/g, "<YYYYMMDD>")
     .replace(/\s+$/, "")).join("\n") + "\n";
@@ -66,7 +66,7 @@ function diff(a, b) {
     const t0 = Date.now(), { out, code } = await run(path.join(dir, f)), name = f.replace(/\.cjs$/, ""), norm = normalize(out), gfile = path.join(gold, name + ".txt");
     const fails = failures(out, code), secs = ((Date.now() - t0) / 1000).toFixed(0);
     if (update) { if (!fails.length) fs.writeFileSync(gfile, norm); console.log(`${fails.length ? "FAIL" : "saved"}  ${name} (${secs}s)${fails.length ? "\n  " + fails.join("\n  ") : ""}`); bad += fails.length ? 1 : 0; continue; }
-    const want = fs.existsSync(gfile) ? fs.readFileSync(gfile, "utf8") : null;
+    const want = fs.existsSync(gfile) ? normalize(fs.readFileSync(gfile, "utf8")) : null;
     const changed = want !== null && want !== norm;
     if (fails.length || changed || want === null) {
       bad++; console.log(`FAIL  ${name} (${secs}s)`);

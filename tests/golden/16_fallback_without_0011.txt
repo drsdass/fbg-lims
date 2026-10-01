@@ -1,9 +1,9 @@
 K1 clinic pickup: PU-<ID> Requested 3 ["Urine"] | lab note: true
 K2 dispatch: Picked up Carl Collector | custody steps: Requested > Assigned > Picked up
-K3 receipt check: true | pickup o<ID>: true
+K3 receipt check: true | pickup offered: true
 K4 received: Received | receipt: {"c":"Ambient","p":true} | pickup now: Delivered | history: Receipt check: passed; Ambient; pickup PU-<ID> (Carl Collector)
 J1 rejected: Rejected | clinic note: Specimen rejected, please recollect | FBG<YYMMDD>-0010 for Bill P.: Temperature out of range (Arrived warm, 31 C). Please recollect and send a new spe
-R1 reports: true | bars: 2 | s<ID>: true,true,true,true,true
+R1 reports: true | bars: 2 | sections: true,true,true,true,true
 R2 CSV first line: Month,Clinic,Accession,Tests,Billing type,Status,Collected,Released,Turnaround hours
 Q1 rejection reasons: Rejections by reason1 of 17 (5.9%)Temperature out of range1100% Review these monthly as part of the
 V1 candidates: Create 1 invoice
@@ -12,8 +12,8 @@ V3 invoice doc: true true
 V4 paid: Paid CHK-1001
 X-1 hold: undefined
 X0 ready claims: Ready (1) | on hold reason: On hold
-X1 837 s<ID>: ISA,GS,ST,BHT,NM1,PER,NM1,HL,PRV,NM1,N3,N4,REF,HL,SBR,NM1,N3,N4,DMG,NM1,CLM,HI,NM1,LX,SV1,DTP,SE,GE,IEA
-X2 key s<ID>: ISA*00*          *00*          *ZZ*FBG123         *ZZ*CLEARHOUSE     *<YYMMDD>*<HHMM>*^*00501*<CTRL>*0*T*: | N4*MESA*AZ*85210 | N4*MESA*AZ*85201 | NM1*PR*2*AETNA*****PI*60054 | CLM*CLM-FBG<YYMMDD>-0003*95.00***81:B:1*Y*A*Y*Y | HI*ABK:Z79891*ABF:F1120 | SV1*HC:80307*95.00*UN*1***1:2
+X1 837 segments: ISA,GS,ST,BHT,NM1,PER,NM1,HL,PRV,NM1,N3,N4,REF,HL,SBR,NM1,N3,N4,DMG,NM1,CLM,HI,NM1,LX,SV1,DTP,SE,GE,IEA
+X2 key segments: ISA*00*          *00*          *ZZ*FBG123         *ZZ*CLEARHOUSE     *<YYMMDD>*<HHMM>*^*00501*<CTRL>*0*T*: | N4*MESA*AZ*85210 | N4*MESA*AZ*85201 | NM1*PR*2*AETNA*****PI*60054 | CLM*CLM-FBG<YYMMDD>-0003*95.00***81:B:1*Y*A*Y*Y | HI*ABK:Z79891*ABF:F1120 | SV1*HC:80307*95.00*UN*1***1:2
 X3 SE count correct: true 25 25 | ISA length: 105
-C1 clinic nav: Dashboard, Patients, New order, Orders & results, Supplies, Pickups, Invoices, Notifications, Test menu, Clinic s<ID>
+C1 clinic nav: Dashboard, Patients, New order, Orders & results, Supplies, Pickups, Invoices, Notifications, Test menu, Clinic settings
 errors [] []
