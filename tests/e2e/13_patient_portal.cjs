@@ -33,7 +33,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  fill(code,'Doe','2000-08-27');click('[data-a="ppRegister"]');await sleep(300);console.log('P3 wrong DOB:',toasts().slice(-110));
  fill(code,'doe','2000-08-26');click('[data-a="ppRegister"]');await sleep(900);
  console.log('P4 patient portal:',/Your lab results/.test(txt()),'| reports:',w.document.querySelectorAll('[data-a="ppView"]').length,'| no lab menu:',!q('.nav'));
- console.log('P5 card:',(txt().replace(/\s+/g,' ').match(/Urine Drug[^A]{0,140}/)||[''])[0].slice(0,160));
+ console.log('P5 card:',((txt().replace(/\s+/g,' ').match(/Urine Drug.{0,140}?(?= · Accession)/)||[''])[0]).slice(0,160));
  click('[data-a="ppView"]');await sleep(40);console.log('P6 report opens:',/Medication Compliance Assessment/.test(mt()),/FINAL/.test(mt()));q('#modal-root').innerHTML='';
  let blob=null;w.URL.createObjectURL=b=>{blob=b;return 'blob:x'};w.URL.revokeObjectURL=()=>{};click('[data-a="ppPdf"]');await sleep(2500);console.log('P7 PDF:',blob&&blob.type,blob&&blob.size);
  console.log('P8 patient profile:',JSON.stringify(st.profiles.find(p=>p.role==='patient')&&{role:'patient',ids:st.profiles.find(p=>p.role==='patient').patient_ids}));
