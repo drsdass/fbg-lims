@@ -59,7 +59,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  [...w.document.querySelectorAll('[data-a="go"]')].find(b=>b.dataset.v==='queue').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(10);
  w.document.querySelector(`[data-a="openOrder"][data-id="${oid}"]`).dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(10);
  click('[data-a="go"][data-v="entry"]');await sleep(10);click('[data-a="fillNormals"]');await sleep(5);click('[data-a="release"]');await sleep(600);
- console.log('13b alerts:',JSON.stringify(M().store.outbox.map(r=>r.data.channel+':'+r.data.status)),'invoked',M().invoked);fs.writeFileSync('report.json',JSON.stringify(M().lastFax||null));
+ console.log('13b alerts:',JSON.stringify(M().store.outbox.map(r=>r.data.channel+':'+r.data.status)),'invoked',M().invoked);fs.writeFileSync(OUT('report.json'),JSON.stringify(M().lastFax||null));
  console.log('13 released:',M().store.orders[0].data.status,'claim:',M().store.claims.map(c=>c.id+':'+c.data.lines.map(l=>l.cpt).join('/')).join(),'outbox:',M().store.outbox.length,'clinic note:',M().store.notes.filter(n=>n.aud==='c1001').length);
  click('[data-a="go"][data-v="clinics"]');await sleep(10);
  click('[data-a="logout"]');await sleep(600);
