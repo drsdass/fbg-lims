@@ -159,7 +159,7 @@ into service, and print the monthly review sheet for supervisor and director sig
 ## 12. Result PDFs and delivery tests
 
 Reports have **Download PDF** next to Print. The PDF is the same document that is faxed.
-`src/reportpdf.js` is generated from `supabase/functions/send-alerts/index.ts`; if you change the fax layout, regenerate it.
+`src/reportpdf.js` is generated from `supabase/functions/send-alerts/index.ts`; if you change the fax layout, run `node scripts/gen-reportpdf.mjs`.
 **Notification log → Delivery setup** shows which channels are configured and can send a test email, text or fax.
 
 ## 13. Instrument connections
@@ -334,6 +334,29 @@ nothing is marked sent; staff can download the orders as an HL7 file instead.
 
 Results come back through the same connector into the **Instrument inbox** as HL7 files for a scientist to review and
 import, exactly like other reference-lab results. Reports name the lab that performed each send-out test.
+
+## 23. Visual report summary and therapy guide
+
+Every report now opens with a summary page; the full detailed tables follow unchanged.
+
+- **At a glance cards**: markers in range, values outside range, medication compliance, and organisms detected.
+- **Range bars**: each blood and chemistry value is drawn against its reference range, with a small trend line of the
+  patient's last five results. Out-of-range values are filled diamonds and in-range values hollow circles, so the page
+  still reads on a black-and-white fax.
+- **Medication compliance**: one line per prescription (consistent, not detected, not tested) and any unexpected drugs.
+- **Molecular**: detected organisms and resistance genes, with drug options from the therapy guide. Drug classes a
+  detected gene affects are struck through, with the reason.
+
+**Therapy guide** (left menu): organism groups, drug options by specimen site (urine, wound, nail), organisms an option
+does not apply to, and the drug classes each resistance gene removes. It starts as a generic draft. Drug options appear on
+reports only after an admin who is the laboratory director, or the director's delegate, names the source and approves
+it; any later edit returns it to draft. Approval and every change are in the audit log (settings table). Cite only a
+reference the lab is licensed to use (for example a Sanford Guide subscription) or one that is openly available (IDSA
+guidelines, the local antibiogram).
+
+The fax PDF is drawn in `supabase/functions/send-alerts/index.ts`. After changing it, run
+`node scripts/gen-reportpdf.mjs` to regenerate `src/reportpdf.js` (the browser's Download PDF), and redeploy
+`send-alerts`.
 
 ## Before go-live
 

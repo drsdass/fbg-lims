@@ -16,7 +16,7 @@ export const sb = createClient(CONFIG_ERROR ? "https://invalid.supabase.co" : ur
 
 const DOC_TABLES = ["clinics", "patients", "orders", "notes", "claims", "outbox", "supply_orders", "pickups", "invoices"];
 const LAB_ONLY = new Set(["claims", "outbox"]);
-const SETTINGS = ["lab", "fees", "confMap"];
+const SETTINGS = ["lab", "fees", "confMap", "therapy"];
 const PENDING_KEY = "fbg-pending-registration";
 
 let synced = {};           // "table:id" -> JSON last known to be on the server
