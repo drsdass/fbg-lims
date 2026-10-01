@@ -200,6 +200,31 @@ export const DB = {
     if (data && data.ok === false) throw new Error(data.error || "The test failed.");
     return data;
   },
+  // ---------- locked report versions ----------
+  async reportVersions(orderId) {
+    const { data, error } = await sb.from("report_versions").select("id,version,data,released_at").eq("order_id", orderId).order("version", { ascending: true });
+    if (error) { if (missingTable(error)) return null; throw error; }
+    return data;
+  },
+  async saveReportVersion(orderId, version, model) {
+    const { data: { user } } = await sb.auth.getUser();
+    const { error } = await sb.from("report_versions").insert({ id: `${orderId}-v${version}`, order_id: orderId, version, data: model, released_by: user && user.id });
+    if (error && !missingTable(error)) throw error;
+  },
+  // ---------- compliance records ----------
+  async qmsAll() { const rows = await fetchAll("qms_records", "id,kind,ref,data"); return rows.map((r) => ({ ...r.data, id: r.id, kind: r.kind, ref: r.ref })); },
+  async qmsSave(rec) {
+    const at = rec.at ? new Date(rec.at).toISOString() : new Date().toISOString();
+    const { error } = await sb.from("qms_records").upsert({ id: rec.id, kind: rec.kind, ref: rec.ref || null, at, data: rec });
+    if (error) throw error;
+  },
+  async qmsUpload(file) {
+    const path = `${new Date().toISOString().slice(0, 7)}/${crypto.randomUUID()}-${file.name.replace(/[^A-Za-z0-9._-]/g, "_")}`;
+    const { error } = await sb.storage.from("qms-docs").upload(path, file, { contentType: file.type || "application/octet-stream" });
+    if (error) throw error;
+    return { path, name: file.name };
+  },
+  async qmsFileUrl(path) { const { data, error } = await sb.storage.from("qms-docs").createSignedUrl(path, 300); if (error) throw error; return data.signedUrl; },
   // ---------- quality control ----------
   async qcMaterials() { return (await fetchAll("qc_materials", "id,data")).map((r) => r.data); },
   async qcResultsSince(sinceMs, materialId) {

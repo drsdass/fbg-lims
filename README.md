@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql` and `supabase/migrations/0006_qc.sql` (quality control).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control) and `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -169,6 +169,19 @@ two-way connections need a small interface program on the lab PC: for the Yumize
 queries (orders down, results up) using HORIBA's LIS protocol; for the SCIEX 4500 it would watch the MultiQuant export
 folder and upload new files. Building it needs HORIBA's LIS interface specification for the C560.
 
+## 14. Compliance and locked reports
+
+Every release saves a locked copy of the report (version 1, 2 for a correction, and so on). The database refuses changes
+to locked copies; the report viewer shows each version and Download PDF uses the selected one.
+
+**Compliance** holds the laboratory's quality records: equipment with maintenance schedules and temperature logs,
+reagent and control lots (each instrument import records which lots were in use), proficiency testing and alternative
+assessments, personnel with training and competency (six CLIA elements; due twice in the first year, then annually),
+procedures with annual director review and staff read-acknowledgments, issues and corrective actions, vendor BAAs,
+HIPAA risk assessments, quarterly access reviews, an unusual-access scan, quality indicators, and downtime exports.
+The Overview lists everything overdue or due soon. The **Quality** role manages these records; any lab user can log
+maintenance, temperatures and SOP acknowledgments. Documents are stored privately in Supabase Storage (qms-docs).
+
 ## Before go-live
 
 - [ ] Supabase Team plan, HIPAA add-on, signed BAA, project marked High Compliance
@@ -183,6 +196,7 @@ folder and upload new files. Building it needs HORIBA's LIS interface specificat
 - [ ] Test email, text and fax received (Notification log → Send test)
 - [ ] QC targets reviewed for each control lot; monthly Levey-Jennings review assigned
 - [ ] Every person's roles reviewed; former staff deactivated
+- [ ] Compliance: equipment, lots, personnel, SOPs, vendors and BAAs entered; first risk assessment and access review recorded
 - [ ] Someone assigned to review the audit log on a regular schedule (for example, monthly)
 - [ ] End-to-end test in the test project with made-up patients, signed off by the lab director
 - [ ] Staff trained; paper requisitions kept as a fallback for the first weeks

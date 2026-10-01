@@ -15,7 +15,7 @@ const cors = {
 };
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...cors, "Content-Type": "application/json" } });
-const LAB_ROLES = ["admin", "scientist", "reporting", "sales", "collector", "billing", "auditor"];
+const LAB_ROLES = ["admin", "scientist", "reporting", "sales", "collector", "billing", "quality", "auditor"];
 // Username sign-in: a username is stored as <username>@<USERNAME_DOMAIN>. No email is ever sent to these addresses.
 const USERNAME_DOMAIN = "users.firstbiogenetics.com";
 
