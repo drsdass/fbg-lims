@@ -18,7 +18,7 @@ async function build() {
 // Remove what legitimately changes between runs: dates, times, generated IDs and sizes that depend on them.
 const MON = "(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)";
 function normalize(t) {
-  return String(t).replace(/\r/g, "").split("\n").filter((l) => l.trim() && !/Not implemented|^\s+at |^JSDOMERR/.test(l)).map((l) => l
+  return String(t).replace(/\r/g, "").replace(/\x1b\[[0-9;]*m/g, "").split("\n").filter((l) => l.trim() && !/Not implemented|^\s+at |^JSDOMERR/.test(l)).map((l) => l
     .replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z/g, "<ISO>")
     .replace(new RegExp(`${MON} \\d{1,2}, \\d{4}(, \\d{1,2}:\\d{2} [AP]M)?`, "g"), "<DATE>")
     .replace(new RegExp(`${MON} '?\\d{2}\\b`, "g"), "<MONTH>")
@@ -47,7 +47,8 @@ function failures(out, code) {
 }
 function run(file) {
   return new Promise((res) => {
-    const p = spawn(process.execPath, [file], { cwd: __dirname, timeout: 300000 });
+    // Hosting builders often set FORCE_COLOR, which wraps printed values in invisible color codes; turn it off.
+    const p = spawn(process.execPath, [file], { cwd: __dirname, timeout: 300000, env: { ...process.env, FORCE_COLOR: "0", NO_COLOR: "1" } });
     let out = ""; p.stdout.on("data", (d) => (out += d)); p.stderr.on("data", (d) => (out += d));
     p.on("close", (code) => res({ out, code: code ?? 1 }));
   });
