@@ -182,6 +182,20 @@ HIPAA risk assessments, quarterly access reviews, an unusual-access scan, qualit
 The Overview lists everything overdue or due soon. The **Quality** role manages these records; any lab user can log
 maintenance, temperatures and SOP acknowledgments. Documents are stored privately in Supabase Storage (qms-docs).
 
+## 15. Result history, delta checks, storage and batch review
+
+- **Result history:** each patient page shows cumulative numeric results across released orders, and a toxicology history
+  with screen and confirmed positives and medication compliance.
+- **Delta checks:** result entry shows the patient's previous value. A change larger than the limit (Lab settings → Delta
+  checks; standard list included) is flagged Δ and must be acknowledged before verifying.
+- **Specimen storage:** Specimen storage lists specimens still to be put away, where each one is, and which are past their
+  keep-until date. Retention periods (positives, negatives, other) are set in Lab settings. Disposal is logged. Released
+  orders have **Add-on test**, which creates a linked order using the same specimen.
+- **LC-MS/MS batch review:** when the MultiQuant export includes ion ratio, IS area, retention time or actual
+  concentration/accuracy, each import checks calibrator and QC accuracy, blank carryover, and each patient result's ion
+  ratio, internal standard response and retention time against the limits in Lab settings. Failures are shown in the
+  import summary and on the order, and must be acknowledged before verifying. Exports without these columns skip the review.
+
 ## Before go-live
 
 - [ ] Supabase Team plan, HIPAA add-on, signed BAA, project marked High Compliance
@@ -196,6 +210,7 @@ maintenance, temperatures and SOP acknowledgments. Documents are stored privatel
 - [ ] Test email, text and fax received (Notification log → Send test)
 - [ ] QC targets reviewed for each control lot; monthly Levey-Jennings review assigned
 - [ ] Every person's roles reviewed; former staff deactivated
+- [ ] Delta check limits, retention periods and batch review limits confirmed by the lab director
 - [ ] Compliance: equipment, lots, personnel, SOPs, vendors and BAAs entered; first risk assessment and access review recorded
 - [ ] Someone assigned to review the audit log on a regular schedule (for example, monthly)
 - [ ] End-to-end test in the test project with made-up patients, signed off by the lab director
