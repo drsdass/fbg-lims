@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) and `supabase/migrations/0010_patient_portal.sql` (patient portal).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -261,6 +261,18 @@ attempts per hour per IP address are allowed). They see only locked copies of th
 or internal notes, and can add results from other visits with another code. Lab settings → Patient portal sets an
 optional delay after release; the Patient access window can hide a single order's report. Deploy
 `supabase/functions/patient-access` with JWT verification OFF.
+
+## 19. Working with years of data
+
+Signing in loads only open work and the last 90 days (orders, patients, notes, claims not yet exported, unpaid invoices,
+open pickups, specimens still in storage), plus any older order a loaded claim, invoice or notification refers to.
+Every 30 seconds the portal fetches only records changed since the last check. Older records load on demand: the search
+bar searches every record on the server (3 or more characters), a patient's page loads their full history (so result
+history and delta checks see everything), and Orders and results has "Load older orders". Reports and quality indicators
+use compact per-order facts for the whole period. Reports → "Rebuild statistics" fills in positivity data for orders
+released before this change. Exports in Compliance → Downtime and export include every record.
+
+These need `0011_scale.sql`. Until it is run, the portal falls back to loading everything, as before.
 
 ## Before go-live
 

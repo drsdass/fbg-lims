@@ -1,4 +1,4 @@
-import { DB, CONFIG_ERROR } from "./db.js";
+import { DB, CONFIG_ERROR, WINDOW_DAYS } from "./db.js";
 import readXlsxFile from "read-excel-file/browser";
 import { BRANDS } from "./brands.js";
 import { BRIDGE_PS1 } from "./bridgeScript.js";
@@ -447,10 +447,10 @@ function ordersTable(list,opts={}){
  ${list.map(o=>{const p=patientOf(o.patientId);const un=!lab&&o.status==="Released"&&!o.readAt;return `<tr class="click" data-a="openOrder" data-id="${o.id}"><td>${un?'<span class="unread-dot" title="New result"></span>':""}<span class="acc">${o.accession}</span>${o.stat?' <span class="flag C">STAT</span>':""}</td><td><div class="nm">${esc(pname(p))}</div><div class="xs muted">DOB ${fmtDOB(p?.dob)}</div></td>${lab?`<td class="small">${esc(clinicOf(o.clinicId)?.name)}</td>`:""}<td class="small">${o.tests.map(c=>`<span class="tag">${isDef(c)?`Def ×${o.confirm.length}`:c}</span>`).join("")}</td><td class="small">${fmtD(o.collectedAt)}</td><td>${badge(o.status)}</td>${!lab||can("results.view")?`<td class="small">${flagSummary(o)}</td>`:""}</tr>`}).join("")}</tbody></table></div>`}
 
 function vSearch(){
- const q=ui.gq.trim().toLowerCase();
+ const q=ui.gq.trim().toLowerCase();serverSearch(ui.gq);
  const pts=scopePatients().filter(p=>`${p.first} ${p.last} ${p.last}, ${p.first} ${p.mrn} ${p.dob}`.toLowerCase().includes(q)).slice(0,10);
  const ords=scopeOrders().filter(o=>{const p=patientOf(o.patientId);return `${o.accession} ${p?.first} ${p?.last} ${clinicOf(o.clinicId)?.name}`.toLowerCase().includes(q)}).slice(0,12);
- return `<div class="page-h"><div><h1>Search results</h1><p class="muted">Matches for “${esc(ui.gq)}”</p></div><button class="btn" data-a="clearSearch">Clear search</button></div>
+ return `<div class="page-h"><div><h1>Search results</h1><p class="muted">Matches for “${esc(ui.gq)}”${LZ.srvBusy?" · searching all records…":DB.scaled()&&ui.gq.trim().length>=3&&LZ.srvQ===ui.gq.trim()?" · all records searched":ui.gq.trim().length<3?" · type 3 or more characters to search older records":""}</p></div><button class="btn" data-a="clearSearch">Clear search</button></div>
  <div class="stack"><div class="panel"><div class="panel-h"><h2>Patients</h2></div>${pts.length?`<div class="tbl-wrap"><table class="tbl"><tbody>${pts.map(p=>`<tr class="click" data-a="openPatient" data-id="${p.id}"><td class="nm">${esc(pname(p))}</td><td class="small">DOB ${fmtDOB(p.dob)}</td><td class="small">${p.mrn}</td>${isLab()?`<td class="small">${esc(clinicOf(p.clinicId)?.name)}</td>`:""}</tr>`).join("")}</tbody></table></div>`:`<div class="empty">No patients match.</div>`}</div>
  <div class="panel"><div class="panel-h"><h2>Orders</h2></div>${ordersTable(ords,{emptyTitle:"No orders match"})}</div></div>`}
 
@@ -478,7 +478,7 @@ function vPatients(){
  ${list.length?`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Patient</th><th>DOB</th><th>Sex</th><th>MRN</th><th>Coverage</th><th>Orders</th><th>Last order</th></tr></thead><tbody>${list.map(p=>{const os=S.orders.filter(o=>o.patientId===p.id);const last=os.sort((a,b)=>b.createdAt-a.createdAt)[0];return `<tr class="click" data-a="openPatient" data-id="${p.id}"><td class="nm">${esc(pname(p))}</td><td class="small">${fmtDOB(p.dob)} <span class="faint">(${ageOf(p.dob)})</span></td><td class="small">${p.sex}</td><td class="small">${p.mrn}</td><td class="small">${esc(p.ins.type)}${p.ins.payer?` <span class="faint">${esc(p.ins.payer)}</span>`:""}</td><td class="small">${os.length}</td><td class="small">${last?fmtD(last.createdAt):"—"}</td></tr>`}).join("")}</tbody></table></div>`:`<div class="empty"><h3>No patients found</h3><p>Try a different name or date of birth, or add a new patient.</p></div>`}</div>`}
 
 function vPatient(){
- const p=patientOf(route.p.id);if(!p)return `<div class="empty">Patient not found.</div>`;
+ const p=patientOf(route.p.id);if(!p){ensureHistory(route.p.id);return `<div class="empty">${DB.scaled()?"Loading…":"Patient not found."}</div>`}ensureHistory(p.id);
  const os=S.orders.filter(o=>o.patientId===p.id).sort((a,b)=>b.createdAt-a.createdAt);
  const f=(k,v)=>`<div><div class="xs muted">${k}</div><div style="font-weight:500;color:var(--ink)">${esc(v||"—")}</div></div>`;
  return `<div class="crumb"><button data-a="go" data-v="${isLab()?"queue":"patients"}">${isLab()?"Accessioning":"Patients"}</button> / ${esc(pname(p))}</div>
@@ -636,7 +636,7 @@ async function submitOrder(){if(submitting)return;const d=draft,nd=needs(),p=pat
 
 /* ---------- order detail ---------- */
 function vOrder(){
- const o=S.orders.find(x=>x.id===route.p.id);if(!o)return `<div class="empty">Order not found.</div>`;
+ const o=S.orders.find(x=>x.id===route.p.id);if(!o){ensureOrder(route.p.id);return `<div class="empty">${LZ.orders.has(route.p.id)&&DB.scaled()?"Loading…":"Order not found."}</div>`}ensureHistory(o.patientId);
  const lab=isLab(),p=patientOf(o.patientId),c=clinicOf(o.clinicId),pr=provOf(o);
  if(!lab&&o.status==="Released"&&!o.readAt){o.readAt=Date.now();S.notes.filter(n=>n.orderId===o.id&&n.aud===c.id).forEach(n=>n.read=true);save()}
  const k=(a,b)=>`<div><div class="xs muted">${a}</div><div style="color:var(--ink);font-weight:500">${b}</div></div>`;
@@ -691,6 +691,7 @@ function vResults(){
  if(ui.rto)list=list.filter(o=>o.collectedAt<=new Date(ui.rto+"T23:59").getTime());
  if(ui.runread)list=list.filter(o=>o.status==="Released"&&!o.readAt);
  list=[...list].sort((a,b)=>b.createdAt-a.createdAt);
+ const olderBtn=DB.scaled()&&!S.offline?`<div style="text-align:center;padding:14px"><button class="btn sm ghost" data-a="loadOlder" ${LZ.olderBusy?"disabled":""}>${LZ.olderBusy?"Loading…":LZ.olderDone?"No older orders":`Load older orders (showing the last ${WINDOW_DAYS} days and open orders)`}</button></div>`:"";
  return `<div class="page-h"><div><h1>Orders and results</h1><p class="muted">${list.length} of ${scopeOrders().length} orders</p></div><button class="btn primary" data-a="go" data-v="order-new">${I.plus} New order</button></div>
  <div class="panel"><div class="panel-h" style="flex-wrap:wrap"><div class="row" style="flex:1">
   <div class="search" style="max-width:300px;min-width:200px">${I.search}<input class="input" data-b="ui.rq" data-live="1" placeholder="Patient, DOB or accession" value="${esc(ui.rq)}"></div>
@@ -699,7 +700,7 @@ function vResults(){
   <input class="input" type="date" style="width:auto" data-b="ui.rfrom" data-live="1" value="${ui.rfrom}" aria-label="Collected from"><input class="input" type="date" style="width:auto" data-b="ui.rto" data-live="1" value="${ui.rto}" aria-label="Collected to">
   <label class="check small"><input type="checkbox" data-b="ui.runread" data-live="1" ${ui.runread?"checked":""}>New results only</label></div>
   ${ui.rq||ui.rstat||ui.rcat||ui.rfrom||ui.rto||ui.runread?`<button class="link" data-a="clearFilters">Clear filters</button>`:""}</div>
- ${ordersTable(list,{emptyTitle:"No orders match these filters",emptyText:"Clear a filter or widen the date range."})}</div>`}
+ ${ordersTable(list,{emptyTitle:"No orders match these filters",emptyText:"Clear a filter or widen the date range."})}${olderBtn}</div>`}
 
 function vNotes(){
  const list=S.notes.filter(n=>n.aud===audience()).sort((a,b)=>b.at-a.at);
@@ -742,7 +743,7 @@ function vQueue(){
  <p class="xs muted" style="margin-top:10px">Tip: scan a requisition barcode into the search box and press Enter to open that order.</p>`}
 
 function vEntry(){
- const o=S.orders.find(x=>x.id===route.p.id);if(!o)return `<div class="empty">Order not found.</div>`;
+ const o=S.orders.find(x=>x.id===route.p.id);if(!o){ensureOrder(route.p.id);return `<div class="empty">Loading…</div>`}ensureHistory(o.patientId);
  if(!resEdit||resEdit._id!==o.id){resEdit=JSON.parse(JSON.stringify(o.results||{}));resEdit._id=o.id}
  const p=patientOf(o.patientId),edit=can("results.enter");
  const cell=(code,a,idx)=>{if(!edit&&a.type!=="calc"){const r=(o.results[code]||{})[a.name]||{},f=flagOf(a,r,p.sex),q=a.type==="quant";return `<td><b>${esc(r.v||"—")}</b></td><td class="small muted">${a.type==="conf"?esc(r.c||""):q?esc(a.unit):""}</td><td class="small muted">${a.type==="conf"?(r.v?consistency(o,a.name,r)[0]:""):q?rangeText(a,p.sex):a.cutoff?"Cutoff "+esc(a.cutoff):""}</td><td>${f?`<span class="flag ${f}">${f}</span>`:""}</td>`}
@@ -896,7 +897,7 @@ function releaseOrder(o){
  if(missing.length){toast(`${missing.length} result${missing.length>1?"s are":" is"} blank. Fill them before release.`);return false}
  storeCalcs(o,patientOf(o.patientId));computeFlags(o);advance(o,"Released");o.releasedAt=Date.now();o.readAt=null;
  const c=clinicOf(o.clinicId),pr=provOf(o),p=patientOf(o.patientId),crit=o.flags.crit>0;
- o.reportVersion=(o.reportVersion||0)+1;const snapVer=o.reportVersion,snap=reportModel(o);DB.saveReportVersion(o.id,snapVer,snap).catch(e=>toast("The locked report copy couldn't be saved: "+errMsg(e)));
+ o.summary=orderSummary(o);o.reportVersion=(o.reportVersion||0)+1;const snapVer=o.reportVersion,snap=reportModel(o);DB.saveReportVersion(o.id,snapVer,snap).catch(e=>toast("The locked report copy couldn't be saved: "+errMsg(e)));
  const corr=(o.corrections||[]).length>0;pushNote(c.id,o.id,corr?"Corrected results":crit?"Critical result":"Results ready",`${o.accession} for ${p.first} ${p.last[0]}. ${corr?"has a corrected report":"is released"}${crit?" with a critical value":""}.`,crit?"crit":"ok");
  const msg=`First Bio Genetics: ${crit?"a CRITICAL result":"new results"} for accession ${o.accession} ${crit?"is":"are"} ready. Sign in to the portal to view.`;
  const log=(channel,to,status,extra)=>S.outbox.push({id:uid("m"),at:Date.now(),channel,to,msg,status:status||"Queued",orderId:o.id,crit,corrected:corr,...(extra||{})});
@@ -1051,12 +1052,12 @@ const A={
  async qmsScan(){QM.scan="busy";render();try{const ps=await DB.profilesAll(),who=Object.fromEntries(ps.map(p=>[p.user_id,p.name||p.email])),rows=await DB.audit({from:ymd(Date.now()-14*DAY,"-"),to:ymd(Date.now(),"-"),action:"view",limit:20000});
   const c={};rows.forEach(r=>{if(!r.actor)return;const k=r.actor+"|"+String(r.at).slice(0,10);c[k]=(c[k]||0)+1});QM.scan=Object.entries(c).filter(([,n])=>n>=75).map(([k,n])=>({who:who[k.split("|")[0]]||"Unknown user",day:k.split("|")[1],n})).sort((a,b)=>b.n-a.n)}catch(err){QM.scan=null;toast(errMsg(err))}render()},
  reportVer:e=>{RV.idx=+e.dataset.i;renderReportModal(orderOf(RV.orderId))},
- exportOrders(){const q=v=>{v=String(v??"");return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v};const lines=[["Accession","Clinic","Patient","DOB","Sex","MRN","Collected","Received","Released","Status","Test","Analyte","Result","Detail"].join(",")];
-  S.orders.forEach(o=>{const p=patientOf(o.patientId)||{},c=clinicOf(o.clinicId)||{},base=[o.accession,c.name,pname(p),p.dob,p.sex,p.mrn,new Date(o.collectedAt).toISOString(),(o.history.find(h=>h.s==="Received")||{}).at?new Date(o.history.find(h=>h.s==="Received").at).toISOString():"",o.releasedAt?new Date(o.releasedAt).toISOString():"",o.status];
+ async exportOrders(){toast("Preparing the export…");let all=S.orders,pts=S.patients;try{if(DB.scaled()){all=await DB.allRows("orders");pts=await DB.allRows("patients")}}catch(e){return toast(errMsg(e))}const pById=new Map(pts.map(p=>[p.id,p]));const patientOf=id=>pById.get(id);const q=v=>{v=String(v??"");return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v};const lines=[["Accession","Clinic","Patient","DOB","Sex","MRN","Collected","Received","Released","Status","Test","Analyte","Result","Detail"].join(",")];
+  all.forEach(o=>{const p=patientOf(o.patientId)||{},c=clinicOf(o.clinicId)||{},base=[o.accession,c.name,pname(p),p.dob,p.sex,p.mrn,new Date(o.collectedAt).toISOString(),(o.history.find(h=>h.s==="Received")||{}).at?new Date(o.history.find(h=>h.s==="Received").at).toISOString():"",o.releasedAt?new Date(o.releasedAt).toISOString():"",o.status];
    let any=false;o.tests.forEach(code=>{const R=(o.results||{})[code]||{};Object.entries(R).forEach(([an,r])=>{if(an==="_id")return;any=true;lines.push([...base,T(code)?T(code).name:code,an,r&&r.v,r&&r.c].map(q).join(","))})});if(!any)lines.push([...base,o.tests.join(" + "),"","",""].map(q).join(","))});
   saveFile(`FBG_orders_results_${ymd(Date.now(),"-")}.csv`,lines.join("\r\n"))},
- exportPatients(){const q=v=>{v=String(v??"");return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v};const lines=[["MRN","Last","First","DOB","Sex","Phone","Address","City","State","ZIP","Clinic","Coverage","Payer","Member ID"].join(",")];
-  S.patients.forEach(p=>lines.push([p.mrn,p.last,p.first,p.dob,p.sex,p.phone,p.address,p.city,p.state,p.zip,(clinicOf(p.clinicId)||{}).name,p.ins.type,p.ins.payer,p.ins.member].map(q).join(",")));saveFile(`FBG_patients_${ymd(Date.now(),"-")}.csv`,lines.join("\r\n"))},
+ async exportPatients(){let pts=S.patients;try{if(DB.scaled())pts=await DB.allRows("patients")}catch(e){return toast(errMsg(e))}const q=v=>{v=String(v??"");return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v};const lines=[["MRN","Last","First","DOB","Sex","Phone","Address","City","State","ZIP","Clinic","Coverage","Payer","Member ID"].join(",")];
+  pts.forEach(p=>lines.push([p.mrn,p.last,p.first,p.dob,p.sex,p.phone,p.address,p.city,p.state,p.zip,(clinicOf(p.clinicId)||{}).name,p.ins.type,p.ins.payer,p.ins.member].map(q).join(",")));saveFile(`FBG_patients_${ymd(Date.now(),"-")}.csv`,lines.join("\r\n"))},
  sgTab:e=>{SG.tab=e.dataset.val;SG.sel={};render()},
  sgSel:e=>{SG.sel[e.dataset.id]=!SG.sel[e.dataset.id];render()},
  sgStore:e=>storeModal(orderOf(e.dataset.id)),
@@ -1086,11 +1087,11 @@ const A={
  dlHL7:e=>{const o=orderOf(e.dataset.id);saveFile(`FBG_${o.accession}.hl7`,oruHL7(o))},
  hl7MapOpen(){closeModal();ui.hmap=null;hl7MapModal()},
  async hl7MapSave(){const m={};Object.entries(ui.hmap||{}).forEach(([k,v])=>{if(v)m[k.replace(/\u2024/g,".")]=v});S.lab={...S.lab,hl7Map:m};save();closeModal();ui.hmap=null;toast("Mapping saved");if(ui.lastHL7)await runImport("hl7",ui.lastHL7)},
- findDups(){const nn=x=>String(x||"").trim().toLowerCase().replace(/[^a-z]/g,""),groups={};S.patients.filter(p=>!p.mergedInto).forEach(p=>{const k=`${p.clinicId}|${nn(p.last)}|${nn(p.first)}|${p.dob}`;(groups[k]=groups[k]||[]).push(p)});
+ async findDups(){const nn=x=>String(x||"").trim().toLowerCase().replace(/[^a-z]/g,""),groups={};const facts=await DB.patientFacts();if(facts){const need=[];const byKey={};facts.filter(f=>!f.merged).forEach(f=>{const k=`${f.clinic_id}|${nn(f.last)}|${nn(f.first)}|${f.dob}`;(byKey[k]=byKey[k]||[]).push(f.id)});Object.values(byKey).filter(g=>g.length>1).forEach(g=>g.forEach(id=>{if(!patientOf(id))need.push(id)}));if(need.length)await DB.patientsByIds(S,need)}S.patients.filter(p=>!p.mergedInto).forEach(p=>{const k=`${p.clinicId}|${nn(p.last)}|${nn(p.first)}|${p.dob}`;(groups[k]=groups[k]||[]).push(p)});
   const dups=Object.values(groups).filter(g=>g.length>1);ui.dups=dups.map(g=>({ids:g.map(p=>p.id),keep:g.sort((a,b)=>(a.createdAt||0)-(b.createdAt||0))[0].id}));
   modal("Possible duplicate patients",dups.length?`<p class="small muted">Same clinic, name and date of birth. Choose the record to keep; orders from the others move to it and the others are retired. This can't be undone.</p>${ui.dups.map((g,gi)=>`<div class="panel" style="margin-top:12px"><div class="panel-b stack" style="gap:6px">${g.ids.map(id=>{const p=patientOf(id),n=S.orders.filter(o=>o.patientId===id).length;return `<label class="check"><input type="radio" name="dup${gi}" data-a="dupKeep" data-g="${gi}" data-id="${id}" ${g.keep===id?"checked":""}>${esc(pname(p))} · DOB ${fmtDOB(p.dob)} · MRN ${esc(p.mrn)} · ${esc((clinicOf(p.clinicId)||{}).name||"")} · ${n} order${n===1?"":"s"}</label>`}).join("")}<div><button class="btn sm danger" data-a="dupMerge" data-g="${gi}">Merge into selected</button></div></div></div>`).join("")}`:`<div class="empty">No duplicates found.</div>`,{wide:1})},
  dupKeep:e=>{ui.dups[+e.dataset.g].keep=e.dataset.id},
- dupMerge:e=>{const g=ui.dups[+e.dataset.g],keep=patientOf(g.keep);if(!confirm(`Merge ${g.ids.length-1} record(s) into ${pname(keep)} (MRN ${keep.mrn})?`))return;
+ async dupMerge(e){const g=ui.dups[+e.dataset.g],keep=patientOf(g.keep);if(!confirm(`Merge ${g.ids.length-1} record(s) into ${pname(keep)} (MRN ${keep.mrn})?`))return;for(const id of g.ids)await DB.patientOrders(S,id).catch(()=>{});
   g.ids.filter(id=>id!==g.keep).forEach(id=>{const p=patientOf(id);S.orders.filter(o=>o.patientId===id).forEach(o=>{o.patientId=keep.id;o.history.push({s:o.status,at:Date.now(),by:me().name,note:`Patient record merged from MRN ${p.mrn} into MRN ${keep.mrn}`})});p.mergedInto=keep.id;p.mergedAt=Date.now();p.mergedBy=me().name});
   save();toast("Records merged");A.findDups()},
  pkTab:e=>{PK.tab=e.dataset.val;render()},
@@ -1133,6 +1134,10 @@ const A={
  ppSlip:e=>{const o=orderOf(e.dataset.id);if(!o.accessCode){o.accessCode=newAccessCode();o.history.push({s:o.status,at:Date.now(),by:me().name,note:"Patient portal access code created"});save()}lastDoc={tbl:"orders",id:o.id,what:"patient access code"};
   modal(`Patient access: ${o.accession}`,accessSlip(o)+(isLab()?`<label class="check" style="margin:12px 20px"><input type="checkbox" data-a="ppToggle" data-id="${o.id}" ${o.patientPortal!==false?"checked":""}>Show this order's report in the patient portal</label>`:""),{wide:0,print:1})},
  ppToggle:e=>{const o=orderOf(e.dataset.id);o.patientPortal=o.patientPortal===false;o.history.push({s:o.status,at:Date.now(),by:me().name,note:o.patientPortal===false?"Report hidden from the patient portal":"Report shown in the patient portal"});save();toast(o.patientPortal===false?"Hidden from the patient portal":"Shown in the patient portal")},
+ loadOlder(){loadOlder()},
+ async rpRebuild(){if(RP.rebuilding)return;RP.rebuilding=true;RP.rebuilt=0;render();
+  try{for(let guard=0;guard<500;guard++){const ids=await DB.ordersMissingSummary(S,100);if(!ids.length)break;ids.forEach(id=>{const o=orderOf(id);if(o)o.summary=orderSummary(o)});await DB.flushNow(S,true);RP.rebuilt+=ids.length;render()}toast(`Statistics rebuilt for ${RP.rebuilt} order${RP.rebuilt===1?"":"s"}`)}catch(e){toast(errMsg(e))}
+  RP.rebuilding=false;FX.key="";render()},
  editOrder:e=>{draft=draftFromOrder(orderOf(e.dataset.id));sigs={};go("order-new")},
  draftNewPt(){draft.newPt=true;ptForm=blankPatient();render()},
  draftPickExisting(){draft.newPt=false;ptForm=null;render()},
@@ -1400,7 +1405,7 @@ function vBilling(){icdLoad();const tab=ui.btab,all=[...S.claims].sort((a,b)=>b.
  const L=S.lab,labMissing=!/^\d{10}$/.test(L.npi||"")||!L.taxId;
  const edit=can("billing");const tabs=[["ready",`Ready (${ready.length})`],["hold",`On hold (${hold.length})`],["sent",`Exported (${sent.length})`],["all","All claims"],["invoices",`Client invoices (${(S.invoices||[]).filter(i=>i.status!=="Paid").length} unpaid)`],["fees","Charge master"]];
  let body;
- if(tab==="invoices"){const per=ui.iperiod||monthKey(new Date(new Date().getFullYear(),new Date().getMonth()-1,15)),cand=invoiceCandidates(per),byC={};cand.forEach(o=>{(byC[o.clinicId]=byC[o.clinicId]||[]).push(o)});const invs=[...(S.invoices||[])].sort((a,b)=>b.createdAt-a.createdAt);
+ if(tab==="invoices"){const per=ui.iperiod||monthKey(new Date(new Date().getFullYear(),new Date().getMonth()-1,15));if(LZ.invPer!==per&&DB.scaled()){LZ.invPer=per;const d0=new Date(per+"-01T00:00"),d1=new Date(d0);d1.setMonth(d1.getMonth()+1);DB.clientBillOrders(S,d0.getTime(),d1.getTime()).then(n=>{if(n)render()}).catch(()=>{})}const cand=invoiceCandidates(per),byC={};cand.forEach(o=>{(byC[o.clinicId]=byC[o.clinicId]||[]).push(o)});const invs=[...(S.invoices||[])].sort((a,b)=>b.createdAt-a.createdAt);
   body=`<div class="stack"><div class="panel"><div class="panel-h"><div><h2>Create invoices</h2><p class="small muted">Released orders with billing type "Client bill", priced from each clinic's client prices or the charge master.</p></div><div class="row"><input class="input" type="month" style="width:auto" data-b="ui.iperiod" data-live="1" value="${per}">${edit&&cand.length?`<button class="btn primary" data-a="invCreate">Create ${Object.keys(byC).length} invoice${Object.keys(byC).length===1?"":"s"}</button>`:""}</div></div>
   ${cand.length?`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Clinic</th><th>Orders</th><th>Amount</th></tr></thead><tbody>${Object.entries(byC).map(([cid,l])=>`<tr><td class="small nm">${esc((clinicOf(cid)||{}).name||cid)}</td><td class="small">${l.length}</td><td class="small">${money(l.reduce((a,o)=>a+invoiceLines(o).amount,0))}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty small">No uninvoiced client-bill orders for ${monthLabel(per)}.</div>`}</div>
   <div class="panel"><div class="panel-h"><h2>Invoices</h2></div>${invs.length?`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Invoice</th><th>Clinic</th><th>Period</th><th>Orders</th><th>Total</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody>${invs.map(i=>`<tr><td class="acc small">${esc(i.id)}</td><td class="small nm">${esc((clinicOf(i.clinicId)||{}).name||"")}</td><td class="small">${monthLabel(i.period)}</td><td class="small">${i.lines.length}</td><td class="small">${money(i.total)}</td><td class="small" style="${i.status!=="Paid"&&i.dueAt<Date.now()?"color:var(--danger);font-weight:600":""}">${fmtD(i.dueAt)}</td><td>${i.status==="Paid"?`<span class="badge st-released">Paid</span><div class="xs muted">${fmtD(i.paidAt)}${i.payRef?` · ${esc(i.payRef)}`:""}</div>`:'<span class="badge st-pending">Unpaid</span>'}</td><td style="text-align:right;white-space:nowrap"><button class="btn sm" data-a="invView" data-id="${i.id}">View</button>${edit&&i.status!=="Paid"?` <button class="btn sm primary" data-a="invPaid" data-id="${i.id}">Mark paid</button>`:""}</td></tr>`).join("")}</tbody></table></div>`:`<div class="empty small">No invoices yet.</div>`}</div></div>`}
@@ -1466,6 +1471,18 @@ async function readCard(){const f=ptForm;if(!f||!f.ins.cardFront||!SAMPLE||cardB
  finally{cardBusy=false;render()}}
 
 const REJECT_REASONS=["Quantity not sufficient","Specimen leaked or container broken","Unlabeled or mislabeled specimen","Name or date of birth doesn't match requisition","Received outside stability window","Temperature out of range","Wrong specimen type or container","Collection device expired","Missing requisition or test order","Missing required signature","Other"];
+/* ---------- loading older records on demand ---------- */
+const LZ={hist:new Set(),orders:new Set(),srvQ:"",srvBusy:false,srvTimer:null,older:{}};
+// A patient's full order history (for the patient page, result history and delta checks).
+function ensureHistory(pid){if(!pid||LZ.hist.has(pid)||S.offline||!DB.scaled())return;LZ.hist.add(pid);DB.patientOrders(S,pid).then(n=>{if(n)render()}).catch(()=>{})}
+function ensureOrder(id){if(!id||LZ.orders.has(id)||S.offline||!DB.scaled())return;LZ.orders.add(id);DB.ordersByIds(S,[id]).then(n=>{if(n)render()}).catch(()=>{})}
+function serverSearch(q){q=String(q||"").trim();if(q.length<3||q===LZ.srvQ||S.offline||!DB.scaled())return;clearTimeout(LZ.srvTimer);LZ.srvTimer=setTimeout(async()=>{LZ.srvQ=q;LZ.srvBusy=true;try{await DB.search(S,q)}catch(e){}LZ.srvBusy=false;if(ui.gq.trim()===q)render()},350)}
+async function loadOlder(){const scope=scopeOrders(),oldest=scope.length?Math.min(...scope.map(o=>o.collectedAt||o.createdAt)):Date.now();LZ.olderBusy=true;render();
+ try{const n=await DB.olderOrders(S,oldest,200);LZ.olderDone=n<200;toast(n?`Loaded ${n} older order${n===1?"":"s"}`:"No older orders")}catch(e){toast(errMsg(e))}LZ.olderBusy=false;render()}
+// Report statistics stored on each order at release, so reports don't need full results.
+function orderSummary(o){const sm={scr:{},conf:{}};if(o.tests.includes("UDS"))SCREEN14.forEach(([c,n])=>{const v=((o.results||{}).UDS||{})[n];if(v&&v.v)sm.scr[c]=v.v==="Positive"?1:0});
+ if(o.tests.some(isDef))toxAnalytes(o).forEach(a=>{if(a.resulted)sm.conf[a.name]=a.pos?1:0});return sm}
+
 /* ---------- patient portal ---------- */
 const PP={reports:null,err:""};let ppf=null;
 const ACODE="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -1527,11 +1544,19 @@ function icdSearch(q,limit=15){if(!ICDX.list){icdLoad();return null}q=String(q||
  const toks=q.split(/\s+/).filter(Boolean),out=[];for(const x of ICDX.list){let ok=true,score=0;for(const t of toks){const i=x.w.indexOf(t);if(i<0){ok=false;break}if(i===0||x.w[i-1]===" "||x.w[i-1]==="(")score+=2;else score+=1}if(ok)out.push([score*1000-x.d.length,x])}
  return out.sort((a,b)=>b[0]-a[0]).slice(0,limit).map(x=>x[1])}
 
+/* ---------- order facts (reports, quality indicators) ---------- */
+// Compact rows from the server covering the whole period, shaped like orders so the report code works on either.
+const FX={key:"",rows:null,claims:null,busy:false};
+function factsFor(fromMs,clinic){const key=`${Math.floor(fromMs/DAY)}|${clinic||""}`;if(!DB.scaled()||S.offline)return null;
+ if(FX.key!==key&&!FX.busy){FX.busy=true;FX.key=key;FX.rows=null;Promise.all([DB.orderFacts(fromMs,clinic),can("billing.view")||can("*")?DB.claimsSince(fromMs):Promise.resolve(null)]).then(([rows,cl])=>{FX.rows=(rows||[]).map(r=>({id:r.id,clinicId:r.clinic_id,patientId:r.patient_id,createdAt:new Date(r.created_at).getTime(),status:r.status,tests:r.tests||[],billType:r.bill_type,collectedAt:+r.collected_at||0,releasedAt:r.released_at?+r.released_at:null,rejectReason:r.reject_reason,corrections:Array(r.corrections||0).fill({}),summary:r.summary,history:r.received_at?[{s:"Received",at:+r.received_at}]:[],_fact:true}));FX.claims=cl;FX.busy=false;render()}).catch(()=>{FX.busy=false;FX.key=""})}
+ return FX.key===key?FX.rows:null}
+const factClaims=()=>FX.claims||S.claims||[];
+
 /* ---------- management reports ---------- */
 const RP={months:6,clinic:""};
 const monthKey=t=>{const d=new Date(t);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`};
 const monthLabel=k=>new Date(k+"-15").toLocaleDateString("en-US",{month:"short",year:"2-digit"});
-function orderCharge(o){const cl=(S.claims||[]).find(c=>c.orderId===o.id);return cl?claimTotal(cl):0}
+function orderCharge(o){const cl=factClaims().find(c=>c.orderId===o.id);return cl?claimTotal(cl):0}
 function barChart(rows,series,opts={}){const W=900,H=opts.h||260,P={l:46,r:12,t:12,b:34},n=rows.length;if(!n)return `<div class="empty">No data.</div>`;
  const max=Math.max(1,...rows.map(r=>series.reduce((a,s)=>a+(r[s.k]||0),0))),bw=(W-P.l-P.r)/n,y=v=>P.t+(H-P.t-P.b)*(1-v/max);
  const ticks=[0,.25,.5,.75,1].map(f=>Math.round(max*f));
@@ -1539,9 +1564,9 @@ function barChart(rows,series,opts={}){const W=900,H=opts.h||260,P={l:46,r:12,t:
  ${rows.map((r,i)=>{let acc=0;return series.map(s2=>{const v=r[s2.k]||0,y0=y(acc),y1=y(acc+v);acc+=v;return v?`<rect x="${P.l+i*bw+bw*.18}" y="${y1}" width="${bw*.64}" height="${Math.max(0,y0-y1)}" fill="${s2.c}"><title>${esc(r.label)} · ${esc(s2.n)}: ${v}</title></rect>`:""}).join("")+`<text x="${P.l+i*bw+bw/2}" y="${H-12}" font-size="11" text-anchor="middle" fill="currentColor" opacity=".7">${esc(r.label)}</text>`}).join("")}</svg>
  <div class="row" style="gap:14px;flex-wrap:wrap;margin-top:6px">${series.map(s2=>`<span class="xs"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${s2.c};margin-right:5px;vertical-align:-1px"></span>${esc(s2.n)}</span>`).join("")}</div>`}
 function reportData(){const start=new Date();start.setDate(1);start.setHours(0,0,0,0);start.setMonth(start.getMonth()-(RP.months-1));
- const os=S.orders.filter(o=>o.createdAt>=start.getTime()&&(!RP.clinic||o.clinicId===RP.clinic)),months=[];for(let i=0;i<RP.months;i++){const d=new Date(start);d.setMonth(start.getMonth()+i);months.push(monthKey(d))}
- return {os,months}}
-function vReports(){const {os,months}=reportData(),money_=can("billing.view")||can("*"),rel=os.filter(o=>o.releasedAt);
+ const fx=factsFor(start.getTime(),RP.clinic),src=fx||S.orders,os=src.filter(o=>o.createdAt>=start.getTime()&&(!RP.clinic||o.clinicId===RP.clinic)),months=[];for(let i=0;i<RP.months;i++){const d=new Date(start);d.setMonth(start.getMonth()+i);months.push(monthKey(d))}
+ return {os,months,loading:DB.scaled()&&!fx&&!S.offline}}
+function vReports(){const {os,months,loading}=reportData(),money_=can("billing.view")||can("*"),rel=os.filter(o=>o.releasedAt);
  const cats=[["tox","Toxicology","#1590cf"],["blood","Blood","#7c5cd6"],["mol","Molecular","#16a37a"],["other","Other","#9aa6bb"]];
  const catOf=o=>o.tests.some(c=>c==="UDS"||isDef(c))?"tox":o.tests.some(c=>T(c).cat==="blood")?"blood":o.tests.some(c=>T(c).cat==="mol")?"mol":"other";
  const vol=months.map(k=>{const r={label:monthLabel(k)};os.filter(o=>monthKey(o.createdAt)===k).forEach(o=>{const c=catOf(o);r[c]=(r[c]||0)+1});return r});
@@ -1549,12 +1574,12 @@ function vReports(){const {os,months}=reportData(),money_=can("billing.view")||c
  const clinics=[...new Set(os.map(o=>o.clinicId))].map(id=>{const l=os.filter(o=>o.clinicId===id);return {id,name:(clinicOf(id)||{}).name||id,n:l.length,rel:l.filter(o=>o.releasedAt).length,rej:l.filter(o=>o.status==="Rejected").length,chg:l.reduce((a,o)=>a+orderCharge(o),0),last:Math.max(...l.map(o=>o.createdAt))}}).sort((a,b)=>b.n-a.n);
  const tests={};os.forEach(o=>o.tests.forEach(c=>{tests[c]=(tests[c]||0)+1}));
  const payers={};os.forEach(o=>{const b=o.billType||BILLFROM[(patientOf(o.patientId)||{ins:{}}).ins.type]||"Unknown";payers[b]=(payers[b]||0)+1});
- const scr={};rel.filter(o=>o.tests.includes("UDS")).forEach(o=>SCREEN14.forEach(([c,n])=>{const v=((o.results.UDS||{})[n]||{}).v;if(!v)return;scr[c]=scr[c]||{n,t:0,p:0};scr[c].t++;if(v==="Positive")scr[c].p++}));
- const conf={};rel.filter(o=>o.tests.some(isDef)).forEach(o=>toxAnalytes(o).forEach(a=>{if(!a.resulted)return;conf[a.name]=conf[a.name]||{t:0,p:0};conf[a.name].t++;if(a.pos)conf[a.name].p++}));
+ const smOf=o=>o.summary||(o.results?orderSummary(o):null);let noSum=0;
+ const scr={},conf={};rel.forEach(o=>{const sm=smOf(o);if(!sm){if(o.tests.some(c=>c==="UDS"||isDef(c)))noSum++;return}Object.entries(sm.scr||{}).forEach(([c,v])=>{const n=(SCREEN14.find(x=>x[0]===c)||[c,c])[1];scr[c]=scr[c]||{n,t:0,p:0};scr[c].t++;scr[c].p+=v});Object.entries(sm.conf||{}).forEach(([a,v])=>{conf[a]=conf[a]||{t:0,p:0};conf[a].t++;conf[a].p+=v})});
  const tat=months.map(k=>{const l=rel.filter(o=>monthKey(o.collectedAt)===k);const m=med(l.map(o=>o.releasedAt-o.collectedAt));return {k,n:l.length,m}});
  const hrs=ms=>ms==null?"—":ms<2*DAY?`${(ms/36e5).toFixed(1)} h`:`${(ms/DAY).toFixed(1)} d`;
  const tbl=(h,rows)=>`<div class="tbl-wrap"><table class="tbl"><thead><tr>${h.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody>${rows.join("")||`<tr><td colspan="${h.length}" class="small muted">No data in this period.</td></tr>`}</tbody></table></div>`;
- return `<div class="page-h"><div><h1>Reports</h1><p class="muted">Volume, test mix, positivity and turnaround. No patient information.</p></div><button class="btn" data-a="rpExport">${I.down} Export CSV</button></div>
+ return `<div class="page-h"><div><h1>Reports</h1><p class="muted">Volume, test mix, positivity and turnaround. No patient information.${loading?" Loading the full period…":""}</p></div><div class="row">${noSum&&can("*")?`<button class="btn" data-a="rpRebuild" ${RP.rebuilding?"disabled":""}>${RP.rebuilding?`Rebuilding… ${RP.rebuilt||0}`:`Rebuild statistics (${noSum} older order${noSum===1?"":"s"})`}</button>`:""}<button class="btn" data-a="rpExport">${I.down} Export CSV</button></div></div>
  <div class="row" style="margin-bottom:16px;gap:8px;flex-wrap:wrap">${[3,6,12].map(m=>`<span class="pill ${RP.months===m?"on":""}" data-a="rpMonths" data-val="${m}">Last ${m} months</span>`).join("")}<select class="input" style="width:auto;margin-left:auto" data-b="rp.clinic" data-live="1"><option value="">All clinics</option>${S.clinics.map(c=>`<option value="${c.id}" ${RP.clinic===c.id?"selected":""}>${esc(c.name)}</option>`).join("")}</select></div>
  <div class="stack"><div class="stats"><div class="stat"><div class="v">${os.length}</div><div class="k">Orders</div></div><div class="stat"><div class="v">${new Set(os.map(o=>o.patientId)).size}</div><div class="k">Patients</div></div><div class="stat"><div class="v">${rel.length}</div><div class="k">Released</div></div>${money_?`<div class="stat"><div class="v">${money(os.reduce((a,o)=>a+orderCharge(o),0))}</div><div class="k">Gross charges billed</div></div>`:`<div class="stat"><div class="v">${clinics.length}</div><div class="k">Ordering clinics</div></div>`}</div>
  <div class="panel"><div class="panel-h"><h2>Orders by month</h2></div><div class="panel-b">${barChart(vol,cats.map(([k,n,c])=>({k,n,c})),{label:"Orders by month"})}</div></div>
@@ -1844,7 +1869,7 @@ function vQMSDetail(){const id=route.p.id,r=(QM.recs||[]).find(x=>x.id===id);if(
  return `<div class="crumb"><button data-a="qmsBack" data-tab="${r.kind}">Compliance</button> / ${esc(K.t)}</div>
  <div class="page-h"><div><h1>${esc(r.name||r.title||r.number||K.t)}</h1></div>${can("qms")?`<button class="btn" data-a="qmsEdit" data-id="${r.id}">${I.pen} Edit</button>`:""}</div>
  <div class="stack"><div class="panel"><div class="panel-b grid g4">${info}</div></div>${extra}</div>`}
-function qualityIndicators(){const since=Date.now()-QM.days*DAY,os=S.orders.filter(o=>o.createdAt>=since),rel=os.filter(o=>o.releasedAt),med=a=>{if(!a.length)return null;const s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length/2)]};
+function qualityIndicators(){const since=Date.now()-QM.days*DAY,fx=factsFor(since,""),os=(fx||S.orders).filter(o=>o.createdAt>=since),rel=os.filter(o=>o.releasedAt),med=a=>{if(!a.length)return null;const s=[...a].sort((x,y)=>x-y);return s[Math.floor(s.length/2)]};
  const hrs=ms=>ms==null?"—":ms<36e5*48?`${(ms/36e5).toFixed(1)} h`:`${(ms/DAY).toFixed(1)} days`;
  const recvAt=o=>(o.history.find(h=>h.s==="Received")||{}).at;
  const row=(name,list)=>{const r=list.filter(o=>o.releasedAt),rj=list.filter(o=>o.status==="Rejected").length,cr=r.filter(o=>(o.corrections||[]).length).length;
@@ -1852,7 +1877,7 @@ function qualityIndicators(){const since=Date.now()-QM.days*DAY,os=S.orders.filt
  const byClinic=[...new Set(os.map(o=>o.clinicId))].map(id=>[(clinicOf(id)||{}).name||id,os.filter(o=>o.clinicId===id)]).sort((a,b)=>b[1].length-a[1].length);
  const byCat=CATS.map(c=>[c.name,os.filter(o=>o.tests.some(t=>T(t).cat===c.id))]).filter(x=>x[1].length);
  const head=`<thead><tr><th></th><th>Orders</th><th>Released</th><th>Median collection to release</th><th>Median receipt to release</th><th>Rejected</th><th>Corrected</th></tr></thead>`;
- return `<div class="stack"><div class="row"><span class="small muted">Period:</span>${[30,90,180,365].map(d=>`<span class="pill ${QM.days===d?"on":""}" data-a="qmsDays" data-val="${d}">Last ${d} days</span>`).join("")}</div>
+ return `<div class="stack">${DB.scaled()&&!fx?`<p class="small muted">Loading the full period…</p>`:""}<div class="row"><span class="small muted">Period:</span>${[30,90,180,365].map(d=>`<span class="pill ${QM.days===d?"on":""}" data-a="qmsDays" data-val="${d}">Last ${d} days</span>`).join("")}</div>
  <div class="panel"><div class="panel-h"><h2>All orders</h2></div><div class="tbl-wrap"><table class="tbl">${head}<tbody>${row("All",os)}</tbody></table></div></div>
  <div class="panel"><div class="panel-h"><h2>By test type</h2></div><div class="tbl-wrap"><table class="tbl">${head}<tbody>${byCat.map(([n,l])=>row(n,l)).join("")||'<tr><td class="empty">No orders in this period.</td></tr>'}</tbody></table></div></div>
  <div class="panel"><div class="panel-h"><h2>By clinic</h2></div><div class="tbl-wrap"><table class="tbl">${head}<tbody>${byClinic.map(([n,l])=>row(n,l)).join("")||'<tr><td class="empty">No orders in this period.</td></tr>'}</tbody></table></div></div>
@@ -2109,7 +2134,7 @@ async function boot(){if(CONFIG_ERROR){S=emptyS();route={v:"login",p:{}};render(
  finally{booting=false}}
 
 async function refresh(){if(!me()||document.hidden||S.offline)return;if(me().role==="patient")return;
- try{const lab=isLab(),fresh=await DB.loadAll(lab);DB.merge(S,fresh,lab);
+ try{const lab=isLab();if(!(await DB.loadChanges(S,lab))){const fresh=await DB.loadAll(lab);DB.merge(S,fresh,lab)}
   const busy=$("#modal-root").innerHTML||["order-new","entry","settings","labset"].includes(route.v)||(document.activeElement&&["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName));
   if(!busy)render()}catch(e){}}
 setInterval(refresh,30000);
@@ -2128,7 +2153,7 @@ Object.assign(A,{
  async login(){const ev=$("#le"),pv=$("#lp");if(ev)lf.email=ev.value;if(pv)lf.pw=pv.value;if(!lf.email.trim()||!lf.pw)return toast("Enter your email or username and password.");try{try{if(lf.trust)localStorage.setItem("fbg-trust",String(Date.now()+12*36e5));else localStorage.removeItem("fbg-trust")}catch(e){}await DB.signIn(loginEmail(lf.email),lf.pw);lf.pw="";await boot()}catch(e){toast(/invalid/i.test(errMsg(e))?"That email and password don't match an account.":/confirm/i.test(errMsg(e))?"Confirm your email first. Check your inbox for the link.":errMsg(e))}},
  async forgotPw(){const ev=$("#le");if(ev)lf.email=ev.value;const e=lf.email.trim();if(!e)return toast("Enter your email above first.");await DB.resetPassword(e);toast("If that email has an account, a reset link is on its way.")},
  async setNewPw(){if((lf.pw1||"").length<12)return toast("Use at least 12 characters.");if(lf.pw1!==lf.pw2)return toast("The passwords don't match.");try{await DB.updatePassword(lf.pw1);if(forcedPw){await DB.passwordChanged();forcedPw=false}lf.pw1=lf.pw2="";toast("Password updated");await boot()}catch(e){toast(errMsg(e))}},
- async mfaVerify(){const code=(lf.code||"").replace(/\s/g,"");if(!/^\d{6}$/.test(code))return toast("Enter the 6-digit code.");try{await DB.mfaVerify(mfa.factorId,code);lf.code="";mfa=null;await boot()}catch(e){toast("That code didn't work. Wait for a new code and try again.")}},
+ async mfaVerify(){const code=(lf.code||"").replace(/\s/g,"");if(!/^\d{6}$/.test(code))return toast("Enter the 6-digit code.");try{await DB.mfaVerify(mfa.factorId,code)}catch(e){return toast("That code didn't work. Wait for a new code and try again.")}lf.code="";mfa=null;await boot()},
  async logout(){if(S.offline){if(S.orders.length&&!confirm(`${S.orders.length} order${S.orders.length>1?"s haven't":" hasn't"} uploaded yet. They stay encrypted on this device and upload the next time you sign in here. Sign out?`))return;Offline.clearStoredSession();S=emptyS();draft=null;closeModal();route={v:"login",p:{}};render();return}try{if(me()){await DB.flushNow(S,isLab());DB.log("sign_out","session",S.session);await new Promise(r=>setTimeout(r,250))}}catch(e){}try{sessionStorage.removeItem("fbg-signed-in");localStorage.removeItem("fbg-trust")}catch(e){}await DB.signOut();S=emptyS();draft=null;cs=null;labForm=null;closeModal();route={v:"login",p:{}};render()},
  toLogin(){route={v:"login",p:{}};render()},
  theme(){const dark=document.documentElement.getAttribute("data-theme")==="dark"||(!S.theme&&matchMedia("(prefers-color-scheme: dark)").matches);S.theme=dark?"light":"dark";try{localStorage.setItem("fbg-theme",S.theme)}catch(e){}applyTheme()},

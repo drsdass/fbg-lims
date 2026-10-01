@@ -20,6 +20,46 @@ const SETTINGS = ["lab", "fees", "confMap"];
 const PENDING_KEY = "fbg-pending-registration";
 
 let synced = {};           // "table:id" -> JSON last known to be on the server
+// Sign-in loads open work plus the last WINDOW_DAYS; older records are fetched on demand.
+export const WINDOW_DAYS = 90;
+const WINDOWED = new Set(["patients", "orders", "notes", "claims", "outbox", "supply_orders", "pickups", "invoices"]);
+let lastSync = {};         // table -> server timestamp of the newest change seen
+let scaleOk = true;        // false until 0011_scale.sql has been run
+const rpcMissing = (e) => e && (e.code === "PGRST202" || e.code === "42883" || /could not find the function|function .* does not exist/i.test(e.message || ""));
+async function fetchRpc(fn, args) {
+  const out = []; const page = 1000;
+  for (let from = 0; ; from += page) {
+    const { data, error } = await sb.rpc(fn, args).range(from, from + page - 1);
+    if (error) throw error;
+    out.push(...(data || []));
+    if (!data || data.length < page) break;
+  }
+  return out;
+}
+// Records in the window can point at older ones (a claim on hold for months, an unpaid invoice).
+// Fetch those referenced orders and patients so nothing on screen points at a missing record.
+async function fillRefs(res) {
+  if (!scaleOk) return;
+  const have = new Set((res.orders || []).map(o => o.id)), need = new Set();
+  [...(res.claims || []), ...(res.outbox || []), ...(res.notes || [])].forEach(x => { if (x && x.orderId && !have.has(x.orderId)) need.add(x.orderId); });
+  (res.invoices || []).forEach(i => (i.lines || []).forEach(l => { if (l.orderId && !have.has(l.orderId)) need.add(l.orderId); }));
+  if (need.size) { const r = await sb.rpc("orders_by_ids", { p_ids: [...need] }); if (!r.error) res.orders = [...(res.orders || []), ...(r.data || []).map(x => x.data)]; }
+  const haveP = new Set((res.patients || []).map(p => p.id)), needP = new Set();
+  [...(res.orders || []), ...(res.claims || [])].forEach(x => { if (x && x.patientId && !haveP.has(x.patientId)) needP.add(x.patientId); });
+  if (needP.size) { const r = await sb.rpc("patients_by_ids", { p_ids: [...needP] }); if (!r.error) res.patients = [...(res.patients || []), ...(r.data || []).map(x => x.data)]; }
+}
+const newest = (rows, prev) => rows.reduce((m, r) => (r.updated_at && r.updated_at > m ? r.updated_at : m), prev || "");
+// Merge server rows into S without overwriting local edits that haven't saved yet.
+function mergeRows(S, t, rows) {
+  const list = S[t] = S[t] || [], idx = new Map(list.map((d, i) => [d.id, i]));
+  for (const r of rows) {
+    const d = r.data, k = t + ":" + d.id, i = idx.get(d.id);
+    if (i !== undefined) { const mine = list[i]; if (synced[k] !== undefined && synced[k] !== JSON.stringify(mine)) continue; list[i] = d; }
+    else { idx.set(d.id, list.length); list.push(d); }
+    synced[k] = JSON.stringify(d);
+  }
+  return rows.length;
+}
 let canSettings = false, saveTimer = null, saving = false, again = false, onError = () => {};
 
 const missingTable = (e) => e && (e.code === "42P01" || e.code === "PGRST205" || /does not exist|could not find the table/i.test(e.message || ""));
@@ -161,7 +201,20 @@ export const DB = {
   async loadAll(isLab) {
     const tables = isLab ? DOC_TABLES : DOC_TABLES.filter(t => !LAB_ONLY.has(t));
     const res = {};
-    await Promise.all(tables.map(async t => { res[t] = (await fetchAll(t, "id,data")).map(r => r.data); }));
+    let now = new Date().toISOString();
+    try { const { data, error } = await sb.rpc("server_now"); if (error) { if (rpcMissing(error)) scaleOk = false; else throw error; } else if (data) now = data; } catch (e) { scaleOk = false; }
+    lastSync = {};
+    await Promise.all(tables.map(async t => {
+      let rows;
+      if (scaleOk && WINDOWED.has(t)) {
+        try { rows = await fetchRpc("doc_window", { p_table: t, p_days: WINDOW_DAYS }); }
+        catch (e) { if (!rpcMissing(e)) throw e; scaleOk = false; }
+      }
+      if (!rows) rows = await fetchAll(t, "id,data,updated_at");
+      res[t] = rows.map(r => r.data);
+      lastSync[t] = newest(rows, now) > now ? newest(rows, now) : now;
+    }));
+    await fillRefs(res);
     const set = await fetchAll("settings", "key,data");
     for (const r of set) res[r.key] = r.data;
     if (!isLab) { res.claims = []; res.outbox = []; }
@@ -189,6 +242,63 @@ export const DB = {
     }
     if (!isLab && fresh.lab) S.lab = fresh.lab;
   },
+  scaled() { return scaleOk; },
+  // Every 30 seconds: fetch only what changed. Returns false if the server can't do that yet.
+  async loadChanges(S, isLab) {
+    if (!scaleOk) return false;
+    const tables = isLab ? DOC_TABLES : DOC_TABLES.filter(t => !LAB_ONLY.has(t));
+    for (const t of tables) {
+      const since = new Date(new Date(lastSync[t] || 0).getTime() - 5000).toISOString();
+      const { data, error } = await sb.rpc("changes_since", { p_table: t, p_since: since });
+      if (error) { if (rpcMissing(error)) { scaleOk = false; return false; } throw error; }
+      if (data && data.length) { mergeRows(S, t, data); lastSync[t] = newest(data, lastSync[t]); }
+    }
+    const refs = { orders: S.orders, patients: S.patients, claims: S.claims, outbox: S.outbox, notes: S.notes, invoices: S.invoices };
+    const before = { o: (S.orders || []).length, p: (S.patients || []).length };
+    await fillRefs(refs);
+    if (refs.orders.length > before.o) mergeRows(S, "orders", refs.orders.slice(before.o).map(d => ({ data: d })));
+    if (refs.patients.length > before.p) mergeRows(S, "patients", refs.patients.slice(before.p).map(d => ({ data: d })));
+    const set = await fetchAll("settings", "key,data");
+    for (const r of set) { const k = "settings:" + r.key; if (synced[k] === undefined || synced[k] === JSON.stringify(S[r.key])) { S[r.key] = r.data; synced[k] = JSON.stringify(r.data); } }
+    return true;
+  },
+  // ---------- on-demand lookups (older records) ----------
+  async search(S, q) {
+    if (!scaleOk || String(q).trim().length < 3) return 0;
+    const [o, p] = await Promise.all([sb.rpc("search_orders", { p_q: q }), sb.rpc("search_patients", { p_q: q })]);
+    if (o.error || p.error) return 0;
+    const ids = [...new Set((o.data || []).map(r => r.data.patientId))].filter(id => !(S.patients || []).some(x => x.id === id));
+    if (ids.length) { const r = await sb.rpc("patients_by_ids", { p_ids: ids }); if (!r.error) mergeRows(S, "patients", r.data || []); }
+    return mergeRows(S, "patients", p.data || []) + mergeRows(S, "orders", o.data || []);
+  },
+  async patientOrders(S, pid) {
+    if (!scaleOk) return 0;
+    const { data, error } = await sb.rpc("patient_orders", { p_patient: pid });
+    if (error) return 0;
+    if (!(S.patients || []).some(x => x.id === pid)) { const r = await sb.rpc("patients_by_ids", { p_ids: [pid] }); if (!r.error) mergeRows(S, "patients", r.data || []); }
+    return mergeRows(S, "orders", data || []);
+  },
+  async ordersByIds(S, ids) {
+    if (!scaleOk || !ids.length) return 0;
+    const { data, error } = await sb.rpc("orders_by_ids", { p_ids: ids }); if (error) return 0;
+    const pids = [...new Set((data || []).map(r => r.data.patientId))].filter(id => !(S.patients || []).some(x => x.id === id));
+    if (pids.length) { const r = await sb.rpc("patients_by_ids", { p_ids: pids }); if (!r.error) mergeRows(S, "patients", r.data || []); }
+    return mergeRows(S, "orders", data || []);
+  },
+  async patientsByIds(S, ids) { if (!scaleOk || !ids.length) return 0; const { data, error } = await sb.rpc("patients_by_ids", { p_ids: ids }); if (error) return 0; return mergeRows(S, "patients", data || []); },
+  async olderOrders(S, before, limit) {
+    if (!scaleOk) return 0;
+    const { data, error } = await sb.rpc("orders_before", { p_before: Math.floor(before), p_limit: limit || 200 }); if (error) return 0;
+    const pids = [...new Set((data || []).map(r => r.data.patientId))].filter(id => !(S.patients || []).some(x => x.id === id));
+    if (pids.length) { const r = await sb.rpc("patients_by_ids", { p_ids: pids }); if (!r.error) mergeRows(S, "patients", r.data || []); }
+    return mergeRows(S, "orders", data || []);
+  },
+  async clientBillOrders(S, from, to) { if (!scaleOk) return 0; const { data, error } = await sb.rpc("client_bill_orders", { p_from: Math.floor(from), p_to: Math.floor(to) }); if (error) return 0; return mergeRows(S, "orders", data || []); },
+  async orderFacts(fromMs, clinic) { if (!scaleOk) return null; try { return await fetchRpc("order_facts", { p_from: Math.floor(fromMs), p_clinic: clinic || null }); } catch (e) { if (rpcMissing(e)) { scaleOk = false; return null; } throw e; } },
+  async claimsSince(fromMs) { if (!scaleOk) return null; try { return (await fetchRpc("claims_since", { p_from: Math.floor(fromMs) })).map(r => r.data); } catch (e) { return null; } },
+  async patientFacts() { if (!scaleOk) return null; try { return await fetchRpc("patient_facts", {}); } catch (e) { return null; } },
+  async ordersMissingSummary(S, limit) { const { data, error } = await sb.rpc("orders_missing_summary", { p_limit: limit || 100 }); if (error) throw error; mergeRows(S, "orders", data || []); return (data || []).map(r => r.data.id); },
+  async allRows(t) { return (await fetchAll(t, "id,data")).map(r => r.data); },
   queueSave(S, isLab) { clearTimeout(saveTimer); saveTimer = setTimeout(() => flush(S, isLab), 350); },
   flushNow(S, isLab) { clearTimeout(saveTimer); return flush(S, isLab); },
   hasUnsaved(S, isLab) { return dirty(S, isLab).length > 0; },
