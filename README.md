@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) and `supabase/migrations/0010_patient_portal.sql` (patient portal).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -241,6 +241,27 @@ each clinic's client prices (Clinic → Edit) or the charge master. Clinics see 
 settings, keep the lab address in the form "street, city, ST 12345", and add each patient's payer ID. Only insurance
 lines are sent; client-bill and self-pay lines go on invoices. Start in Test mode until the clearinghouse accepts a file.
 
+## 18. ICD-10 search, offline entry, patient portal
+
+**ICD-10 search.** The order form searches the CMS ICD-10-CM code set (April 1, 2026 release, 74,736 billable codes,
+`public/icd10cm-2026.json`) by code or words. Non-billable category codes are refused, codes show their descriptions on
+requisitions, and claims flag codes that aren't billable. When CMS publishes a new release (each October 1, plus April
+updates), replace the JSON file.
+
+**Offline entry.** Collectors turn on "Offline order entry on this device" (sidebar). While online, the device stores the
+clinic list and settings (no patient data) and reserves 15 accession numbers. Without a connection the portal opens in
+offline mode: new orders are saved on the device encrypted (AES-GCM, non-extractable key), labels and requisitions print,
+and everything uploads automatically when the connection returns (matching existing patients), then the device copy is
+deleted. Offline mode works only within 7 days of the last online sign-in on that device. Use lab-issued devices with a
+screen lock. The service worker (`public/sw.js`) caches only the app, never patient data.
+
+**Patient portal.** Each order gets an access code. The Patient access button prints a slip with instructions. Patients
+choose "View your lab results" on the sign-in page and register with the code, last name and date of birth (8 failed
+attempts per hour per IP address are allowed). They see only locked copies of their own released reports, never orders
+or internal notes, and can add results from other visits with another code. Lab settings → Patient portal sets an
+optional delay after release; the Patient access window can hide a single order's report. Deploy
+`supabase/functions/patient-access` with JWT verification OFF.
+
 ## Before go-live
 
 - [ ] Supabase Team plan, HIPAA add-on, signed BAA, project marked High Compliance
@@ -255,6 +276,8 @@ lines are sent; client-bill and self-pay lines go on invoices. Start in Test mod
 - [ ] Test email, text and fax received (Notification log → Send test)
 - [ ] QC targets reviewed for each control lot; monthly Levey-Jennings review assigned
 - [ ] Every person's roles reviewed; former staff deactivated
+- [ ] Patient portal delay agreed with providers; access-code slips added to the collection workflow
+- [ ] Offline entry tested on a collector phone (airplane mode)
 - [ ] 837P test file accepted by the clearinghouse before switching to Production
 - [ ] Delta check limits, retention periods and batch review limits confirmed by the lab director
 - [ ] Compliance: equipment, lots, personnel, SOPs, vendors and BAAs entered; first risk assessment and access review recorded

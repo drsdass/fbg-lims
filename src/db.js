@@ -216,6 +216,15 @@ export const DB = {
   async devicesList() { const { data, error } = await sb.from("instrument_devices").select("id,name,active,created_at,last_seen").order("created_at"); if (error) { if (missingTable(error)) return []; throw error; } return data; },
   async deviceAdd(name, tokenHash) { const { error } = await sb.from("instrument_devices").insert({ name, token_hash: tokenHash }); if (error) throw error; },
   async deviceSetActive(id, active) { const { error } = await sb.from("instrument_devices").update({ active }).eq("id", id); if (error) throw error; },
+  // ---------- patient portal ----------
+  async patientReports() { const { data, error } = await sb.from("report_versions").select("id,order_id,version,data,released_at"); if (error) throw error; return data; },
+  async publicLab() { const { data } = await sb.from("settings").select("data").eq("key", "lab").maybeSingle(); return data && data.data ? { name: data.data.name, phone: data.data.phone, address: data.data.address, clia: data.data.clia } : null; },
+  async patientAccess(body) {
+    const { data, error } = await sb.functions.invoke("patient-access", { body });
+    if (error) { let msg = error.message; try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) {} throw new Error(msg); }
+    if (data && data.error) throw new Error(data.error);
+    return data;
+  },
   // ---------- locked report versions ----------
   async reportVersions(orderId) {
     const { data, error } = await sb.from("report_versions").select("id,version,data,released_at").eq("order_id", orderId).order("version", { ascending: true });

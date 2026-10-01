@@ -349,3 +349,13 @@ table.rp-t{width:100%;border-collapse:collapse;table-layout:fixed;margin:0}
   body.printing .modal-b{padding:0}
   .label{break-inside:avoid}
 }
+
+.icd-opt{display:block;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--border);padding:8px 12px;font:inherit;font-size:13px;color:var(--ink);cursor:pointer}
+.icd-opt:hover,.icd-opt:focus{background:var(--hover,rgba(21,144,207,.08));outline:none}
+.icd-opt:disabled{opacity:.45;cursor:default}
+.icd-opt b{display:inline-block;min-width:74px;color:var(--brand,#1590cf)}
+
+.pp{min-height:100vh;background:var(--bg)}
+.pp-top{display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-bottom:1px solid var(--border);background:var(--panel,#fff)}
+.pp-top img{height:36px}
+.pp-main{max-width:860px;margin:0 auto;padding:28px 20px 60px}

@@ -2,6 +2,7 @@ import { DB, CONFIG_ERROR } from "./db.js";
 import readXlsxFile from "read-excel-file/browser";
 import { BRANDS } from "./brands.js";
 import { BRIDGE_PS1 } from "./bridgeScript.js";
+import { Offline } from "./offline.js";
 import { parseTable as parseExport, normName, stripSuffix, validityOf, C560_ALIAS, VALIDITY, VALIDITY_CODES, isControlName } from "./imports.js";
 
 const LOGO="/logo.png";
@@ -41,6 +42,7 @@ const I={
  x:ic('<path d="M6 6l12 12M18 6 6 18"/>'),
  drop:ic('<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>'),
 };
+I.cloud=ic('<path d="M7 18h10a4 4 0 0 0 .6-7.96A6 6 0 0 0 6.1 9.1 4.5 4.5 0 0 0 7 18z"/><path d="m3 3 18 18"/>');
 I.truck=ic('<path d="M3 7h11v9H3zM14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="17" cy="18" r="1.8"/>');
 I.check=ic('<path d="m5 12 5 5 9-10"/>');
 I.shield=ic('<path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6z"/><path d="m9 12 2 2 4-4"/>');
@@ -233,7 +235,7 @@ function seed(){
 }
 function acc(t,n){const d=new Date(t);return `FBG${String(d.getFullYear()).slice(2)}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}-${String(n).padStart(4,"0")}`}
 function load(){try{const r=localStorage.getItem(KEY);if(r){const x=JSON.parse(r);if(x&&x.v===3){S=x;return}}}catch(e){}S=seed()}
-function save(){if(me())DB.queueSave(S,isLab())}
+function save(){if(!me())return;if(S.offline){offlinePersist();return}DB.queueSave(S,isLab())}
 
 /* ---------- results logic ---------- */
 function fillDefaults(o,onlyEmpty,sex){
@@ -305,7 +307,7 @@ let ui={pq:"",pins:"",rq:"",rstat:"",rcat:"",rfrom:"",rto:"",runread:false,qq:""
 let lf={email:"",pw:""};
 let reg=null,draft=null,ptForm=null,cs=null,provForm=null,labForm=null,rej=null;
 let sigs={};
-const roots={rp:()=>RP,pkf:()=>pkf,pk:()=>PK,ib:()=>IB,sg:()=>SG,stf:()=>stf,dlt:()=>labForm,qmf:()=>qmf,al:()=>AL,qf:()=>qf,qs:()=>QCS,spf:()=>spf,clf:()=>clf,uf:()=>uf,au:()=>AU,ui:()=>ui,lf:()=>lf,reg:()=>reg,draft:()=>draft,pt:()=>ptForm,cs:()=>cs,prov:()=>provForm,labf:()=>labForm,rej:()=>rej,res:()=>resEdit};
+const roots={ppf:()=>ppf,rp:()=>RP,pkf:()=>pkf,pk:()=>PK,ib:()=>IB,sg:()=>SG,stf:()=>stf,dlt:()=>labForm,qmf:()=>qmf,al:()=>AL,qf:()=>qf,qs:()=>QCS,spf:()=>spf,clf:()=>clf,uf:()=>uf,au:()=>AU,ui:()=>ui,lf:()=>lf,reg:()=>reg,draft:()=>draft,pt:()=>ptForm,cs:()=>cs,prov:()=>provForm,labf:()=>labForm,rej:()=>rej,res:()=>resEdit};
 let resEdit=null;
 
 const me=()=>S.users.find(u=>u.id===S.session);
@@ -334,15 +336,15 @@ function render(){
  const ae=document.activeElement,fb=ae&&ae.dataset?ae.dataset.b:null;let pos=null;try{pos=fb?ae.selectionStart:null}catch(e){}
  const app=$("#app");
  if(!me()){app.innerHTML=(AUTHV[route.v]||vLogin)()}
- else app.innerHTML=shell(page());
+ else app.innerHTML=me().role==="patient"?patientShell():shell(page());
  after();
  if(openForm&&$("#modal-root").innerHTML){refreshing=true;formModal(openForm);refreshing=false}
  if(fb){const el=document.querySelector(`[data-b="${CSS.escape(fb)}"]`);if(el&&el!==document.activeElement){el.focus();try{if(pos!=null)el.setSelectionRange(pos,pos)}catch(e){}}}
 }
-function labAllowed(v){const need={pickups:["pickups"],reports:["reports"],invoice:["billing","billing.view"],storage:["orders.receive","results.enter"],qc:["qc","results.view"],qcm:["qc","results.view"],supplies:["supplies"],"order-new":["orders.enter"],instruments:["instruments","sendouts"],billing:["billing","billing.view"],clinics:["clinics.view"],outbox:["alerts"],audit:["audit"],users:["users"],labset:["settings"],entry:["results.enter","results.release"]}[v];return !need||need.some(can)}
+function labAllowed(v){if(S.offline)return ["offline","order-new","order"].includes(v);const need={pickups:["pickups"],reports:["reports"],invoice:["billing","billing.view"],storage:["orders.receive","results.enter"],qc:["qc","results.view"],qcm:["qc","results.view"],supplies:["supplies"],"order-new":["orders.enter"],instruments:["instruments","sendouts"],billing:["billing","billing.view"],clinics:["clinics.view"],outbox:["alerts"],audit:["audit"],users:["users"],labset:["settings"],entry:["results.enter","results.release"]}[v];return !need||need.some(can)}
 function page(){
  const v=route.v,lab=isLab();if(!lab&&((v==="order-new"&&!cset(myClinic(),"ordering"))||(v==="supplies"&&!cset(myClinic(),"supplies"))))route={v:"dash",p:{}};if(lab&&!labAllowed(v))route={v:"dash",p:{}};
- const map=lab?{dash:vLabDash,queue:vQueue,order:vOrder,entry:vEntry,clinics:vClinics,menu:vMenu,instruments:vInstruments,billing:vBilling,"order-new":vOrderNew,audit:vAudit,users:vUsers,supplies:vSupplies,qc:vQC,qcm:vQCM,qms:vQMS,qmsd:vQMSDetail,storage:vStorage,pickups:vPickups,reports:vReports,outbox:vOutbox,labset:vLabSet,notes:vNotes,patient:vPatient}
+ const map=lab?{dash:vLabDash,queue:vQueue,order:vOrder,entry:vEntry,clinics:vClinics,menu:vMenu,instruments:vInstruments,billing:vBilling,"order-new":vOrderNew,audit:vAudit,users:vUsers,supplies:vSupplies,qc:vQC,qcm:vQCM,qms:vQMS,qmsd:vQMSDetail,storage:vStorage,pickups:vPickups,reports:vReports,offline:vOffline,outbox:vOutbox,labset:vLabSet,notes:vNotes,patient:vPatient}
              :{dash:vClinicDash,patients:vPatients,patient:vPatient,"order-new":vOrderNew,results:vResults,order:vOrder,notes:vNotes,menu:vMenu,settings:vSettings,supplies:vSupplies,pickups:vPickups,invoices:vInvoices};
  return (map[v]||map.dash)();
 }
@@ -350,14 +352,14 @@ function shell(content){
  const u=me(),lab=isLab(),c=lab?null:myClinic(),n=unread();
  const openQ=S.orders.filter(o=>["Ordered","Received","In Process"].includes(o.status)).length;
  const unreadRes=lab?0:S.orders.filter(o=>o.clinicId===u.clinicId&&o.status==="Released"&&!o.readAt).length;
- const items=lab?[["dash","Dashboard",I.home],["order-new","New order",I.plus],["queue","Accessioning",I.flask,openQ],["pickups","Pickups",I.truck,(S.pickups||[]).filter(x=>x.status==="Requested").length||""],["storage","Specimen storage",I.box,(()=>{const n=S.orders.filter(o=>o.storage&&!o.storage.disposedAt&&o.storage.retainUntil<Date.now()).length;return n||""})()],["qc","Quality control",I.chart],["instruments","Instruments",I.chip,(IB.list||[]).length||(can("instruments")?pendingFor("UDS").length+pendingFor("CONF").length+pendingFor("CONFOF").length:0)+(can("sendouts")?refPending().length:0)||""],["billing","Billing",I.dollar,can("billing")?S.claims.filter(c=>claimStatus(c)==="Ready").length||"":""],["clinics","Clinics",I.building,can("clinics.approve")?S.clinics.filter(x=>x.status==="pending").length||"":""],["menu","Test menu",I.list],["supplies","Supply orders",I.box,S.supply_orders.filter(x=>x.status==="New").length||""],["reports","Reports",I.chart],["qms","Compliance",I.shield,qmsDueCount()||""],["outbox","Notification log",I.send],["audit","Audit log",I.list],["users","Users",I.users],["labset","Lab settings",I.gear]].filter(([v])=>labAllowed(v))
+ const items=S.offline?[["offline","Offline orders",I.cloud,S.orders.length||""],["order-new","New order",I.plus]]:lab?[["dash","Dashboard",I.home],["order-new","New order",I.plus],["queue","Accessioning",I.flask,openQ],["pickups","Pickups",I.truck,(S.pickups||[]).filter(x=>x.status==="Requested").length||""],["storage","Specimen storage",I.box,(()=>{const n=S.orders.filter(o=>o.storage&&!o.storage.disposedAt&&o.storage.retainUntil<Date.now()).length;return n||""})()],["qc","Quality control",I.chart],["instruments","Instruments",I.chip,(IB.list||[]).length||(can("instruments")?pendingFor("UDS").length+pendingFor("CONF").length+pendingFor("CONFOF").length:0)+(can("sendouts")?refPending().length:0)||""],["billing","Billing",I.dollar,can("billing")?S.claims.filter(c=>claimStatus(c)==="Ready").length||"":""],["clinics","Clinics",I.building,can("clinics.approve")?S.clinics.filter(x=>x.status==="pending").length||"":""],["menu","Test menu",I.list],["supplies","Supply orders",I.box,S.supply_orders.filter(x=>x.status==="New").length||""],["reports","Reports",I.chart],["qms","Compliance",I.shield,qmsDueCount()||""],["outbox","Notification log",I.send],["audit","Audit log",I.list],["users","Users",I.users],["labset","Lab settings",I.gear]].filter(([v])=>labAllowed(v))
   :[["dash","Dashboard",I.home],["patients","Patients",I.users],...(cset(c,"ordering")?[["order-new","New order",I.plus]]:[]),["results","Orders & results",I.doc,unreadRes||""],...(cset(c,"supplies")?[["supplies","Supplies",I.box]]:[]),["pickups","Pickups",I.truck],...((S.invoices||[]).length?[["invoices","Invoices",I.doc]]:[]),["notes","Notifications",I.bell,n||""],["menu","Test menu",I.list],["settings","Clinic settings",I.gear]];
  const act=v=>route.v===v||(v==="qc"&&route.v==="qcm")||(v==="qms"&&route.v==="qmsd")||(v==="results"&&route.v==="order"&&!lab)||(v==="queue"&&["order","entry"].includes(route.v)&&lab)||(v==="patients"&&route.v==="patient");
  return `<div class="shell"><aside class="side">
   <div class="brand"><img src="${LOGO}" alt="First Bio Genetics"></div>
   <div class="portal-tag">${lab?"<b>Laboratory</b> workspace":`<b>${esc(c.name)}</b>`}</div>
   <nav class="nav" aria-label="Main">${items.map(([v,l,i,cnt])=>`<button class="${act(v)?"on":""}" data-a="go" data-v="${v}">${i}<span>${l}</span>${cnt?`<span class="cnt">${cnt}</span>`:""}</button>`).join("")}</nav>
-  <div class="side-foot">${trustedUntil()>Date.now()?`Signed in on this computer until ${new Date(trustedUntil()).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}.`:"You'll be signed out after 15 minutes of inactivity."}</div>
+  <div class="side-foot">${offlineAllowed()?`<button class="link" style="font-size:12px;display:block;margin-bottom:6px" data-a="offlineToggle">Offline order entry on this device: ${Offline.deviceEnabled()?"on":"off"}</button>`:""}${trustedUntil()>Date.now()?`Signed in on this computer until ${new Date(trustedUntil()).toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}.`:"You'll be signed out after 15 minutes of inactivity."}</div>
  </aside><div class="main">
  <header class="top">
   <div class="search">${I.search}<input class="input" data-b="ui.gq" placeholder="${lab?"Search accession, patient or clinic":"Search patients or accession numbers"}" value="${esc(ui.gq)}" aria-label="Search"></div>
@@ -369,7 +371,7 @@ function shell(content){
    <button class="icon-btn" data-a="changePw" title="Change password" aria-label="Change password">${I.key}</button>
    <button class="icon-btn" data-a="logout" title="Sign out" aria-label="Sign out">${I.out}</button>
   </div></header>
- <main class="page">${ui.gq.trim()?vSearch():content}</main></div></div>`;
+ <main class="page">${S.offline?`<div class="banner warn" style="margin-bottom:16px">${I.cloud}<div><b>You're offline.</b> New orders are saved on this device, encrypted, and upload when the connection returns. Patient lookups and results need a connection.</div></div>`:""}${ui.gq.trim()?vSearch():content}</main></div></div>`;
 }
 
 /* ---------- auth ---------- */
@@ -381,6 +383,7 @@ function vLogin(){return `<div class="auth"><div class="auth-l"><div class="auth
  <button type="submit" class="btn primary block" data-a="login">Sign in</button></form>
  <label class="check small"><input type="checkbox" data-b="lf.trust" ${lf.trust?"checked":""}>Keep me signed in on this computer for 12 hours. Don't use on shared computers.</label>
  <button class="link" style="align-self:flex-start" data-a="forgotPw">Forgot password?</button>
+ <button class="btn block" style="margin-top:4px" data-a="ppStart">Patients: view your lab results</button>
  <div class="or">New to First Bio Genetics?</div>
  <button class="btn block" data-a="startReg">Register your clinic</button>
  </div></div>
@@ -522,7 +525,7 @@ async function saveOrderEdit(){const d=draft,o=orderOf(d.editId);syncTox(d);cons
  Object.keys(o.results||{}).forEach(code=>{if(!tests.includes(code))delete o.results[code]});const dc=defCode(o);if(dc&&o.results[dc])Object.keys(o.results[dc]).forEach(k=>{if(!o.confirm.includes(k))delete o.results[dc][k]});
  const changed=before!==JSON.stringify({t:o.tests,c:o.confirm,p:o.parts,i:o.icd,pr:o.providerId,pt:o.patientId});if(changed)delete o.verified;
  o.history.push({s:o.status,at:Date.now(),by:me().name,note:"Order edited"});save();draft=null;sigs={};go("order",{id:o.id});toast("Order updated")}
-function newDraft(pid){const cid=pid?patientOf(pid).clinicId:(isLab()?"":me().clinicId),cc=clinicOf(cid);return {step:pid?2:1,clinicId:cid,paper:isLab(),received:true,scans:[],genPaper:false,abnPaper:false,provPaper:false,patientId:pid||"",pq:"",newPt:false,toxSpec:"",screen:"none",poct:{},rxMeds:[],rxq:"",collector:me()?me().name:"",recollect:false,billType:"",providerId:cc&&cc.providers[0]?cc.providers[0].id:"",tests:[],confirm:[],meds:[],medsText:"",icd:[],icdFree:"",collectedAt:localNow(),stat:false,fasting:false,notes:"",tq:"",
+function newDraft(pid){const cid=pid?patientOf(pid).clinicId:(isLab()?"":me().clinicId),cc=clinicOf(cid);return {step:pid?2:1,clinicId:cid,paper:isLab(),received:!S.offline&&!(me()&&(me().roles||[]).length&&me().roles.every(r=>r==="collector")),scans:[],genPaper:false,abnPaper:false,provPaper:false,patientId:pid||"",pq:"",newPt:false,toxSpec:"",screen:"none",poct:{},rxMeds:[],rxq:"",collector:me()?me().name:"",recollect:false,billType:"",providerId:cc&&cc.providers[0]?cc.providers[0].id:"",tests:[],confirm:[],meds:[],medsText:"",icd:[],icdFree:"",collectedAt:localNow(),stat:false,fasting:false,notes:"",tq:"",
  pMethod:isLab()?"paper":"now",repName:"",repRel:"",onFile:false,genAgree:false,abnChoice:"",abnCost:"",provAttest:false}}
 function needs(){const p=patientOf(draft.patientId),ts=draft.tests.map(T);return {genetic:ts.some(t=>t.genetic),abn:draft.billType==="Medicare"&&ts.some(t=>t.abn),abnTests:ts.filter(t=>t.abn),tox:ts.some(t=>t.cat==="tox"||t.cat==="conf"),fasting:ts.some(t=>t.fasting)}}
 function vOrderNew(){
@@ -555,7 +558,9 @@ function vOrderNew(){
   ${nd.fasting?`<label class="check" style="margin-top:18px"><input type="checkbox" data-b="draft.fasting" ${d.fasting?"checked":""}>Patient was fasting at collection</label>`:""}
   <h2 style="margin:28px 0 6px">Diagnosis codes (ICD-10)</h2><p class="muted small" style="margin-bottom:10px">At least one is required to support medical necessity.</p>
   <div class="radio-row">${ICD_QUICK.map(([c,l])=>`<span class="pill ${d.icd.includes(c)?"on":""}" data-a="toggleArr" data-k="icd" data-val="${c}" title="${esc(l)}"><b>${c}</b> ${esc(l)}</span>`).join("")}${d.icd.filter(c=>!ICD_QUICK.some(q=>q[0]===c)).map(c=>`<span class="pill on" data-a="toggleArr" data-k="icd" data-val="${esc(c)}"><b>${esc(c)}</b><span class="x">✕</span></span>`).join("")}</div>
-  <div class="row" style="margin-top:12px"><input class="input" style="max-width:220px" data-b="draft.icdFree" value="${esc(d.icdFree)}" placeholder="Other code, e.g. M54.50" data-enter="addIcd"><button class="btn" data-a="addIcd">Add code</button></div>
+  <div style="margin-top:12px;max-width:620px;position:relative"><div class="row" style="gap:8px"><div class="search" style="flex:1">${I.search}<input class="input" data-b="draft.icdFree" data-live="1" value="${esc(d.icdFree)}" placeholder="Search by code or words, e.g. M54.5 or low back pain" data-enter="addIcd" autocomplete="off"></div><button class="btn" data-a="addIcd">Add</button></div>
+   ${String(d.icdFree||"").trim().length>=2?(()=>{const r=icdSearch(d.icdFree);return r===null?`<div class="small muted" style="padding:8px 2px">${ICDX.err?esc(ICDX.err):"Loading the ICD-10 code list…"}</div>`:r.length?`<div class="panel" style="margin-top:6px;max-height:320px;overflow:auto">${r.map(x=>`<button type="button" class="icd-opt" data-a="icdPick" data-val="${x.c}" ${d.icd.includes(x.c)?"disabled":""}><b>${x.c}</b> ${esc(x.d)}</button>`).join("")}</div>`:`<div class="small muted" style="padding:8px 2px">No billable codes match. Try fewer words, or a code like F11.20.</div>`})():""}</div>
+  ${d.icd.length?`<div class="stack" style="gap:4px;margin-top:12px">${d.icd.map(c=>{const ds=icdDesc(c),b=icdBillable(c);return `<div class="small"><b>${esc(c)}</b> ${ds?esc(ds):b===false?'<span style="color:var(--danger)">Not a billable ICD-10-CM code; choose a more specific code.</span>':""}</div>`}).join("")}</div>`:""}
   <div class="field" style="margin-top:22px"><label>Notes for the lab</label><textarea class="input" data-b="draft.notes" placeholder="Optional">${esc(d.notes)}</textarea></div>`;
  }
  if(d.step===3){const p=patientOf(d.patientId),pr=dClinic().providers.find(x=>x.id===d.providerId),nd=needs(),paper=d.paper;
@@ -618,8 +623,8 @@ function ordValidate(){syncTox(draft);const d=draft,nd=needs();
 async function submitOrder(){if(submitting)return;const d=draft,nd=needs(),p=patientOf(d.patientId),c=dClinic(),pr=c.providers.find(x=>x.id===d.providerId);
  let tests=[...d.tests];if(nd.abn&&d.abnChoice==="3")tests=tests.filter(x=>!T(x).abn);
  if(!tests.length){toast("No tests remain after the ABN choice. Change the choice or the tests.");return}
- const now=Date.now();let seqN;submitting=true;try{seqN=await DB.nextSeq("accession")}catch(e){submitting=false;return toast("Couldn't get an accession number. Check your connection and try again.")}submitting=false;
- const o={id:uid("o"),accession:acc(now,seqN),clinicId:c.id,patientId:p.id,providerId:pr.id,tests,confirm:tests.some(isDef)?[...d.confirm]:[],rxMeds:[...(d.rxMeds||[])],addOnOf:d.addOnOf||undefined,parts:Object.fromEntries(tests.filter(x=>partsOf(d,x)).map(x=>[x,[...partsOf(d,x)]])),toxSpec:d.toxSpec,screen:d.screen,reflex:d.screen==="reflex",poct:JSON.parse(JSON.stringify(d.poct)),collector:d.collector,recollect:d.recollect,billType:d.billType,meds:[...d.meds],medsText:d.medsText,icd:[...d.icd],collectedAt:new Date(d.collectedAt).getTime(),createdAt:now,stat:d.stat,fasting:d.fasting,notes:d.notes,
+ const now=Date.now();let seqN;submitting=true;try{if(S.offline)throw new Error("offline");seqN=await DB.nextSeq("accession")}catch(e){if(Offline.deviceEnabled()){try{seqN=await Offline.takeSeq()}catch(e2){}}if(seqN==null){submitting=false;return toast(S.offline?"No offline accession numbers left on this device. Connect to the internet to reserve more.":"Couldn't get an accession number. Check your connection and try again.")}}submitting=false;
+ const o={id:uid("o"),accessCode:newAccessCode(),accession:acc(now,seqN),clinicId:c.id,patientId:p.id,providerId:pr.id,tests,confirm:tests.some(isDef)?[...d.confirm]:[],rxMeds:[...(d.rxMeds||[])],addOnOf:d.addOnOf||undefined,parts:Object.fromEntries(tests.filter(x=>partsOf(d,x)).map(x=>[x,[...partsOf(d,x)]])),toxSpec:d.toxSpec,screen:d.screen,reflex:d.screen==="reflex",poct:JSON.parse(JSON.stringify(d.poct)),collector:d.collector,recollect:d.recollect,billType:d.billType,meds:[...d.meds],medsText:d.medsText,icd:[...d.icd],collectedAt:new Date(d.collectedAt).getTime(),createdAt:now,stat:d.stat,fasting:d.fasting,notes:d.notes,
   source:d.paper?"paper":"portal",scans:d.paper?[...d.scans]:[],
   consents:{patient:d.pMethod==="paper"?{method:"paper",name:`${p.first} ${p.last}`,at:now}:d.pMethod==="file"?{method:"file",name:`${p.first} ${p.last}`,at:now}:{method:d.pMethod,name:d.pMethod==="rep"?`${d.repName} (${d.repRel})`:`${p.first} ${p.last}`,sig:sigs.patient,at:now},provider:d.paper?{name:`${pr.name}, ${pr.cred}`,paper:true,at:now,attest:true}:{name:`${pr.name}, ${pr.cred}`,sig:sigs.provider,at:now,attest:true}},
   status:"Ordered",history:[{s:"Ordered",at:now,by:me().name,note:d.paper?"Entered from paper requisition":undefined}],results:{},readAt:null,releasedAt:null};
@@ -646,6 +651,7 @@ function vOrder(){
   else if(o.status==="In Process"&&can("results.release"))actions+=o.verified?`<button class="btn primary" data-a="go" data-v="entry" data-id="${o.id}">${I.send} Review and report out</button>`:`<span class="badge st-pending">Waiting for a scientist to verify</span>`;
  }
  if(o.status!=="Rejected")actions+=`<button class="btn" data-a="printLabels" data-id="${o.id}">${I.print} Labels</button>`;
+ if(o.status!=="Rejected"&&!S.offline)actions+=`<button class="btn" data-a="ppSlip" data-id="${o.id}">Patient access</button>`;
  if(o.status==="Released")actions+=`<button class="btn" data-a="dlHL7" data-id="${o.id}">${I.down} HL7</button>`;
  if(lab&&(can("orders.receive")||can("results.enter"))&&["Received","In Process","Released"].includes(o.status)&&!(o.storage&&o.storage.disposedAt))actions+=`<button class="btn" data-a="sgStore" data-id="${o.id}">${o.storage?"Move specimen":"Store specimen"}</button>`;
  if(lab&&can("orders.enter")&&o.status==="Released")actions+=`<button class="btn" data-a="addOn" data-id="${o.id}">${I.plus} Add-on test</button>`;
@@ -785,8 +791,9 @@ function vLabSet(){if(!labForm)labForm=JSON.parse(JSON.stringify(S.lab));
  <div class="panel"><div class="panel-h"><h2>Billing and send-outs</h2></div><div class="panel-b grid g2">${i("npi","Lab NPI (billing provider)")}${i("taxId","Lab Tax ID")}${i("refLab","Reference lab name")}${i("billingCo","Billing company")}${i("x12Submitter","837 submitter ID (from your clearinghouse)")}${i("x12Receiver","837 receiver ID")}${i("x12ReceiverName","837 receiver name")}<div class="field"><label>837 file mode</label><select class="input" data-b="labf.x12Mode"><option value="T" ${labForm.x12Mode!=="P"?"selected":""}>Test</option><option value="P" ${labForm.x12Mode==="P"?"selected":""}>Production</option></select></div><div class="field spanall"><label>Supply catalog (one item per line)</label><textarea class="input" style="min-height:160px" data-b="labf.supplyItems" placeholder="${esc(SUPPLY_DEFAULT.join("\n"))}">${esc(labForm.supplyItems||"")}</textarea><span class="hint">Leave blank to use the standard list.</span></div><label class="check spanall"><input type="checkbox" data-b="labf.billRef" ${labForm.billRef?"checked":""}>Bill reference-lab tests on our claims (only if you have a purchased-service arrangement with the reference lab). Off means the reference lab bills them.</label></div></div>
  ${(()=>{if(!labForm.retention)labForm.retention={...RET_DEFAULT};if(!labForm.batchRules)labForm.batchRules={...BATCH_DEFAULT};if(!labForm.deltaRules)labForm.deltaRules=JSON.parse(JSON.stringify(deltaRules()));const n=(k,l,h)=>`<div class="field"><label>${l}</label><input class="input" inputmode="decimal" data-b="labf.${k}" value="${esc(k.split(".").reduce((a,x)=>a?.[x],labForm)??"")}">${h?`<span class="hint">${h}</span>`:""}</div>`;
  const an=[...new Set(TESTS.filter(t=>t.cat==="blood"||t.code==="UA").flatMap(t=>t.analytes.filter(a=>a.type==="quant").map(a=>a.name)))].sort();
- if(!labForm.labels)labForm.labels=labelCfg();
+ if(!labForm.labels)labForm.labels=labelCfg();if(labForm.patientDelayHours===undefined)labForm.patientDelayHours=0;
  return `<div class="panel"><div class="panel-h"><div><h2>Specimen labels</h2><p class="small muted">Used by the Labels button on every order.</p></div></div><div class="panel-b grid g3"><div class="field"><label>Label size</label><select class="input" data-b="labf.labels.size">${Object.keys(LABEL_SIZES).map(k=>`<option value="${k}" ${labForm.labels.size===k?"selected":""}>${k.replace("x"," in × ")} in</option>`).join("")}</select></div><div class="field"><label>Printer</label><select class="input" data-b="labf.labels.printer"><option value="browser" ${labForm.labels.printer==="browser"?"selected":""}>Any printer (print dialog)</option><option value="zpl" ${labForm.labels.printer==="zpl"?"selected":""}>Zebra (download ZPL file)</option></select></div>${n("labels.copies","Copies per container")}</div></div>
+ <div class="panel"><div class="panel-h"><div><h2>Patient portal</h2><p class="small muted">Patients sign up with the access code on their order (Patient access button) plus last name and date of birth, and see only their own released reports.</p></div></div><div class="panel-b grid g3">${n("patientDelayHours","Hours after release before patients can see a report","0 shows it right away. Use a delay if providers want to review results first.")}</div></div>
  ${can("users")?bridgePanel():""}
  ${can("*")?`<div class="panel"><div class="panel-h"><div><h2>Data maintenance</h2><p class="small muted">Find patient records entered twice (same clinic, name and date of birth) and merge them.</p></div><button class="btn sm" data-a="findDups">Find duplicate patients</button></div></div>`:""}
  <div class="panel"><div class="panel-h"><h2>Specimen retention</h2></div><div class="panel-b grid g3">${n("retention.pos","Toxicology positives (days)")}${n("retention.neg","Toxicology negatives (days)")}${n("retention.other","Other specimens (days)")}</div></div>
@@ -797,7 +804,7 @@ function vLabSet(){if(!labForm)labForm=JSON.parse(JSON.stringify(S.lab));
 /* ---------- documents ---------- */
 function paperHead(title,o){const L=S.lab;return `<div class="ph"><div><img src="${LOGO}" alt="First Bio Genetics"><div style="margin-top:8px;font-size:11.5px;color:#5d687c">${esc(L.address)}${L.phone?` · ${esc(L.phone)}`:""}${L.email?` · ${esc(L.email)}`:""}${L.clia?`<br>CLIA ${esc(L.clia)}`:""}</div></div><div style="text-align:right"><h2 style="font-size:18px">${title}</h2>${o&&o.accession?`<svg class="bc" data-v="${o.accession}"></svg>`:""}</div></div>`}
 function metaBlock(o){const p=patientOf(o.patientId),c=clinicOf(o.clinicId),pr=provOf(o);const m=(k,v)=>`<div><span>${k}</span><b>${v}</b></div>`;
- return `<div class="meta">${m("Patient",esc(pname(p)))}${m("DOB / Sex",`${fmtDOB(p.dob)} · ${p.sex}`)}${m("MRN",p.mrn)}${m("Ordering provider",`${esc(pr?.name)}, ${esc(pr?.cred)}`)}${m("Provider NPI",pr?.npi)}${m("Client",esc(c.name)+(c.acct?` (${c.acct})`:""))}${m("Accession",o.accession)}${m("Collected",fmtDT(o.collectedAt))}${m("Received",fmtDT(o.history.find(h=>h.s==="Received")?.at))}${o.releasedAt?m("Reported",fmtDT(o.releasedAt)):m("Billing type",`${esc(o.billType||p.ins.type)} ${esc(p.ins.member)}`)}${m("Diagnosis",o.icd.map(esc).join(", "))}${m("Specimen",[...new Set(o.tests.map(c=>T(c).specimen))].map(esc).join(", "))}</div>`}
+ return `<div class="meta">${m("Patient",esc(pname(p)))}${m("DOB / Sex",`${fmtDOB(p.dob)} · ${p.sex}`)}${m("MRN",p.mrn)}${m("Ordering provider",`${esc(pr?.name)}, ${esc(pr?.cred)}`)}${m("Provider NPI",pr?.npi)}${m("Client",esc(c.name)+(c.acct?` (${c.acct})`:""))}${m("Accession",o.accession)}${m("Collected",fmtDT(o.collectedAt))}${m("Received",fmtDT(o.history.find(h=>h.s==="Received")?.at))}${o.releasedAt?m("Reported",fmtDT(o.releasedAt)):m("Billing type",`${esc(o.billType||p.ins.type)} ${esc(p.ins.member)}`)}${m("Diagnosis",o.icd.map(c=>{const ds=icdDesc(c);return `${esc(c)}${ds?` <span style="font-weight:400;color:#5d687c">${esc(ds)}</span>`:""}`}).join("<br>"))}${m("Specimen",[...new Set(o.tests.map(c=>T(c).specimen))].map(esc).join(", "))}</div>`}
 function showRequisition(id){DB.logView("orders",id,"requisition");lastDoc={tbl:"orders",id,what:"requisition"};const o=S.orders.find(x=>x.id===id),p=patientOf(o.patientId),cons=o.consents||{};
  const specs=[...new Set(o.tests.map(c=>T(c).specimen))];
  const html=`<div class="paper">${paperHead("Test requisition",o)}${metaBlock(o)}
@@ -1112,6 +1119,20 @@ const A={
   save();render();toast(`${Object.keys(byC).length} invoice${Object.keys(byC).length===1?"":"s"} created`)},
  invView:e=>{const inv=S.invoices.find(x=>x.id===e.dataset.id);lastDoc={tbl:"invoices",id:inv.id,what:"invoice"};modal(`Invoice ${inv.id}`,invoiceDoc(inv),{wide:1,print:1})},
  invPaid:e=>{const inv=S.invoices.find(x=>x.id===e.dataset.id),ref=prompt("Payment reference (check number, ACH ID)");if(ref===null)return;inv.status="Paid";inv.paidAt=Date.now();inv.payRef=ref.trim();inv.paidBy=me().name;save();render();toast("Marked paid")},
+ offlineRetry(){if(!navigator.onLine)return toast("Still no connection.");location.reload()},
+ async offlineToggle(){const on=Offline.deviceEnabled();
+  if(!on){if(!confirm("Turn on offline order entry for this device?\n\nOrders you enter without a connection are stored on this device, encrypted, until they upload. Only use this on a lab-issued device with a screen lock. 15 accession numbers will be reserved for offline use."))return;await Offline.setDeviceEnabled(true);await offlineAfterOnline();toast(`Offline entry on. ${(await Offline.seqs()).length} accession numbers reserved.`)}
+  else{const q=await Offline.loadQueue(me().id);if(q&&(q.orders||[]).length)return toast("Orders entered offline are still waiting to upload. Connect first.");await Offline.setDeviceEnabled(false);toast("Offline entry off. Saved data removed from this device.")}render()},
+ ppStart(){ppf=null;route={v:"pregister",p:{}};render()},
+ async ppRegister(){const f=ppf;if(String(f.code).replace(/[^A-Za-z0-9]/g,"").length<8||!f.lastName.trim()||!f.dob||!f.email.trim())return toast("Fill in every field.");if((f.pw||"").length<12)return toast("Use a password of at least 12 characters.");if(f.pw!==f.pw2)return toast("The passwords don't match.");
+  try{await DB.patientAccess({action:"register",code:f.code,lastName:f.lastName,dob:f.dob,email:f.email.trim(),password:f.pw});await DB.signIn(f.email.trim().toLowerCase(),f.pw);ppf=null;toast("Account created");await boot()}catch(err){toast(errMsg(err))}},
+ ppAddOpen(){ppf={code:"",lastName:"",dob:""};modal("Add results",`<p class="small muted">Use the access code from another visit to add those results to your account.</p><div class="stack" style="gap:12px;margin-top:12px"><div class="field"><label>Access code</label><input class="input" data-b="ppf.code" placeholder="XXXX-XXXX"></div><div class="field"><label>Last name</label><input class="input" data-b="ppf.lastName"></div><div class="field"><label>Date of birth</label><input class="input" type="date" data-b="ppf.dob"></div></div>`,{foot:`<button class="btn" data-a="closeModal">Cancel</button><button class="btn primary" data-a="ppAdd">Add</button>`})},
+ async ppAdd(){const f=ppf;try{await DB.patientAccess({action:"link",code:f.code,lastName:f.lastName,dob:f.dob});closeModal();PP.reports=null;render();toast("Results added")}catch(err){toast(errMsg(err))}},
+ ppView:e=>{const r=PP.reports.find(x=>x.id===e.dataset.id);DB.logView("report_versions",r.id);lastDoc={tbl:"report_versions",id:r.id,what:"report"};modal(`Report ${r.data.accession}`,reportHTML(r.data),{wide:1,print:1})},
+ async ppPdf(e){const r=PP.reports.find(x=>x.id===e.dataset.id);try{const {reportPdf}=await import("./reportpdf.js");const bytes=await reportPdf(r.data);const u=URL.createObjectURL(new Blob([bytes],{type:"application/pdf"})),a=document.createElement("a");a.href=u;a.download=`FBG_${r.data.accession}.pdf`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);DB.log("export","report_versions",r.id,{what:"report pdf"})}catch(err){toast("The PDF couldn't be created: "+errMsg(err))}},
+ ppSlip:e=>{const o=orderOf(e.dataset.id);if(!o.accessCode){o.accessCode=newAccessCode();o.history.push({s:o.status,at:Date.now(),by:me().name,note:"Patient portal access code created"});save()}lastDoc={tbl:"orders",id:o.id,what:"patient access code"};
+  modal(`Patient access: ${o.accession}`,accessSlip(o)+(isLab()?`<label class="check" style="margin:12px 20px"><input type="checkbox" data-a="ppToggle" data-id="${o.id}" ${o.patientPortal!==false?"checked":""}>Show this order's report in the patient portal</label>`:""),{wide:0,print:1})},
+ ppToggle:e=>{const o=orderOf(e.dataset.id);o.patientPortal=o.patientPortal===false;o.history.push({s:o.status,at:Date.now(),by:me().name,note:o.patientPortal===false?"Report hidden from the patient portal":"Report shown in the patient portal"});save();toast(o.patientPortal===false?"Hidden from the patient portal":"Shown in the patient portal")},
  editOrder:e=>{draft=draftFromOrder(orderOf(e.dataset.id));sigs={};go("order-new")},
  draftNewPt(){draft.newPt=true;ptForm=blankPatient();render()},
  draftPickExisting(){draft.newPt=false;ptForm=null;render()},
@@ -1130,7 +1151,10 @@ const A={
  partsToggle:e=>{draft.partsOpen=draft.partsOpen||{};draft.partsOpen[e.dataset.id]=!draft.partsOpen[e.dataset.id];render()},
  partPick:e=>{const code=e.dataset.id,name=e.dataset.val,all=T(code).analytes.filter(a=>a.type!=="calc").map(a=>a.name);draft.parts=draft.parts||{};let cur=partsOf(draft,code)||[...all];cur=cur.includes(name)?cur.filter(x=>x!==name):[...cur,name];
   if(!cur.length){toast("Keep at least one test, or untick the whole panel above.");return render()}draft.parts[code]=cur.length===all.length?null:all.filter(x=>cur.includes(x));render()},
- addIcd(){const v=draft.icdFree.trim().toUpperCase();if(!/^[A-Z]\d{2}(\.[A-Z0-9]{1,4})?$/.test(v))return toast("Enter a valid ICD-10 code, like M54.50.");if(!draft.icd.includes(v))draft.icd.push(v);draft.icdFree="";render()},
+ addIcd(){let v=draft.icdFree.trim().toUpperCase();if(/^[A-Z]\d[0-9A-Z]{2,5}$/.test(v)&&!v.includes("."))v=v.slice(0,3)+"."+v.slice(3);
+  if(!/^[A-Z]\d[0-9A-Z](\.[A-Z0-9]{1,4})?$/.test(v)){const r=icdSearch(draft.icdFree);if(r&&r.length===1){v=r[0].c}else return toast("Pick a code from the list, or type a full code like M54.50.")}
+  if(icdBillable(v)===false)return toast(`${v} isn't a billable ICD-10-CM code. Choose a more specific code from the list.`);if(!draft.icd.includes(v))draft.icd.push(v);draft.icdFree="";render()},
+ icdPick:e=>{const v=e.dataset.val;if(!draft.icd.includes(v))draft.icd.push(v);draft.icdFree="";render()},
  ordBack(){draft.step=draft.editId&&draft.step===4?2:draft.step-1;render()},
  ordNext(){if(!ordValidate())return;if(draft.step===4)return draft.editId?saveOrderEdit():submitOrder();draft.step=draft.editId&&draft.step===2?4:draft.step+1;window.scrollTo(0,0);render()},
  req:e=>showRequisition(e.dataset.id),
@@ -1174,7 +1198,7 @@ const A={
  suspendClinic:e=>{if(!confirm("Suspend this clinic? Its users can still sign in, but new specimens won't be received."))return;clinicOf(e.dataset.id).status="suspended";save();render()},
  logCall:e=>{rej={id:e.dataset.id,who:"",readback:false};formModal("call")},
  confirmCall(){if(!rej.who.trim()||!rej.readback)return toast("Record who you spoke with and confirm read-back.");const x=S.outbox.find(m=>m.id===rej.id);x.status="Completed";x.detail=`Spoke with ${rej.who}, read-back confirmed · ${me().name}`;save();closeModal();render();toast("Call documented")},
- saveLab(){const L={...labForm};const numify=o=>{if(!o)return o;const r={};Object.entries(o).forEach(([k,v])=>{const x=parseFloat(v);r[k]=isFinite(x)?x:v});return r};L.retention=numify(L.retention);L.batchRules=numify(L.batchRules);L.deltaRules=(L.deltaRules||[]).filter(d=>String(d.analyte||"").trim()&&isFinite(parseFloat(d.limit))).map(d=>({analyte:String(d.analyte).trim(),type:d.type==="pct"?"pct":"abs",limit:parseFloat(d.limit),days:parseFloat(d.days)||7}));S.lab=L;save();labForm=null;render();toast("Changes saved")},
+ saveLab(){const L={...labForm};const numify=o=>{if(!o)return o;const r={};Object.entries(o).forEach(([k,v])=>{const x=parseFloat(v);r[k]=isFinite(x)?x:v});return r};L.retention=numify(L.retention);L.patientDelayHours=Math.max(0,parseFloat(L.patientDelayHours)||0);L.batchRules=numify(L.batchRules);L.deltaRules=(L.deltaRules||[]).filter(d=>String(d.analyte||"").trim()&&isFinite(parseFloat(d.limit))).map(d=>({analyte:String(d.analyte).trim(),type:d.type==="pct"?"pct":"abs",limit:parseFloat(d.limit),days:parseFloat(d.days)||7}));S.lab=L;save();labForm=null;render();toast("Changes saved")},
  scanAcc(){const q=ui.qq.trim().toUpperCase();const o=S.orders.find(x=>x.accession===q);if(o){ui.qq="";go("order",{id:o.id})}},
 };
 
@@ -1350,7 +1374,7 @@ function buildClaim(o){if(S.claims.some(c=>c.orderId===o.id))return;const lines=
  o.tests.forEach(code=>{const t=T(code);if(routeOf(code)==="ref"&&!S.lab.billRef)return;const cpts=isDef(code)?[gcode(classCount(o.confirm))]:t.cpt.split(/,\s*/);
   const toPt=abn&&abn.choice==="2"&&t.abn,mod=abn&&abn.choice==="1"&&t.abn?"GA":"";cpts.forEach(c=>lines.push({code,cpt:c,mod,units:1,billTo:o.billType==="Client bill"?"Client":o.billType==="Self pay"||toPt?"Patient":"Payer"}))});
  if(!lines.length)return;S.claims.push({id:"CLM-"+o.accession,orderId:o.id,patientId:o.patientId,lines,createdAt:o.releasedAt||Date.now(),status:"Created"})}
-function claimIssues(cl){const L=S.lab,is=[],o=orderOf(cl.orderId),p=patientOf(cl.patientId),pr=provOf(o)||{};if(!/^\d{10}$/.test(L.npi||""))is.push("Lab NPI missing");else if(!npiValid(L.npi))is.push("Lab NPI fails the check-digit test");if(!L.taxId)is.push("Lab Tax ID missing");const bt=o.billType||BILLFROM[p.ins.type];const ins=["Medicare","Medicaid","Commercial insurance"].includes(bt);if(ins&&!p.ins.member)is.push("Member ID missing");if(ins&&!p.ins.payer&&bt==="Commercial insurance")is.push("Payer name missing");if(!o.icd.length)is.push("No diagnosis code");o.icd.filter(c=>!icdValid(c)).forEach(c=>is.push(`Diagnosis code ${c} isn't a valid ICD-10 format`));if(!pr.npi)is.push("Ordering provider NPI missing");else if(!npiValid(pr.npi))is.push(`Ordering provider NPI ${pr.npi} fails the check-digit test`);if(!p.dob)is.push("Patient date of birth missing");if(ins&&!(p.address&&p.city&&p.state&&p.zip))is.push("Patient address incomplete");if(!cl.lines.length)is.push("No billable lines");cl.lines.filter(l=>!(parseFloat(S.fees[l.cpt])>0)).forEach(l=>is.push(`No charge set for ${l.cpt} in the charge master`));return [...new Set(is)]}
+function claimIssues(cl){const L=S.lab,is=[],o=orderOf(cl.orderId),p=patientOf(cl.patientId),pr=provOf(o)||{};if(!/^\d{10}$/.test(L.npi||""))is.push("Lab NPI missing");else if(!npiValid(L.npi))is.push("Lab NPI fails the check-digit test");if(!L.taxId)is.push("Lab Tax ID missing");const bt=o.billType||BILLFROM[p.ins.type];const ins=["Medicare","Medicaid","Commercial insurance"].includes(bt);if(ins&&!p.ins.member)is.push("Member ID missing");if(ins&&!p.ins.payer&&bt==="Commercial insurance")is.push("Payer name missing");if(!o.icd.length)is.push("No diagnosis code");o.icd.filter(c=>!icdValid(c)).forEach(c=>is.push(`Diagnosis code ${c} isn't a valid ICD-10 format`));o.icd.filter(c=>icdValid(c)&&icdBillable(c)===false).forEach(c=>is.push(`Diagnosis code ${c} isn't a billable ICD-10-CM code`));if(!pr.npi)is.push("Ordering provider NPI missing");else if(!npiValid(pr.npi))is.push(`Ordering provider NPI ${pr.npi} fails the check-digit test`);if(!p.dob)is.push("Patient date of birth missing");if(ins&&!(p.address&&p.city&&p.state&&p.zip))is.push("Patient address incomplete");if(!cl.lines.length)is.push("No billable lines");cl.lines.filter(l=>!(parseFloat(S.fees[l.cpt])>0)).forEach(l=>is.push(`No charge set for ${l.cpt} in the charge master`));return [...new Set(is)]}
 const claimStatus=cl=>cl.status==="Sent"?"Sent":claimIssues(cl).length?"On hold":"Ready";
 const lineCharge=l=>parseFloat(S.fees[l.cpt])||0;
 const claimTotal=cl=>cl.lines.reduce((s,l)=>s+lineCharge(l)*l.units,0);
@@ -1372,7 +1396,7 @@ function claimHL7(cls){const L=S.lab,now=new Date(),ts=ymd(now)+[now.getHours(),
    ...o.icd.map((x,i)=>seg("DG1",{1:String(i+1),2:"I10",3:`${e(x)}^^I10`,6:"F"})),
    ...(p.ins.type==="Self-pay"?[]:[seg("IN1",{1:"1",2:e(p.ins.type),4:e(p.ins.payer),8:e(p.ins.group),16:`${e(p.last)}^${e(p.first)}`,17:"SEL",18:p.dob.replace(/-/g,""),36:e(p.ins.member)})])].join("\r")}).join("\r\n")}
 
-function vBilling(){const tab=ui.btab,all=[...S.claims].sort((a,b)=>b.createdAt-a.createdAt),by=s=>all.filter(c=>claimStatus(c)===s),ready=by("Ready"),hold=by("On hold"),sent=by("Sent");
+function vBilling(){icdLoad();const tab=ui.btab,all=[...S.claims].sort((a,b)=>b.createdAt-a.createdAt),by=s=>all.filter(c=>claimStatus(c)===s),ready=by("Ready"),hold=by("On hold"),sent=by("Sent");
  const L=S.lab,labMissing=!/^\d{10}$/.test(L.npi||"")||!L.taxId;
  const edit=can("billing");const tabs=[["ready",`Ready (${ready.length})`],["hold",`On hold (${hold.length})`],["sent",`Exported (${sent.length})`],["all","All claims"],["invoices",`Client invoices (${(S.invoices||[]).filter(i=>i.status!=="Paid").length} unpaid)`],["fees","Charge master"]];
  let body;
@@ -1442,6 +1466,67 @@ async function readCard(){const f=ptForm;if(!f||!f.ins.cardFront||!SAMPLE||cardB
  finally{cardBusy=false;render()}}
 
 const REJECT_REASONS=["Quantity not sufficient","Specimen leaked or container broken","Unlabeled or mislabeled specimen","Name or date of birth doesn't match requisition","Received outside stability window","Temperature out of range","Wrong specimen type or container","Collection device expired","Missing requisition or test order","Missing required signature","Other"];
+/* ---------- patient portal ---------- */
+const PP={reports:null,err:""};let ppf=null;
+const ACODE="ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const newAccessCode=()=>{const r=crypto.getRandomValues(new Uint8Array(8));return [...r].map(b=>ACODE[b%ACODE.length]).join("")};
+const fmtCode=c=>String(c||"").replace(/(.{4})(.{4})/,"$1-$2");
+async function ppLoad(){try{const rows=await DB.patientReports();const by={};rows.forEach(r=>{if(!by[r.order_id]||by[r.order_id].version<r.version)by[r.order_id]=r});PP.reports=Object.values(by).sort((a,b)=>new Date(b.released_at)-new Date(a.released_at));PP.err=""}catch(e){PP.err=errMsg(e);PP.reports=PP.reports||[]}render()}
+function patientShell(){const u=me();if(PP.reports===null){PP.reports=undefined;setTimeout(ppLoad,0)}const list=PP.reports||[];
+ const testsOf=m=>(m.blocks||[]).filter(b=>b.type==="table"&&b.big).map(b=>b.title.replace(/ \(continued\)$/,"")).join(" · ")||"Laboratory report";
+ return `<div class="pp"><header class="pp-top"><img src="${LOGO}" alt="First Bio Genetics"><div class="row" style="gap:8px"><span class="small muted">${esc(u.name||u.email)}</span><button class="icon-btn" data-a="changePw" title="Change password" aria-label="Change password">${I.key}</button><button class="icon-btn" data-a="logout" title="Sign out" aria-label="Sign out">${I.out}</button></div></header>
+ <main class="pp-main"><div class="page-h"><div><h1>Your lab results</h1><p class="muted">Reports appear here after the lab releases them to your provider. Please talk to your provider about what your results mean.</p></div><button class="btn" data-a="ppAddOpen">${I.plus} Add results</button></div>
+ ${PP.err?`<div class="banner danger">${I.alert}<div>${esc(PP.err)}</div></div>`:""}
+ ${PP.reports===undefined?`<div class="empty">Loading…</div>`:list.length?`<div class="stack">${list.map(r=>{const m=r.data;return `<div class="panel"><div class="panel-b row between" style="flex-wrap:wrap;gap:12px"><div><div class="nm">${esc(testsOf(m))}</div><div class="small muted">Collected ${esc(m.collected||"")} · Accession ${esc(m.accession)} · ${esc(m.clinic||"")}</div>${m.status==="CORRECTED"?'<span class="badge st-pending" style="margin-top:6px">Corrected report</span>':""}</div><div class="row" style="gap:8px"><button class="btn" data-a="ppView" data-id="${r.id}">View</button><button class="btn" data-a="ppPdf" data-id="${r.id}">${I.down} PDF</button></div></div></div>`}).join("")}</div>`:`<div class="empty"><h3>No reports yet</h3><p>If you expected results, they may still be in progress, or the lab may not have released them yet.</p></div>`}
+ <p class="xs muted" style="margin-top:24px">Questions about your account or a test? Call First Bio Genetics at ${esc(S.lab.phone||"(480) 847-1916")}.</p></main></div>`}
+function vPatientRegister(){const f=ppf||(ppf={code:"",lastName:"",dob:"",email:"",pw:"",pw2:""});
+ return `<div class="auth"><div class="auth-l"><div class="auth-card"><div class="brand"><img src="${LOGO}" alt="First Bio Genetics"></div>
+ <div><h1>View your lab results</h1><p class="muted small">Use the access code on the paperwork from your provider or collector. We'll check it against your last name and date of birth.</p></div>
+ <div class="stack" style="gap:12px;margin-top:8px"><div class="field"><label class="req">Access code</label><input class="input" data-b="ppf.code" value="${esc(f.code)}" placeholder="XXXX-XXXX" autocapitalize="characters" autocomplete="off"></div>
+ <div class="field"><label class="req">Last name</label><input class="input" data-b="ppf.lastName" value="${esc(f.lastName)}" autocomplete="family-name"></div>
+ <div class="field"><label class="req">Date of birth</label><input class="input" type="date" data-b="ppf.dob" value="${esc(f.dob)}" autocomplete="bday"></div>
+ <div class="field"><label class="req">Email</label><input class="input" type="email" data-b="ppf.email" value="${esc(f.email)}" autocomplete="email"></div>
+ <div class="field"><label class="req">Create a password</label><input class="input" type="password" data-b="ppf.pw" autocomplete="new-password"><span class="hint">At least 12 characters.</span></div>
+ <div class="field"><label class="req">Confirm password</label><input class="input" type="password" data-b="ppf.pw2" autocomplete="new-password"></div>
+ <button class="btn primary block" data-a="ppRegister">Create account</button><button class="link" style="align-self:flex-start" data-a="toLogin">Already have an account? Sign in</button></div></div></div></div>`}
+function accessSlip(o){const p=patientOf(o.patientId),L=S.lab;return `<div class="paper"><div class="ph"><div><img src="${LOGO}" alt="First Bio Genetics"></div><div style="text-align:right"><h2 style="font-size:17px">Your lab results online</h2></div></div>
+ <p style="margin-top:14px">${esc(p.first)} ${esc(p.last)}, your results from First Bio Genetics will be available online after the lab releases them to your provider.</p>
+ <ol style="margin:12px 0 0 18px;line-height:1.7"><li>Go to <b>${esc(location.origin)}</b> and choose <b>View your lab results</b>.</li><li>Enter this access code with your last name and date of birth.</li><li>Create a password. Next time, just sign in.</li></ol>
+ <div style="margin:18px 0;padding:14px;border:2px dashed #1590cf;border-radius:8px;text-align:center"><div style="font-size:12px;color:#5d687c">Access code</div><div style="font:700 28px/1.2 ui-monospace,Menlo,Consolas,monospace;letter-spacing:.12em">${fmtCode(o.accessCode)}</div><div style="font-size:12px;color:#5d687c">Accession ${esc(o.accession)}</div></div>
+ <p class="small">Keep this code private. Questions: ${esc(L.phone||"")}.</p></div>`}
+
+/* ---------- offline order entry (mobile collectors) ---------- */
+const offlineAllowed=()=>isLab()&&can("orders.enter")&&Offline.supported();
+let offPersistTimer=null;
+function offlinePersist(){clearTimeout(offPersistTimer);offPersistTimer=setTimeout(()=>{Offline.saveQueue(S.session,{patients:S.patients,orders:S.orders,notes:S.notes}).catch(e=>toast("Couldn't save on this device: "+errMsg(e)))},150)}
+async function tryOffline(){try{if(!Offline.supported()||!Offline.deviceEnabled()||!Offline.hasStoredSession())return false;const ref=await Offline.loadRef();if(!ref||Date.now()-ref.savedAt>7*DAY)return false;
+ const q=(await Offline.loadQueue(ref.profile.user_id))||{};
+ S={...emptyS(),clinics:ref.clinics||[],lab:ref.lab||S.lab,confMap:ref.confMap||S.confMap,fees:ref.fees||S.fees,patients:q.patients||[],orders:q.orders||[],notes:q.notes||[],offline:true,theme:localStorage.getItem("fbg-theme"),session:ref.profile.user_id,
+  users:[{id:ref.profile.user_id,email:ref.profile.email,name:ref.profile.name||ref.profile.email,role:"lab",clinicId:null,roles:ref.profile.lab_roles||[]}]};
+ try{migrate()}catch(e){}applyTheme();lastActive=Date.now();route={v:"offline",p:{}};render();return true}catch(e){return false}}
+async function offlineAfterOnline(){if(!offlineAllowed()||!Offline.deviceEnabled())return;const u=me();
+ try{await Offline.saveRef({profile:{user_id:u.id,email:u.email,name:u.name,lab_roles:u.roles},clinics:S.clinics,lab:S.lab,confMap:S.confMap,fees:S.fees});
+  const have=(await Offline.seqs()).length;if(have<10){const add=[];for(let i=have;i<15;i++){try{add.push(await DB.nextSeq("accession"))}catch(e){break}}if(add.length)await Offline.addSeqs(add)}
+  const q=await Offline.loadQueue(u.id);if(!q||!((q.orders||[]).length||(q.patients||[]).length))return;
+  const nn=x=>String(x||"").trim().toLowerCase().replace(/[^a-z]/g,""),pmap={};
+  (q.patients||[]).forEach(p=>{if(S.patients.some(x=>x.id===p.id))return;const dup=S.patients.find(x=>!x.mergedInto&&x.clinicId===p.clinicId&&x.dob===p.dob&&nn(x.last)===nn(p.last)&&nn(x.first)===nn(p.first));if(dup)pmap[p.id]=dup.id;else S.patients.push(p)});
+  let n=0;(q.orders||[]).forEach(o=>{if(S.orders.some(x=>x.id===o.id))return;if(pmap[o.patientId])o.patientId=pmap[o.patientId];o.history=[...(o.history||[]),{s:o.status,at:Date.now(),by:u.name,note:"Uploaded from offline entry on a collector device"}];S.orders.push(o);n++});
+  (q.notes||[]).forEach(x=>{if(!S.notes.some(y=>y.id===x.id))S.notes.push(x)});
+  await DB.flushNow(S,true);if(!DB.hasUnsaved(S,true)){await Offline.clearQueue(u.id);if(n)toast(`${n} order${n>1?"s":""} entered offline uploaded`)}else toast("Some offline orders haven't uploaded yet. They'll try again.");render()}catch(e){}}
+function vOffline(){const os=[...S.orders].sort((a,b)=>b.createdAt-a.createdAt);
+ return `<div class="page-h"><div><h1>Offline orders</h1><p class="muted">Saved on this device, encrypted. They upload automatically when you're back online.</p></div><div class="row"><button class="btn" data-a="offlineRetry">Check connection</button><button class="btn primary" data-a="go" data-v="order-new">${I.plus} New order</button></div></div>
+ <div class="panel">${os.length?`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Accession</th><th>Patient</th><th>Clinic</th><th>Tests</th><th>Collected</th><th></th></tr></thead><tbody>${os.map(o=>`<tr><td class="acc small">${o.accession}</td><td class="small nm">${esc(pname(patientOf(o.patientId)))}</td><td class="small">${esc((clinicOf(o.clinicId)||{}).name||"")}</td><td class="small">${o.tests.map(c=>`<span class="tag">${c}</span>`).join("")}</td><td class="small">${fmtDT(o.collectedAt)}</td><td style="text-align:right;white-space:nowrap"><button class="btn sm" data-a="printLabels" data-id="${o.id}">${I.print} Labels</button> <button class="btn sm ghost" data-a="req" data-id="${o.id}">Requisition</button></td></tr>`).join("")}</tbody></table></div>`:`<div class="empty"><h3>Nothing waiting to upload</h3><p>Orders you enter while offline appear here.</p></div>`}</div>`}
+
+/* ---------- ICD-10-CM code search (CMS April 2026 release, billable codes only) ---------- */
+const ICDX={list:null,map:null,loading:null,err:""};
+function icdLoad(){if(ICDX.list||ICDX.loading)return ICDX.loading;if(typeof fetch!=="function")return null;ICDX.loading=fetch("/icd10cm-2026.json").then(r=>{if(!r.ok)throw new Error("ICD-10 list unavailable");return r.json()}).then(l=>{ICDX.list=l.map(([c,d])=>({c,d,k:c.replace(".","").toLowerCase(),w:d.toLowerCase()}));ICDX.map=new Map(l.map(([c,d])=>[c,d]));render()}).catch(e=>{ICDX.err=errMsg(e);ICDX.loading=null});return ICDX.loading}
+const icdDesc=c=>{if(!ICDX.map){icdLoad();return ""}return ICDX.map.get(String(c).toUpperCase())||""};
+const icdBillable=c=>ICDX.map?ICDX.map.has(String(c).toUpperCase()):null;
+function icdSearch(q,limit=15){if(!ICDX.list){icdLoad();return null}q=String(q||"").trim().toLowerCase();if(q.length<2)return [];
+ const code=q.replace(".","");if(/^[a-z]\d/.test(code)){return ICDX.list.filter(x=>x.k.startsWith(code)).slice(0,limit)}
+ const toks=q.split(/\s+/).filter(Boolean),out=[];for(const x of ICDX.list){let ok=true,score=0;for(const t of toks){const i=x.w.indexOf(t);if(i<0){ok=false;break}if(i===0||x.w[i-1]===" "||x.w[i-1]==="(")score+=2;else score+=1}if(ok)out.push([score*1000-x.d.length,x])}
+ return out.sort((a,b)=>b[0]-a[0]).slice(0,limit).map(x=>x[1])}
+
 /* ---------- management reports ---------- */
 const RP={months:6,clinic:""};
 const monthKey=t=>{const d=new Date(t);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`};
@@ -1993,11 +2078,12 @@ function vConfirm(){return authShell(`<div><h1>Check your email</h1><p class="mu
 function vNoProfile(){return authShell(`<div><h1>Account not set up yet</h1><p class="muted" style="margin-top:6px">You're signed in, but this account isn't linked to a clinic or to the laboratory. Contact First Bio Genetics at ${esc(S.lab.phone||"(480) 847-1916")} to finish setting it up.</p></div><button class="btn block" data-a="logout">Sign out</button>`)}
 function vNewPw(){return authShell(`<div><h1>${forcedPw?"Choose your own password":"Set a new password"}</h1><p class="muted" style="margin-top:6px">${forcedPw?"You signed in with a temporary password. Choose a new one only you know, ":""}Use at least 12 characters.</p></div><div class="field"><label for="np1">New password</label><input id="np1" class="input" type="password" autocomplete="new-password" data-b="lf.pw1" value="${esc(lf.pw1||"")}"></div><div class="field"><label for="np2">Confirm new password</label><input id="np2" class="input" type="password" autocomplete="new-password" data-b="lf.pw2" value="${esc(lf.pw2||"")}" data-enter="setNewPw"></div><button class="btn primary block" data-a="setNewPw">Save password</button>`)}
 function vInactive(){return authShell(`<div><h1>Account deactivated</h1><p class="muted" style="margin-top:6px">This account no longer has access. If you think that's a mistake, contact First Bio Genetics at ${esc(S.lab.phone||"(480) 847-1916")}.</p></div><button class="btn block" data-a="logout">Sign out</button>`)}
-const AUTHV={inactive:vInactive,login:()=>vLogin(),register:()=>vRegister(),loading:vLoading,mfa:vMfa,confirm:vConfirm,noprofile:vNoProfile,newpw:vNewPw};
+const AUTHV={pregister:vPatientRegister,inactive:vInactive,login:()=>vLogin(),register:()=>vRegister(),loading:vLoading,mfa:vMfa,confirm:vConfirm,noprofile:vNoProfile,newpw:vNewPw};
 const errMsg=e=>(e&&(e.message||e.error_description))||"Something went wrong.";
 
 async function boot(){if(CONFIG_ERROR){S=emptyS();route={v:"login",p:{}};render();toast(CONFIG_ERROR);const b=document.createElement("div");b.className="banner danger";b.style.cssText="position:fixed;left:16px;right:16px;top:16px;z-index:300";b.textContent=CONFIG_ERROR;document.body.appendChild(b);return}if(booting)return;booting=true;
  try{
+  if(!navigator.onLine&&await tryOffline())return;
   const sess=await DB.session();
   if(!sess){S=emptyS();route={v:"login",p:{}};render();return}
   route={v:"loading",p:{}};render();
@@ -2008,6 +2094,7 @@ async function boot(){if(CONFIG_ERROR){S=emptyS();route={v:"login",p:{}};render(
   if(!profile){route={v:"noprofile",p:{}};render();return}
   if(profile.active===false){route={v:"inactive",p:{}};render();return}
   if(profile.must_change_pw){lf.pw1="";lf.pw2="";forcedPw=true;route={v:"newpw",p:{}};render();return}
+  if(profile.role==="patient"){S={...emptyS(),theme:localStorage.getItem("fbg-theme"),session:profile.user_id,users:[{id:profile.user_id,email:profile.email,name:profile.name||profile.email,role:"patient",roles:[]}]};try{const L=await DB.publicLab();if(L)S.lab={...S.lab,...L}}catch(e){}PP.reports=null;applyTheme();lastActive=Date.now();route={v:"pdash",p:{}};if(!sessionStorage.getItem("fbg-signed-in")){DB.log("sign_in","session",profile.user_id);try{sessionStorage.setItem("fbg-signed-in","1")}catch(e){}}render();return}
   const lab=profile.role==="lab",data=await DB.loadAll(lab);
   S={...emptyS(),...data,theme:localStorage.getItem("fbg-theme"),session:profile.user_id,
      users:[{id:profile.user_id,email:profile.email,name:profile.name||profile.email,role:profile.role,clinicId:profile.clinic_id,roles:profile.lab_roles||[]}]};
@@ -2017,14 +2104,17 @@ async function boot(){if(CONFIG_ERROR){S=emptyS();route={v:"login",p:{}};render(
   if(lab&&can("settings"))DB.queueSave(S,true);
   lastActive=Date.now();route={v:"dash",p:{}};render();
   if(lab)DB.qmsAll().then(r=>{QM.recs=r;render()}).catch(()=>{});
- }catch(e){toast(errMsg(e));route={v:"login",p:{}};render()}
+  if(lab)offlineAfterOnline();
+ }catch(e){if((e instanceof TypeError||/fetch|network|load failed/i.test(String(e&&e.message)))&&await tryOffline())return;toast(errMsg(e));route={v:"login",p:{}};render()}
  finally{booting=false}}
 
-async function refresh(){if(!me()||document.hidden)return;
+async function refresh(){if(!me()||document.hidden||S.offline)return;if(me().role==="patient")return;
  try{const lab=isLab(),fresh=await DB.loadAll(lab);DB.merge(S,fresh,lab);
   const busy=$("#modal-root").innerHTML||["order-new","entry","settings","labset"].includes(route.v)||(document.activeElement&&["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName));
   if(!busy)render()}catch(e){}}
 setInterval(refresh,30000);
+window.addEventListener("online",()=>{if(S&&S.offline)setTimeout(()=>location.reload(),1500)});
+setInterval(()=>{if(S&&S.offline&&navigator.onLine&&typeof fetch==="function")fetch("/logo.png",{cache:"no-store"}).then(r=>{if(r.ok)location.reload()}).catch(()=>{})},20000);
 window.addEventListener("focus",refresh);
 ["click","keydown","pointerdown"].forEach(ev=>document.addEventListener(ev,()=>{lastActive=Date.now()},{passive:true}));
 setInterval(async()=>{const tu=trustedUntil();if(me()&&((tu>Date.now())?false:(tu?true:Date.now()-lastActive>IDLE_MIN*6e4))){try{localStorage.removeItem("fbg-trust")}catch(e){}await DB.flushNow(S,isLab());DB.log("sign_out","session",S.session,{reason:"inactivity"});await new Promise(r=>setTimeout(r,250));try{sessionStorage.removeItem("fbg-signed-in")}catch(e){}await DB.signOut();S=emptyS();closeModal();route={v:"login",p:{}};render();toast(tu?"Your 12-hour session ended. Please sign in again.":`Signed out after ${IDLE_MIN} minutes of inactivity`)}},30000);
@@ -2039,7 +2129,7 @@ Object.assign(A,{
  async forgotPw(){const ev=$("#le");if(ev)lf.email=ev.value;const e=lf.email.trim();if(!e)return toast("Enter your email above first.");await DB.resetPassword(e);toast("If that email has an account, a reset link is on its way.")},
  async setNewPw(){if((lf.pw1||"").length<12)return toast("Use at least 12 characters.");if(lf.pw1!==lf.pw2)return toast("The passwords don't match.");try{await DB.updatePassword(lf.pw1);if(forcedPw){await DB.passwordChanged();forcedPw=false}lf.pw1=lf.pw2="";toast("Password updated");await boot()}catch(e){toast(errMsg(e))}},
  async mfaVerify(){const code=(lf.code||"").replace(/\s/g,"");if(!/^\d{6}$/.test(code))return toast("Enter the 6-digit code.");try{await DB.mfaVerify(mfa.factorId,code);lf.code="";mfa=null;await boot()}catch(e){toast("That code didn't work. Wait for a new code and try again.")}},
- async logout(){try{if(me()){await DB.flushNow(S,isLab());DB.log("sign_out","session",S.session);await new Promise(r=>setTimeout(r,250))}}catch(e){}try{sessionStorage.removeItem("fbg-signed-in");localStorage.removeItem("fbg-trust")}catch(e){}await DB.signOut();S=emptyS();draft=null;cs=null;labForm=null;closeModal();route={v:"login",p:{}};render()},
+ async logout(){if(S.offline){if(S.orders.length&&!confirm(`${S.orders.length} order${S.orders.length>1?"s haven't":" hasn't"} uploaded yet. They stay encrypted on this device and upload the next time you sign in here. Sign out?`))return;Offline.clearStoredSession();S=emptyS();draft=null;closeModal();route={v:"login",p:{}};render();return}try{if(me()){await DB.flushNow(S,isLab());DB.log("sign_out","session",S.session);await new Promise(r=>setTimeout(r,250))}}catch(e){}try{sessionStorage.removeItem("fbg-signed-in");localStorage.removeItem("fbg-trust")}catch(e){}await DB.signOut();S=emptyS();draft=null;cs=null;labForm=null;closeModal();route={v:"login",p:{}};render()},
  toLogin(){route={v:"login",p:{}};render()},
  theme(){const dark=document.documentElement.getAttribute("data-theme")==="dark"||(!S.theme&&matchMedia("(prefers-color-scheme: dark)").matches);S.theme=dark?"light":"dark";try{localStorage.setItem("fbg-theme",S.theme)}catch(e){}applyTheme()},
 });
