@@ -64,6 +64,38 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Tell Amico DX that electronic orders and a box of specimens are on the way. The address comes from Lab settings
+  // (never from the request), and the message carries counts only: no names, dates of birth or accession numbers.
+  if (body.action === "referral") {
+    const { data: st } = await admin.from("settings").select("data").eq("key", "lab").maybeSingle();
+    const am = st?.data?.amico ?? {}, lab = st?.data ?? {};
+    const to = String(am.email ?? "").split(/[,;\s]+/).map((x: string) => x.trim()).filter(Boolean);
+    if (!to.length) return json({ ok: false, error: "No Amico DX notification email in Lab settings." });
+    const from = env("ALERT_FROM");
+    if (!from) return json({ ok: false, error: "Email isn't set up: add the ALERT_FROM secret." });
+    const manifest = String(body.manifest ?? "").replace(/[^A-Z0-9-]/gi, "").slice(0, 40);
+    const n = Math.max(0, parseInt(body.specimens) || 0);
+    const tests = (Array.isArray(body.tests) ? body.tests : []).map((t: unknown) => String(t).slice(0, 60)).slice(0, 30);
+    const text = [
+      `${lab.name || "First Bio Genetics"} has sent ${n} specimen${n === 1 ? "" : "s"} to ${am.name || "Amico DX"} on manifest ${manifest}.`,
+      "",
+      tests.length ? `Tests: ${tests.join(", ")}` : "",
+      "The electronic orders are waiting for Icarus. If the Amico DX connector is running they will appear automatically;",
+      "otherwise check the connector log on the Icarus computer.",
+      "",
+      `Questions: ${lab.phone || ""} ${lab.email || ""}`.trim(),
+      "",
+      "This message contains no patient information.",
+    ].filter((l, i, a) => l !== "" || a[i - 1] !== "").join("\n");
+    try {
+      await resend({ from, to, subject: `Incoming referral ${manifest} - ${n} specimen${n === 1 ? "" : "s"} from ${lab.name || "First Bio Genetics"}`, text });
+      await admin.from("audit_log").insert({ actor: u.user.id, action: "send", tbl: "referrals", row_id: manifest, detail: { channel: "Email", to, specimens: n } });
+      return json({ ok: true, detail: `Emailed ${to.join(", ")}` });
+    } catch (e) {
+      return json({ ok: false, error: String((e as Error)?.message ?? e) });
+    }
+  }
+
   const { data: rows, error } = await admin.from("outbox").select("id,data").filter("data->>status", "eq", "Queued").limit(25);
   if (error) return json({ error: error.message }, 500);
 

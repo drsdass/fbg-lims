@@ -323,8 +323,27 @@ export const DB = {
     const { error } = await sb.from("instrument_inbox").update({ status, note: note || null, handled_at: new Date().toISOString(), handled_by: user && user.id }).eq("id", id);
     if (error) throw error;
   },
-  async devicesList() { const { data, error } = await sb.from("instrument_devices").select("id,name,active,created_at,last_seen").order("created_at"); if (error) { if (missingTable(error)) return []; throw error; } return data; },
-  async deviceAdd(name, tokenHash) { const { error } = await sb.from("instrument_devices").insert({ name, token_hash: tokenHash }); if (error) throw error; },
+  async devicesList() {
+    let { data, error } = await sb.from("instrument_devices").select("id,name,active,created_at,last_seen,scope").order("created_at");
+    if (error && /scope/i.test(error.message || "")) ({ data, error } = await sb.from("instrument_devices").select("id,name,active,created_at,last_seen").order("created_at"));
+    if (error) { if (missingTable(error)) return []; throw error; } return data;
+  },
+  async deviceAdd(name, tokenHash, scope) { const row = { name, token_hash: tokenHash }; if (scope && scope !== "instrument") row.scope = scope; const { error } = await sb.from("instrument_devices").insert(row); if (error) { if (scope && /scope/i.test(error.message || "")) throw new Error("Run supabase/migrations/0012_referrals.sql first."); throw error; } },
+
+  // ---------- Amico DX electronic referrals ----------
+  async referralsQueue(rows) {
+    const { error } = await sb.from("referrals").insert(rows);
+    if (error) { if (missingTable(error)) { const e = new Error("Referral queue isn't set up: run supabase/migrations/0012_referrals.sql."); e.missing = true; throw e; } throw error; }
+  },
+  async referralsFor(orderIds) {
+    if (!orderIds.length) return [];
+    const { data, error } = await sb.from("referrals").select("id,order_id,accession,manifest,status,created_at,delivered_at,acked_at,note,attempts").in("order_id", orderIds);
+    if (error) { if (missingTable(error)) return null; throw error; }
+    return data || [];
+  },
+  async referralMessages(ids) { const { data, error } = await sb.from("referrals").select("id,accession,message").in("id", ids); if (error) throw error; return data || []; },
+  async referralSet(id, status, note) { const { error } = await sb.from("referrals").update({ status, note: note || null }).eq("id", id); if (error) throw error; },
+  async referralNotify(body) { const { data, error } = await sb.functions.invoke("send-alerts", { body: { action: "referral", ...body } }); if (error) throw error; return data; },
   async deviceSetActive(id, active) { const { error } = await sb.from("instrument_devices").update({ active }).eq("id", id); if (error) throw error; },
   // ---------- patient portal ----------
   async patientReports() { const { data, error } = await sb.from("report_versions").select("id,order_id,version,data,released_at"); if (error) throw error; return data; },

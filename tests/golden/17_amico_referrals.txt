@@ -1,0 +1,26 @@
+A1 off: send button: false | hint: true | destination column: false
+S1 panel: true | defaults: 45D2301329 AMICODX | ticked: WOUND,UTIABR,UTI,NAIL
+S2 saved: Changes saved | stored: {"on":true,"email":"lab@amicodx.test","tests":["WOUND","NAIL","UTIABR","UTI"]}
+K1 connector device: Amico DX connector (Icarus) | scope: amico | hash only: 64
+K2 script has feed, upload URL and key: true true true
+R1 defaults: wound amico | nail amico | cbc other | wound+cbc other | note: true
+R2 nail switched to other lab: Send to Amico DX (1) | Manifest for Quest Diagnostics (3)
+R3 and back: Send to Amico DX (2) | Manifest for Quest Diagnostics (2)
+X1 referrals queued: FBG<YYMMDD>-0001:WOUND:queued, FBG<YYMMDD>-0002:NAIL:queued
+X2 HL7 segments: MSH,PID,PV1,ORC,OBR,DG1,DG1
+X3 MSH: MSH|^~\&|FBG_LIMS|First Bio Genetics^03D2287865^CLIA|ICARUS|AMICODX^45D2301329^CLIA|<TS>||ORM^O01^ORM_O01|<CTRL>|P|2.5.1
+X4 PID: PID|1||W1^^^FBG^MR||Wound^Walter||19750409|M|||12 Main St^^Mesa^AZ^85201||(480) 555-0101
+X5 OBR: OBR|1|FBG<YYMMDD>-0001||WOUND^Wound panel^L|||<TS>||||||||^Sterile swab in transport vial|1639201847^Reyes^Daniel^^^^MD^^NPI|||||||||||^^^^^R
+X6 DG1: DG1|1||L97.909^^I10|||W / DG1|2||E11.621^^I10|||W
+X7 no insurance by default: true
+X8 order status: In Process | sendout: {"lab":"Amico DX","dest":"amico","electronic":true,"tests":["WOUND"]}
+X9 manifest modal: true true true
+X10 notice: [{"action":"referral","manifest":"MAN-<ID>","specimens":2,"tests":["Wound panel","Nail fungal panel"]}] | toast: File downloaded | 2 orders sent. Amico DX notified.
+P1 other manifest: true | on it: Quest Diagnostics,Quest Diagnostics
+T1 queued: Waiting for Amico | paper: true
+T2 accepted: true | rejected with reason: true
+U1 old cancelled: cancelled | new queued: cancelled,queued | toast: d | Order re-queued for Icarus
+U2 HL7 download: true
+F1 failure modal: Orders weren't sentReferral queue isn't set up: run supabase/migrations/0012_referrals.sql.Nothing was marked as sent. Fix the problem and t | still pending: true
+F2 file saved and marked sent: true | {"status":"In Process","dest":"amico","electronic":false}
+errors: []

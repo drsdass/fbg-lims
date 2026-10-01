@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale) and `supabase/migrations/0012_referrals.sql` (Amico DX electronic referrals).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -296,6 +296,44 @@ In an emergency, set `SKIP_TESTS=1` in Netlify's environment variables to deploy
 When a change is meant to alter behavior, review the difference the runner prints, then run `npm run test:update` and
 commit the updated tests/golden files with the change. Test files in tests/fixtures are instrument exports identified
 only by sample barcodes; never add files containing patient names.
+
+## 22. Amico DX electronic referrals
+
+Send-out orders can go to Amico DX's Icarus system electronically instead of on paper. Other orders still go to the
+reference lab named in Lab settings on a printed manifest.
+
+**Setup (once)**
+
+1. Run `supabase/migrations/0012_referrals.sql`.
+2. Deploy the new function with JWT verification off: `supabase functions deploy referral-feed --no-verify-jwt`.
+   Redeploy `instrument-upload` and `send-alerts` too (both changed).
+3. Lab settings > **Amico DX referrals**: tick *Send referrals to Amico DX electronically*, add the email address Amico
+   wants shipping notices sent to, and tick the tests Amico performs for us. Confirm the receiving facility and
+   application codes (MSH-5/MSH-6) with whoever runs Icarus.
+4. Click **Connect Amico's computer** (admin only). Download the connector script and send it to Amico through a
+   secure channel. On the Icarus computer they save it as `C:\AmicoDX\FBG\amico-connector.ps1`, run it with `-Test`,
+   and add it to Task Scheduler. Icarus imports orders from `C:\AmicoDX\FBG\Inbound` and writes HL7 ORU result files to
+   `C:\AmicoDX\FBG\Results`.
+
+**Daily use**
+
+Instruments > Reference lab > **Ready to send** shows a *Send to* choice per specimen. It defaults to Amico DX when
+every send-out test on the order is on Amico's list; staff can switch any order to the other lab. Tick specimens and
+click **Send to Amico DX**. The portal:
+
+- writes one HL7 v2.5.1 ORM^O01 order per specimen (patient, ordering provider with NPI, tests, collection time,
+  ICD-10 codes, and insurance only if that box is ticked) into the referral queue,
+- marks the specimens sent on a new manifest and opens it for printing to go in the box,
+- emails Amico a shipping notice with counts only (no patient information).
+
+**At the reference lab** shows each electronic order's status: *Waiting for Amico* (queued), *Picked up, not
+confirmed*, *In Icarus* or *Rejected* with Icarus's reason. Fix a rejected order and click *re-send*; the old message
+is cancelled and a fresh one is queued. An order that isn't picked up is handed over again after 10 minutes, so
+Icarus should treat the accession number as the unique key and ignore repeats. If the referral queue can't be reached,
+nothing is marked sent; staff can download the orders as an HL7 file instead.
+
+Results come back through the same connector into the **Instrument inbox** as HL7 files for a scientist to review and
+import, exactly like other reference-lab results. Reports name the lab that performed each send-out test.
 
 ## Before go-live
 
