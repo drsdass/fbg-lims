@@ -14,6 +14,7 @@ const q=s=>w.document.querySelector(s),txt=()=>w.document.querySelector('#app').
 const click=s=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}))};
 const type=(s,v)=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.value=v;el.dispatchEvent(new w.Event('input',{bubbles:true}));el.dispatchEvent(new w.Event('change',{bubbles:true}))};
 const M=()=>w.__mock;
+const signRelease=async()=>{click('[data-a="release"]');await sleep(20);const pw=q('#esig-pw');if(pw){pw.value=M().user.pw;click('#modal-root [data-a="esigRelease"]');await sleep(80)}};
 const toasts=()=>[...w.document.querySelectorAll('#toast .toast')].map(t=>t.textContent).join(' | ');
 async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b="lf.pw"]',pw);click('[data-a="login"]');await sleep(80)}
 (async()=>{
@@ -58,7 +59,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  // go to entry, fill normals, release (reflex CONF now needs results -> fill normals covers)
  [...w.document.querySelectorAll('[data-a="go"]')].find(b=>b.dataset.v==='queue').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(10);
  w.document.querySelector(`[data-a="openOrder"][data-id="${oid}"]`).dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(10);
- click('[data-a="go"][data-v="entry"]');await sleep(10);click('[data-a="fillNormals"]');await sleep(5);click('[data-a="release"]');await sleep(600);
+ click('[data-a="go"][data-v="entry"]');await sleep(10);click('[data-a="fillNormals"]');await sleep(5);await signRelease();await sleep(600);
  console.log('13b alerts:',JSON.stringify(M().store.outbox.map(r=>r.data.channel+':'+r.data.status)),'invoked',M().invoked);fs.writeFileSync(OUT('report.json'),JSON.stringify(M().lastFax||null));
  console.log('13 released:',M().store.orders[0].data.status,'claim:',M().store.claims.map(c=>c.id+':'+c.data.lines.map(l=>l.cpt).join('/')).join(),'outbox:',M().store.outbox.length,'clinic note:',M().store.notes.filter(n=>n.aud==='c1001').length);
  click('[data-a="go"][data-v="clinics"]');await sleep(10);

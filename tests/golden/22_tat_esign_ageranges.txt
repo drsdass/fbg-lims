@@ -1,0 +1,14 @@
+T1 nav item with late count: true | Turnaround1
+T2 cards: Released=3 | Median turnaround=20 h | 90th percentile=28 h | On time=100% | Late now=1 | Transport=3 h
+T3 late list: FBG-L1:Late by N, FBG-L2:Due in N
+T4 by test: Complete blood count with differential/2/20 h/28 h/100% ; Wound panel/1/20 h/20 h/100%
+T5 by type: Sent to reference lab 100%
+T6 weekly chart bars: 12
+A1 saved: [{"analyte":"Glucose","sex":"","min":0,"max":18,"lo":60,"hi":110}] | tox target: 60
+A2 with 60 h tox target, late now: 0
+A3 child glucose 105 range and flag: Glucosemg/dL60–110
+E1 sign dialog: true | meaning: true
+E2 wrong password refused: true | still open: true | status: In Process
+E3 released with signature: Released | Jordan Ellis | I have reviewed these results and approve them for release. | history sig: true | glucose flag: {"ab":0,"crit":0,"inc":0}
+E4 locked report carries signature: true
+errors: []

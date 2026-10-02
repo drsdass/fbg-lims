@@ -1,5 +1,5 @@
 L0 login screen: no self-registration: false keep-signed-in option: true username label: true
-L1 lab nav: Dashboard, New order, Accessioning, Pickups, Specimen storage, Quality control, Instruments, Billing, Clinics, Test menu, Supply orders, Reports, Compliance, Notification log, Audit log, Users, Therapy guide!, Lab settings
+L1 lab nav: Dashboard, New order, Accessioning, Pickups, Specimen storage, Quality control, Instruments, Billing, Clinics, Test menu, Supply orders, Turnaround, Reports, Compliance, Notification log, Audit log, Users, Therapy guide!, Lab settings
 L2 settings shown: true true
 L3 clinic saved: active {"ordering":false,"supplies":true,"resultsScope":"all","mfa":false} {"onFile":true,"signer":"Ann Ora"}
 L4 provider links offered: true

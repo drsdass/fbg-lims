@@ -53,7 +53,8 @@ function canWrite(t,row,op){const p=prof();if(!p||(aal!=='aal2'&&p.role!=='clini
  if(t==='invoices')return false;
  if(t==='audit_log')return true;return false}
 const thenable=v=>({then:(a,b)=>Promise.resolve(v).then(a,b)});
-export function createClient(){
+export function createClient(u,k,opts){
+ if(opts&&opts.auth&&opts.auth.persistSession===false)return{auth:{async signInWithPassword({email,password}){const u=USERS.find(x=>x.email===email&&x.pw===password);globalThis.__mock.esigns=(globalThis.__mock.esigns||0)+1;return u?{error:null}:{error:{message:'Invalid login credentials'}}},async signOut(){return{error:null}}}};
  const auth={async getSession(){return{data:{session:user?{user}:null}}},
   async signInWithPassword({email,password}){const u=USERS.find(x=>x.email===email&&x.pw===password);if(!u)return{error:{message:'Invalid login credentials'}};user=u;aal='aal1';return{error:null}},
   async signOut(){user=null;aal='aal1'},async getUser(){return{data:{user}}},onAuthStateChange(){},async resetPasswordForEmail(){return{}},async updateUser(){return{error:null}},

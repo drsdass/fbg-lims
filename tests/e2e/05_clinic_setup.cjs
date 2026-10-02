@@ -14,6 +14,7 @@ const q=s=>w.document.querySelector(s),txt=()=>w.document.querySelector('#app').
 const click=s=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}))};
 const type=(s,v)=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.value=v;el.dispatchEvent(new w.Event('input',{bubbles:true}));el.dispatchEvent(new w.Event('change',{bubbles:true}))};
 const M=()=>w.__mock;
+const signRelease=async()=>{click('[data-a="release"]');await sleep(20);const pw=q('#esig-pw');if(pw){pw.value=M().user.pw;click('#modal-root [data-a="esigRelease"]');await sleep(80)}};
 const toasts=()=>[...w.document.querySelectorAll('#toast .toast')].map(t=>t.textContent).join(' | ');
 async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b="lf.pw"]',pw);click('[data-a="login"]');await sleep(80)}
 (async()=>{
@@ -58,11 +59,11 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  // 4d: result, release, correct, re-release
  click('[data-a="startTesting"]');await sleep(20);click('[data-a="go"][data-v="entry"]');await sleep(10);
  console.log('L12 partial CBC rows in entry:',w.document.querySelectorAll('.re-test')[0].querySelectorAll('tbody tr').length);
- click('[data-a="fillNormals"]');click('[data-a="release"]');await sleep(800);
+ click('[data-a="fillNormals"]');await signRelease();await sleep(800);
  console.log('L13 released:',M().store.orders.find(o=>o.id===lo.id).data.status);
  click('[data-a="startCorrect"]');await sleep(10);type('#modal-root [data-b="rej.reason"]','Wrong WBC transcribed');click('#modal-root [data-a="confirmCorrect"]');await sleep(500);
  const lo3=M().store.orders.find(o=>o.id===lo.id).data;console.log('L14 reopened:',lo3.status,'corrections:',(lo3.corrections||[]).length);
- click('[data-a="fillNormals"]');click('[data-a="release"]');await sleep(900);
+ click('[data-a="fillNormals"]');await signRelease();await sleep(900);
  click('[data-a="report"]');await sleep(40);console.log('L15 corrected report:',mt().includes('CORRECTED'),mt().includes('Wrong WBC transcribed'),'alerts corrected flag:',M().store.outbox.filter(x=>x.data.corrected).length>0);
  q('#modal-root').innerHTML='';
  click('[data-a="changePw"]');await sleep(10);type('#modal-root [data-b="lf.pw1"]','AnotherPassword12');type('#modal-root [data-b="lf.pw2"]','AnotherPassword12');click('#modal-root [data-a="saveMyPw"]');await sleep(100);console.log('L16 change password:',toasts().includes('Password changed'));

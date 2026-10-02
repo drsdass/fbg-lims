@@ -445,6 +445,7 @@ async function reportPdf(m: any): Promise<Uint8Array> {
   need(30); y -= 6;
   const foot = `Laboratory Director: ${m.lab?.director ?? ""}${m.lab?.clia ? `   CLIA ID# ${m.lab.clia}` : ""}`;
   text(foot, (W - reg.widthOfTextAtSize(clean(foot), 8.5)) / 2, y, 8.5, reg); y -= 11;
+  if (m.esign) { need(12); text(m.esign, (W - bold.widthOfTextAtSize(clean(m.esign), 8)) / 2, y, 8, bold); y -= 11; }
   const conf = `CONFIDENTIAL: protected health information for ${m.clinic ?? "the ordering provider"}. If received in error, call ${m.lab?.phone ?? "the laboratory"} and destroy all copies.`;
   for (const l of wrap(conf, R - X, 7.5, reg)) { text(l, X, y, 7.5, reg, mute); y -= 9; }
 

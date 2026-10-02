@@ -377,6 +377,18 @@ item name, unit or pack size, an optional maximum per order, and whether it is s
 pause an item by unticking *Shown to clinics*, or *Restore standard list*. Changes apply on **Save changes**. Clinics see
 the unit and limit on their Supplies page and can't order more than the limit at once.
 
+## 26. Turnaround, signature at release, age-specific ranges
+
+- **Turnaround** (left menu; the badge counts specimens past target): receipt-to-release median, 90th percentile and
+  on-time rate for the last 7, 30 or 90 days, a 12-week trend, a breakdown by test, type or clinic, and a live list of
+  specimens late or due within 4 hours (send-outs included until results are entered). Targets are in Lab settings >
+  Turnaround targets; an order's target is the longest among its tests.
+- **Signature at release**: releasing results asks for the user's password and shows the signature meaning. The
+  signer, time and meaning are stored on the order and its history, locked into the report version, and printed on the
+  report and fax ("Electronically signed by ..."). The password is checked without disturbing the two-step session.
+- **Age-specific reference ranges** (Lab settings): per analyte, optional sex, age band in years ("from" included, "to"
+  not), low and high. The first matching row wins; flags, reports, range bars and trends use them.
+
 ## Before go-live
 
 - [ ] Supabase Team plan, HIPAA add-on, signed BAA, project marked High Compliance

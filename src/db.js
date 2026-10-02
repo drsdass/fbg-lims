@@ -148,6 +148,15 @@ export const DB = {
   async passwordChanged() { const { error } = await sb.rpc("password_changed"); if (error) throw error; },
   onAuth(fn) { sb.auth.onAuthStateChange((event, session) => fn(event, session)); },
   async session() { const { data } = await sb.auth.getSession(); return data.session; },
+  // Re-checks a password for an electronic signature without touching the current session (which carries two-step
+  // verification): a separate, memory-only client signs in, and is signed out locally straight away.
+  async verifyPassword(email, password) {
+    const tmp = createClient(CONFIG_ERROR ? "https://invalid.supabase.co" : url, CONFIG_ERROR ? "invalid-key-placeholder" : key,
+      { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: "fbg-esign" } });
+    const { error } = await tmp.auth.signInWithPassword({ email, password });
+    try { await tmp.auth.signOut({ scope: "local" }); } catch (e) { /* nothing to clean up */ }
+    if (error) throw new Error(/invalid/i.test(error.message || "") ? "That password isn't right." : error.message);
+  },
   async signIn(email, password) { const { error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error; },
   async signOut() { synced = {}; await sb.auth.signOut(); },
   async resetPassword(email) { await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin }); },
