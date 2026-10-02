@@ -29,7 +29,7 @@ let user=null,aal='aal1',seq=5000,acc=1000;
 const errors=[];
 globalThis.__mock={store,errors,get user(){return user}};
 const prof=()=>user&&store.profiles.find(p=>p.user_id===user.id);
-function visible(t){const p=prof();if(!p)return t==='profiles'?[]:[];if(aal!=='aal2'&&!['clinic','patient'].includes(p.role)&&t!=='profiles')return[];
+function visible(t){if(t==='settings'&&globalThis.__mock&&globalThis.__mock.hideSettings>0){globalThis.__mock.hideSettings--;return[]}const p=prof();if(!p)return t==='profiles'?[]:[];if(aal!=='aal2'&&!['clinic','patient'].includes(p.role)&&t!=='profiles')return[];
  if(p.role==='patient'){if(t==='profiles')return store.profiles.filter(x=>x.user_id===user.id);if(t==='settings')return store.settings.filter(x=>x.key==='lab');if(t==='report_versions')return store.report_versions.filter(v=>{const o=store.orders.find(x=>x.id===v.order_id);return o&&(p.patient_ids||[]).includes(o.data.patientId)&&o.data.patientPortal!==false});return []}
  if(t==='profiles')return store.profiles.filter(x=>x.user_id===user.id||p.role==='lab');
  if(t==='audit_log')return p.role==='lab'&&aal==='aal2'?store.audit_log:[];

@@ -87,6 +87,8 @@ function dirty(S, isLab) {
   }
   if (isLab && canSettings) for (const key of SETTINGS) {
     if (S[key] === undefined) continue;
+    // Never write a lab profile that has lost its identity (an empty load must not overwrite the real one).
+    if (key === "lab" && !(String(S.lab.name || "").trim() && String(S.lab.clia || "").trim())) continue;
     const k = "settings:" + key, j = JSON.stringify(S[key]);
     if (synced[k] !== j) out.push({ t: "settings", key, d: S[key], k, j });
   }
@@ -220,6 +222,7 @@ export const DB = {
     if (!isLab) { res.claims = []; res.outbox = []; }
     return res;
   },
+  async refreshSession() { try { await sb.auth.refreshSession(); } catch (e) { /* keep the current session */ } },
   markSynced(S, isLab) {
     synced = {};
     for (const t of DOC_TABLES) for (const d of S[t] || []) synced[t + ":" + d.id] = JSON.stringify(d);
