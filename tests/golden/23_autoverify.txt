@@ -1,0 +1,16 @@
+D1 decisions:
+  a1: PASS
+  a3: HELD: Outside reference range: LDL Cholesterol 150 (high)
+  a4: HELD: No QC on file for the screening analytes
+  a5: HELD: Complete blood count with differential isn't enabled for auto-verification
+D2 nav item: true | modes locked: verify,release
+D3 order page shows why held: true
+V1 validation: Evaluated=9 | Would pass=67% | Passes confirmed=1 | False passes=1 | Held=0 | Judged by a person=2 | approve disabled: true | false pass listed: true
+V2 after rule change: Evaluated=7 | Would pass=71% | Passes confirmed=0 | False passes=0 | Held=0 | Judged by a person=0
+V3 two clean passes: Evaluated=7 | Would pass=71% | Passes confirmed=2 | False passes=0 | Held=0 | Judged by a person=2 | approve enabled: true
+V4 approved: true | modes locked now: none
+M1 verify mode, a8: In Process | verified by: Auto-verification true
+M2 release mode, a9: Released | signature: Auto-verification | Released automatically under auto-verification rules approved by Dr. Guihua Cao on <DATE>. | history by: Auto-verification
+M3 held orders untouched: In Process,In Process
+M4 suspend: shadow
+errors: []

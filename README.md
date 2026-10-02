@@ -389,6 +389,25 @@ the unit and limit on their Supplies page and can't order more than the limit at
 - **Age-specific reference ranges** (Lab settings): per analyte, optional sex, age band in years ("from" included, "to"
   not), low and high. The first matching row wins; flags, reports, range bars and trends use them.
 
+## 27. Auto-verification
+
+Left menu > **Auto-verification** (admins edit; scientists and reporting can view).
+
+- **Modes**: Off; Shadow (records a decision on each order, changes nothing); Verify (passing orders are marked verified
+  by "Auto-verification", a person releases); Verify and release (passing orders are released and signed "Released
+  automatically under auto-verification rules approved by ..."). Verify modes unlock only after director approval.
+  **Suspend now** returns to shadow instantly.
+- **Rules** (all must pass): every test enabled; all results entered; no critical values; nothing outside the
+  reference range unless allowed (calculated values included); no delta-check hits; no LC-MS batch review notes; positive
+  screens awaiting confirmation held; definitive tox with no unexpected drugs and every prescribed drug detected;
+  corrected reports always to a person; tests run here need QC run within the window and not rejected.
+- **Validation**: when a scientist verifies or releases an order the rules judged in shadow, the system records whether
+  any measured result changed. A pass the scientist changed is a false pass. Approval needs the configured number of
+  confirmed passes (default 30) and zero false passes under the current rules; changing the rules restarts validation
+  and voids an approval.
+- Decisions and reasons appear on each order and in the Recent decisions table. Document the validation and the rules in the
+  lab's procedure manual; CAP's checklist has specific autoverification requirements.
+
 ## Before go-live
 
 - [ ] Supabase Team plan, HIPAA add-on, signed BAA, project marked High Compliance
