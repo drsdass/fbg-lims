@@ -1,0 +1,8 @@
+C1 shortcut on Supply orders: true
+C2 own section: true | heading: Supply catalog | items: 13 | old text box gone: true
+C3 header count: 12 of 13 items
+C4 saved: 13 items | first two: Oral fluid collection devices, Urine collection cups [sleeve of 100] | paused: Urine toxicology requisitions | new: {"name":"Saliva collection kits","unit":"box of 25","max":"4","on":true}
+C5 clinic list: 12 | paused hidden: true | new item shown: true | unit hint: true
+C6 over limit: e most you can order at once is 4. Call the lab for larger quantities.
+C7 order items: [{"name":"Oral fluid collection devices","qty":2},{"name":"Saliva collection kits (box of 25)","qty":3}]
+errors: []

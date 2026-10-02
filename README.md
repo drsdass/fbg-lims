@@ -370,6 +370,13 @@ Run `supabase/migrations/0013_clinic_archive.sql` once.
   for a clinic in Clinics > Edit > *Require two-step verification for this clinic's users*.
 - Only the lab can change a clinic's status, account number or portal settings.
 
+## 25. Supply catalog
+
+Lab settings > **Supply catalog** (also reached from Supply orders > *Edit supply catalog*) lists what clinics can order:
+item name, unit or pack size, an optional maximum per order, and whether it is shown to clinics. Reorder with the arrows,
+pause an item by unticking *Shown to clinics*, or *Restore standard list*. Changes apply on **Save changes**. Clinics see
+the unit and limit on their Supplies page and can't order more than the limit at once.
+
 ## Before go-live
 
 - [ ] Supabase Team plan, HIPAA add-on, signed BAA, project marked High Compliance
