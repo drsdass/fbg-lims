@@ -153,6 +153,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:14px}
 .st-rejected{background:var(--danger-soft);color:var(--danger)}
 .st-active{background:var(--ok-soft);color:var(--ok)}
 .st-pending{background:var(--warn-soft);color:var(--warn)}
+.st-archived{background:var(--sunken);color:var(--muted)}
 .st-suspended{background:var(--danger-soft);color:var(--danger)}
 .flag{display:inline-block;min-width:22px;padding:1px 6px;border-radius:5px;font-size:12px;font-weight:700;text-align:center}
 .flag.H,.flag.L,.flag.A{background:var(--warn-soft);color:var(--warn)}

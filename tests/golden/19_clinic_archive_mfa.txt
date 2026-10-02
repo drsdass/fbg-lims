@@ -1,0 +1,14 @@
+M1 clinic user asked for two-step by default (should be false): false
+A1 list: Pacific Coast Pain, ZZ Test Clinic | archive buttons: 2
+A2 archived and hidden: archived | list: Pacific Coast Pain | toggle: Show archived (1)
+A3 confirm text mentions records kept: true
+A4 order clinic picker hides archived: true
+A5 shown again: Pacific Coast Pain, ZZ Test Clinic | restore/delete: true true
+A6 empty clinic deleted: true | Clinic archived | ZZ Test Clinic deleted
+A7 clinic with records: This clinic can't be deletedPacific Coast Pain has 0 patients, 0 orders and 1 portal user. A clinic with patients, orders or users stays archived inst | still there: true
+A8 restored: active
+M2 toggle present, off by default: true true
+M3a toast: Clinic updated
+M3 saved: {"ordering":true,"supplies":true,"mfa":true}
+M4 after turning it on, clinic user is asked for two-step: true
+errors: []

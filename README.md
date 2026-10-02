@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale) and `supabase/migrations/0012_referrals.sql` (Amico DX electronic referrals).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale) and `supabase/migrations/0012_referrals.sql` (Amico DX electronic referrals) and `supabase/migrations/0013_clinic_archive.sql` (archiving clinics, clinic two-step).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -357,6 +357,18 @@ guidelines, the local antibiogram).
 The fax PDF is drawn in `supabase/functions/send-alerts/index.ts`. After changing it, run
 `node scripts/gen-reportpdf.mjs` to regenerate `src/reportpdf.js` (the browser's Download PDF), and redeploy
 `send-alerts`.
+
+## 24. Archiving clinics and clinic two-step verification
+
+Run `supabase/migrations/0013_clinic_archive.sql` once.
+
+- **Archive** (Clinics list, admins): hides a clinic from the clinic list and order screens and closes its users' portal
+  access. Orders, patients and reports are kept. **Show archived** lists them again with **Restore** and **Delete**.
+- **Delete** only works for a clinic with no patients, no orders and no portal users (for example an unused test
+  profile); the database enforces this. Everything else stays archived.
+- **Two-step verification**: always required for lab staff, never for patients. Clinic users are off by default; turn it on
+  for a clinic in Clinics > Edit > *Require two-step verification for this clinic's users*.
+- Only the lab can change a clinic's status, account number or portal settings.
 
 ## Before go-live
 

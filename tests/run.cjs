@@ -25,7 +25,7 @@ function normalize(t) {
     .replace(/\b\d{1,2}\/\d{1,2}\/\d{4}(,? \d{1,2}:\d{2}(:\d{2})? ?[AP]M)?/g, "<DATE>")
     .replace(/\b\d{1,2}:\d{2}(:\d{2})? ?[AP]M\b/g, "<TIME>").replace(/<DATE>, \d{1,2}(:\d{0,2})?/g, "<DATE>")
     .replace(/\b\d{4}-\d{2}-\d{2}\b/g, "<YMD>").replace(/\b20\d{2}-(0[1-9]|1[0-2])\b/g, "<YM>")
-    .replace(/\bFBG\d{6}\b/g, "FBG<YYMMDD>").replace(/\b(PU|SUP|BAT|MAN)-?\d{6}-[A-Z0-9]+\b/g, "$1-<ID>").replace(/\bINV-\d{4}-/g, "INV-<YYMM>-")
+    .replace(/FBG\d{6}(?=-|\b)/g, "FBG<YYMMDD>").replace(/\b(PU|SUP|BAT|MAN)-?\d{6}-[A-Z0-9]+\b/g, "$1-<ID>").replace(/\bINV-\d{4}-/g, "INV-<YYMM>-")
     .replace(/\b[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}\b/g, "<CODE>").replace(/\b(pk|pt|o|s|qr|ack|run|vendor|equipment|lot|sop|personnel|auto|uN|uP)(?=[a-z0-9]*\d)[a-z0-9]{6,}\b/g, "$1<ID>")
     .replace(/\b(application\/pdf) \d+/g, "$1 <BYTES>").replace(/\*(\d{6})\*(\d{4})\*/g, "*<YYMMDD>*<HHMM>*").replace(/\*\d{9}\*/g, "*<CTRL>*").replace(/\*\d{8}\*\d{4}\*\d+\*X\*/g, "*<YYYYMMDD>*<HHMM>*<G>*X*")
     .replace(/\b\d{14}\b/g, "<TS>").replace(/\b20\d{6}\b/g, "<YYYYMMDD>")

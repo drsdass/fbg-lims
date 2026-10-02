@@ -42,6 +42,6 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  const pp=q('[data-b="draft.provPaper"]');if(pp){pp.checked=true;pp.dispatchEvent(new w.Event('input',{bubbles:true}))}
  click('[data-a="ordNext"]');await sleep(20);click('[data-a="ordNext"]');await sleep(900);
  const ao=M().store.orders.find(o=>o.data.addOnOf);console.log('A2 add-on order:',ao&&ao.data.accession,ao&&ao.data.addOnOf,ao&&ao.data.status,ao&&ao.data.tests.join('+'),'| banner:',txt().includes('Add-on test using the specimen from accession'),'| toasts:',toasts().slice(-80));
- console.log('E3 report text:',html.textContent.replace(/\s+/g,' ').slice(0,1500));
+ console.log('E3 report text:',html.textContent.replace(/\s+/g,' ').replace(/\b[A-Z][a-z]{2} \d{1,2}, \d{4}(, \d{1,2}:\d{2}( [AP]M)?)?/g,'<DATE>').replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}(,? \d{1,2}:\d{2}(:\d{2})?( [AP]M)?)?/g,'<DATE>').slice(0,1500));
  console.log('errors',errs,M().errors);process.exit(0)
 })();

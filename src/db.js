@@ -330,6 +330,9 @@ export const DB = {
   },
   async deviceAdd(name, tokenHash, scope) { const row = { name, token_hash: tokenHash }; if (scope && scope !== "instrument") row.scope = scope; const { error } = await sb.from("instrument_devices").insert(row); if (error) { if (scope && /scope/i.test(error.message || "")) throw new Error("Run supabase/migrations/0012_referrals.sql first."); throw error; } },
 
+  async clinicUsage(id) { const { data, error } = await sb.rpc("clinic_usage", { p_clinic: id }); if (error) { if (/clinic_usage/.test(error.message || "")) throw new Error("Run supabase/migrations/0013_clinic_archive.sql first."); throw error; } return data; },
+  async clinicDelete(id) { const { data, error } = await sb.from("clinics").delete().eq("id", id).select("id"); if (error) throw error; if (!data || !data.length) throw new Error("The clinic couldn't be deleted. Check it has no patients, orders or users, and that migration 0013 is installed."); },
+
   // ---------- Amico DX electronic referrals ----------
   async referralsQueue(rows) {
     const { error } = await sb.from("referrals").insert(rows);
