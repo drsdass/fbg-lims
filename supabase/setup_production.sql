@@ -867,10 +867,11 @@ create trigger audit after insert or update or delete on public.qms_records for 
 alter table public.qms_records enable row level security;
 
 -- Every lab user can read records and log the day-to-day ones (maintenance, temperatures,
--- read acknowledgments, instrument runs). Everything else needs the qms permission.
+-- read acknowledgments, instrument runs); anyone with the qc permission can sign a daily QC review.
+-- Everything else needs the qms permission.
 create policy qms_read on public.qms_records for select to authenticated using (public.is_lab());
 create policy qms_insert on public.qms_records for insert to authenticated
-  with check (public.is_lab() and (kind in ('maintenance','temp','ack','run') or public.has_perm('qms')));
+  with check (public.is_lab() and (kind in ('maintenance','temp','ack','run') or (kind = 'qcreview' and public.has_perm('qc')) or public.has_perm('qms')));
 create policy qms_update on public.qms_records for update to authenticated
   using (public.has_perm('qms')) with check (public.has_perm('qms'));
 revoke delete on public.qms_records from authenticated;

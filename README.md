@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale) and `supabase/migrations/0012_qc_review.sql` (daily QC review sign-off).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -285,7 +285,7 @@ creatinine was measured. Periods: all, 2 years, 12 months, 6 months. Printable.
 ## 21. Production setup and automated tests
 
 **New production project.** Run `supabase/setup_production.sql` once in the SQL Editor of a new, empty project (it is
-migrations 0001 to 0011 in order). Then deploy the four Edge Functions (manage-users, send-alerts, instrument-upload,
+migrations 0001 to 0012 in order). Then deploy the four Edge Functions (manage-users, send-alerts, instrument-upload,
 patient-access, each with JWT verification off), set their secrets, create the first admin, and point Netlify's
 `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at the new project.
 

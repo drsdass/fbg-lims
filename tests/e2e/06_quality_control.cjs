@@ -25,10 +25,10 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  console.log('Q0 nav has QC:',[...w.document.querySelectorAll('.nav button')].some(b=>/Quality control/.test(b.textContent)));
  click('[data-a="go"][data-v="instruments"]');await sleep(20);
  await upload('c560',FIX('CSV_Screening_Tox_QC.xlsx'),'CSV_Screening_Tox_QC.xlsx');
- console.log('Q1 C560 QC import:',(mt().match(/\d+ control results? logged to Quality control/)||['none'])[0],'| materials',M().store.qc_materials.length,'results',M().store.qc_results.length);
+ console.log('Q1 C560 QC import:',(mt().match(/\d+ control results? logged and scored[^.]*\./)||['none'])[0],'| materials',M().store.qc_materials.length,'results',M().store.qc_results.length);
  q('#modal-root').innerHTML='';click('[data-a="setUi"][data-k="itab"][data-val="sciex"]');await sleep(20);
  await upload('sciex',FIX('20260715_JA_Urine_Tox_LCMS.csv'),'u.csv');
- console.log('Q2 MultiQuant QC import:',(mt().match(/\d+ control results? logged to Quality control/)||['none'])[0],'| materials',M().store.qc_materials.length,'| sample:',JSON.stringify(M().store.qc_materials.find(m=>m.data.instrument==='SCIEX 4500').data).slice(0,160));
+ console.log('Q2 MultiQuant QC import:',(mt().match(/\d+ control results? logged and scored[^.]*\./)||['none'])[0],'| materials',M().store.qc_materials.length,'| sample:',JSON.stringify(M().store.qc_materials.find(m=>m.data.instrument==='SCIEX 4500').data).slice(0,160));
  await upload('sciex',FIX('20260715_JA_Urine_Tox_LCMS.csv'),'u.csv');
  console.log('Q3 re-import does not duplicate:',M().store.qc_results.length);
  q('#modal-root').innerHTML='';

@@ -375,6 +375,12 @@ export const DB = {
     return out;
   },
   async qcInsertMaterials(list) { if (!list.length) return; const { error } = await sb.from("qc_materials").upsert(list.map((m) => ({ id: m.id, data: m })), { onConflict: "id", ignoreDuplicates: true }); if (error) throw error; },
+  async qcSaveMaterials(list) {
+    for (let i = 0; i < list.length; i += 500) {
+      const { error } = await sb.from("qc_materials").upsert(list.slice(i, i + 500).map((m) => ({ id: m.id, data: m })), { onConflict: "id" });
+      if (error) throw error;
+    }
+  },
   async qcSaveMaterial(m) { const { error } = await sb.from("qc_materials").upsert({ id: m.id, data: m }); if (error) throw error; },
   async qcAddResults(list) {
     for (let i = 0; i < list.length; i += 500) {
