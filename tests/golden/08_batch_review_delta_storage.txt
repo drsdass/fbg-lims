@@ -6,7 +6,7 @@ B4 entry shows note: false
 B5 verify asked to confirm: Review before you verify: |  | - Amphetamine: ion ratio 0.9 vs 0.6 (50% off) |  | Confirm you have reviewed these and they are acceptable to report?
 B6 verified: true | history note: Reviewed before verify: Amphetamine: ion ratio 0.9 vs 0.6 (50% off) | toasts: Verified. Ready to report out.
 D1 previous shown: true | delta flag: true
-D2 review items text: Previous 140 on <DATE>mmol/L1
+D2 review items text: Previous 140 on <DATE>
 H1 result history: true | potassium row: Potassium43.5–5.1 mmol/
 S1 needs storing: Needs storing (11)
 S2 stored: Specimen fridge 1 Rack A B4 | default keep-until was <YMD>

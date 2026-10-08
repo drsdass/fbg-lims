@@ -1,0 +1,17 @@
+J1 summary: Import complete18 result rows matched to 4 orders from the Yumizen C560. 50018191One, ToxReview and release50018192One, ToxReview and release50018189One, ToxReview and release50018185One, ToxReview and release Not posted (3):FBG<YYMMDD>-1009: no open order with this accession number (check the number, or whether it was already released)50018188U1: order 50018188 hasn't been received yet (status Ordered)50018186U1: no open order with this accession number (check the number, or whether it was already released) Specimen validity: 50018189 adulterated. Review before reporting. Instrument flags:50018185 BUPR: instrument flag LOW Close
+J2 posted 50018185 OXY / 50018189 validity: {"v":"Positive","c":"244.3"} {"v":"Adulterated"}
+J3 semicolon file: Import complete3 result rows matched to 1 order from the Yumizen C560. 50018190One, ToxReview and release Close | OXY {"v":"Positive","c":"1234.5"} | THC {"v":"Negative","c":"3.1"}
+M1 received order offers manual entry: true
+M2 entry page: Enter results | status In Process
+M3 auto results: OXY Positive | BUP Negative | validity Diluted | note true
+M4 verified: true Luna Sci true | OXY {"v":"Positive","c":"150","src":"manual"} | history Results verified for reporting (5 entered manually)
+D1 oxycodone components: Oxycodone ≥20
+D1b alprazolam components: Alprazolam ≥100 | Hydroxyalprazolam ≥40
+D2 stored: {"src":"manual","by":"Luna Sci","raw":{"Oxycodone":"1240"},"v":"Positive","c":"Oxycodone >800","comps":{"oxycodone":{"pos":true,"text":">800","issues":[]}}} | {"src":"manual","by":"Luna Sci","raw":{"Alprazolam":"3","Hydroxyalprazolam":"99999"},"v":"Positive","c":"Hydroxyalprazolam >1,600","comps":{"alprazolam":{"pos":false,"text":"","issues":[]},"hydroxyalprazolam":{"pos":true,"text":">1,600","issues":[]}}}
+A1 order page: Verified by Luna Sci (ID LS-UT), <DATE>
+A2 status: Released | released by Rita Reporter
+A3 header: First Bio Genetics1830 S. Alma School Rd, Ste 134Mesa, AZ 85210(480) 847-1916Lab Director : Guihua Cao, MD, PhDCLIA ID : 03D2287865 Patient:One, ToxBirth:<DATE>Accession:50018184Patien
+A4 approval: Results reviewed and approved by: Luna Sci (ID LS-UT), <DATE>Released by: Rita Reporter (ID RR-UR), <DATE>
+A5 footer repeats director: false
+A6 PDF built: true
+errors [] []

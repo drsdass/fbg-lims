@@ -14,7 +14,6 @@ const q=s=>w.document.querySelector(s),txt=()=>w.document.querySelector('#app').
 const click=s=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}))};
 const type=(s,v)=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.value=v;el.dispatchEvent(new w.Event('input',{bubbles:true}));el.dispatchEvent(new w.Event('change',{bubbles:true}))};
 const M=()=>w.__mock;
-const signRelease=async()=>{click('[data-a="release"]');await sleep(20);const pw=q('#esig-pw');if(pw){pw.value=M().user.pw;click('#modal-root [data-a="esigRelease"]');await sleep(80)}};
 const toasts=()=>[...w.document.querySelectorAll('#toast .toast')].map(t=>t.textContent).join(' | ');
 async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b="lf.pw"]',pw);click('[data-a="login"]');await sleep(80)}
 (async()=>{
@@ -26,7 +25,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  w.document.querySelector('[data-a="openOrder"][data-id="oRPT"]').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(20);
  click('[data-a="go"][data-v="entry"]');await sleep(20);
  console.log('E1 entry consistency column:',[...w.document.querySelectorAll('.re-test')].slice(-1)[0].textContent.replace(/\s+/g,' ').slice(0,420));
- await signRelease();await sleep(900);
+ click('[data-a="release"]');await sleep(900);
  const o=M().store.orders.find(x=>x.id==='oRPT').data;console.log('E2 status',o.status,'flags',JSON.stringify(o.flags));
  fs.writeFileSync(OUT('report_model.json'),JSON.stringify(M().lastFax||null));
  w.document.querySelector('[data-a="report"]').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(50);
@@ -43,6 +42,6 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  const pp=q('[data-b="draft.provPaper"]');if(pp){pp.checked=true;pp.dispatchEvent(new w.Event('input',{bubbles:true}))}
  click('[data-a="ordNext"]');await sleep(20);click('[data-a="ordNext"]');await sleep(900);
  const ao=M().store.orders.find(o=>o.data.addOnOf);console.log('A2 add-on order:',ao&&ao.data.accession,ao&&ao.data.addOnOf,ao&&ao.data.status,ao&&ao.data.tests.join('+'),'| banner:',txt().includes('Add-on test using the specimen from accession'),'| toasts:',toasts().slice(-80));
- console.log('E3 report text:',html.textContent.replace(/\s+/g,' ').replace(/\b[A-Z][a-z]{2} \d{1,2}, \d{4}(, \d{1,2}:\d{2}( [AP]M)?)?/g,'<DATE>').replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}(,? \d{1,2}:\d{2}(:\d{2})?( [AP]M)?)?/g,'<DATE>').slice(0,1500));
+ console.log('E3 report text:',html.textContent.replace(/\s+/g,' ').slice(0,1500));
  console.log('errors',errs,M().errors);process.exit(0)
 })();

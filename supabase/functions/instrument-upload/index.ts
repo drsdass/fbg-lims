@@ -2,7 +2,6 @@
 // Deploy with JWT verification OFF. Each request must carry a device key (x-device-key) created in
 // Lab settings > Instrument bridge. Only a hash of the key is stored. Files land in instrument_inbox
 // for a scientist to review and import; nothing is imported automatically.
-// Amico DX's connector uses this same endpoint (with an 'amico' key) to return HL7 results.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const MAX_BYTES = 15 * 1024 * 1024;
@@ -19,7 +18,7 @@ Deno.serve(async (req) => {
   const key = req.headers.get("x-device-key") ?? "";
   if (key.length < 32) return json({ error: "Missing device key." }, 401);
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, { auth: { persistSession: false } });
-  const { data: dev } = await admin.from("instrument_devices").select("*").eq("token_hash", await sha256(key)).maybeSingle();
+  const { data: dev } = await admin.from("instrument_devices").select("id,active,name").eq("token_hash", await sha256(key)).maybeSingle();
   if (!dev || !dev.active) return json({ error: "Unknown or inactive device." }, 401);
   await admin.from("instrument_devices").update({ last_seen: new Date().toISOString() }).eq("id", dev.id);
 
@@ -30,8 +29,6 @@ Deno.serve(async (req) => {
   const fileName = String(body?.fileName ?? "").slice(0, 200);
   const content = String(body?.content ?? "");
   if (!KINDS.includes(instrument)) return json({ error: `instrument must be one of ${KINDS.join(", ")}.` }, 400);
-  // The Amico DX connector may only send back HL7 result files.
-  if (dev.scope === "amico" && instrument !== "hl7") return json({ error: "Amico DX connector keys can only send HL7 results." }, 403);
   if (!fileName || !content) return json({ error: "fileName and content are required." }, 400);
   if (!/\.(csv|txt|xlsx|xls|hl7)$/i.test(fileName)) return json({ error: "Only .csv, .txt, .xlsx, .xls or .hl7 files are accepted." }, 400);
   const size = Math.floor((content.length * 3) / 4);

@@ -27,7 +27,7 @@ P9 review: true
 P10 saved: FBG<YYMMDD>-1002 Received c1001 scans 1 patient clinic c1001 consent paper true
 P11 detail shows scan: true true true
 A1 audit page rows: 16 | actions: sign_in,view,sign_out
-A2 sample: <DATE>Jordan EllisViewed OrderFBG<YYMMDD>-1002 Patient, Paperrequisition || <DATE>Jordan EllisViewed OrderFBG<YYMMDD>-1002 Patient, Paper || <DATE>Jordan EllisSigned in PortalPortal || <DATE>Maria LopezSigned out PortalPortal
+A2 sample: <DATE>Jordan EllisViewed OrderFBG261001-1002 Patient, Paperrequisition || <DATE>Jordan EllisViewed OrderFBG261001-1002 Patient, Paper || <DATE>Jordan EllisSigned in PortalPortal || <DATE>Maria LopezSigned out PortalPortal
 A3 filtered by accession rows: 2
 A4 export logged: true
 16 registered clinic: ["c1001:active:FBG-1001","c5002:pending:FBG-5002"] screen:

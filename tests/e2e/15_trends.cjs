@@ -32,7 +32,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  console.log('T1 trend button:',!!q('[data-a="trendOpen"]'));click('[data-a="trendOpen"]');await sleep(50);
  const cards=[...w.document.querySelectorAll('#modal-root .tr-card')].map(c=>c.textContent.replace(/\s+/g,' ').trim());
  console.log('T2 THC card end:',cards[2].slice(-260));
- console.log('T3 screen grid:',(mt().match(/Drug screens.{0,200}/)||['none'])[0]);
+ console.log('T3 screen grid:',(mt().match(/Drug screens.{0,200}?For clinical review/)||['none'])[0]);
  console.log('T4 charts:',w.document.querySelectorAll('#modal-root svg[aria-label]').length,'| ref band:',!!q('#modal-root svg rect'),'| cutoff line:',/cutoff 50/.test(mt()));
  click('#modal-root [data-a="trMonths"][data-val="6"]');await sleep(30);console.log('T5 last 6 months:',[...w.document.querySelectorAll('#modal-root .tr-card')].length,'cards');
  fs.writeFileSync(OUT('trend.html'),'<html><head><meta charset="utf-8"><style>'+fs.readFileSync(ROOT('src/styles.css'),'utf8')+'</style></head><body style="background:#fff">'+q('#modal-root .paper').outerHTML.replace(/src="\/logo.png"/,'src="file://'+ROOT('public/logo.png')+'"')+'</body></html>');

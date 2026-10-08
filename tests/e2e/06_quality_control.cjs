@@ -39,7 +39,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  click('[data-a="go"][data-v="qc"]');await sleep(500);
  console.log('Q4 QC list:',txt().replace(/\s+/g,' ').match(/Controls tracked.{0,160}/)[0].slice(0,160));
  const row=[...w.document.querySelectorAll('[data-a="qcOpen"]')].find(r=>r.dataset.id===mat.id);
- console.log('Q5 target set from first 20 runs:',JSON.stringify({mean:M().store.qc_materials.find(m=>m.id===mat.id).data.mean,sd:M().store.qc_materials.find(m=>m.id===mat.id).data.sd}),'row status:',row&&row.textContent.replace(/\s+/g,' ').slice(-40));
+ console.log('Q5 target set from first 20 runs:',JSON.stringify({mean:M().store.qc_materials.find(m=>m.id===mat.id).data.mean,sd:M().store.qc_materials.find(m=>m.id===mat.id).data.sd}),'row status:',row&&[...row.children].slice(-3).map(c=>c.textContent.replace(/\s+/g,' ').trim()).join(' | '));
  row.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(500);
  console.log('Q6 LJ chart points:',w.document.querySelectorAll('svg[aria-label="Levey-Jennings chart"] circle').length,'| rules shown:',(txt().match(/1-3s[^A-Z]{0,20}/)||['none'])[0]);
  const cb=[...w.document.querySelectorAll('[data-a="qcComment"]')][0];cb.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(10);type('#modal-root [data-b="rej.comment"]','Reran control after recalibration, in range');click('#modal-root [data-a="qcSaveComment"]');await sleep(300);

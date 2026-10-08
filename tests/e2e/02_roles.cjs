@@ -14,7 +14,6 @@ const q=s=>w.document.querySelector(s),txt=()=>w.document.querySelector('#app').
 const click=s=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}))};
 const type=(s,v)=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.value=v;el.dispatchEvent(new w.Event('input',{bubbles:true}));el.dispatchEvent(new w.Event('change',{bubbles:true}))};
 const M=()=>w.__mock;
-const signRelease=async()=>{click('[data-a="release"]');await sleep(20);const pw=q('#esig-pw');if(pw){pw.value=M().user.pw;click('#modal-root [data-a="esigRelease"]');await sleep(80)}};
 const toasts=()=>[...w.document.querySelectorAll('#toast .toast')].map(t=>t.textContent).join(' | ');
 async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b="lf.pw"]',pw);click('[data-a="login"]');await sleep(80)}
 (async()=>{
@@ -65,7 +64,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  console.log('R2 verified banner + report button:',txt().includes('Verified'),!!q('[data-a="go"][data-v="entry"]'));
  click('[data-a="go"][data-v="entry"]');await sleep(10);
  console.log('R3 read-only (no inputs):',!q('[data-b^="res."]'),'report out btn:',!!q('[data-a="release"]'),'no verify btn:',!q('[data-a="verifyResults"]'));
- await signRelease();await sleep(700);
+ click('[data-a="release"]');await sleep(700);
  await sleep(2500);console.log('R4 clinic0',JSON.stringify(M().store.clinics[0]).slice(0,400));console.log('R4 clinic notify',JSON.stringify(M().store.clinics[0].data.notify),M().store.clinics[0].data.fax,JSON.stringify(M().store.orders[0].data.providerId));console.log('R4 invoked',M().invoked,'outbox',M().store.outbox.length,'notes',M().store.notes.length);console.log('R4 errors so far',JSON.stringify(M().errors),toasts());console.log('R4 released by reporting:',M().store.orders[0].data.status,'claims',M().store.claims.length,'outbox',M().store.outbox.length);
  click('[data-a="logout"]');await sleep(600);
 

@@ -16,7 +16,7 @@ export const sb = createClient(CONFIG_ERROR ? "https://invalid.supabase.co" : ur
 
 const DOC_TABLES = ["clinics", "patients", "orders", "notes", "claims", "outbox", "supply_orders", "pickups", "invoices"];
 const LAB_ONLY = new Set(["claims", "outbox"]);
-const SETTINGS = ["lab", "fees", "confMap", "therapy"];
+const SETTINGS = ["lab", "fees", "confMap"];
 const PENDING_KEY = "fbg-pending-registration";
 
 let synced = {};           // "table:id" -> JSON last known to be on the server
@@ -87,8 +87,6 @@ function dirty(S, isLab) {
   }
   if (isLab && canSettings) for (const key of SETTINGS) {
     if (S[key] === undefined) continue;
-    // Never write a lab profile that has lost its identity (an empty load must not overwrite the real one).
-    if (key === "lab" && !(String(S.lab.name || "").trim() && String(S.lab.clia || "").trim())) continue;
     const k = "settings:" + key, j = JSON.stringify(S[key]);
     if (synced[k] !== j) out.push({ t: "settings", key, d: S[key], k, j });
   }
@@ -148,15 +146,6 @@ export const DB = {
   async passwordChanged() { const { error } = await sb.rpc("password_changed"); if (error) throw error; },
   onAuth(fn) { sb.auth.onAuthStateChange((event, session) => fn(event, session)); },
   async session() { const { data } = await sb.auth.getSession(); return data.session; },
-  // Re-checks a password for an electronic signature without touching the current session (which carries two-step
-  // verification): a separate, memory-only client signs in, and is signed out locally straight away.
-  async verifyPassword(email, password) {
-    const tmp = createClient(CONFIG_ERROR ? "https://invalid.supabase.co" : url, CONFIG_ERROR ? "invalid-key-placeholder" : key,
-      { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: "fbg-esign" } });
-    const { error } = await tmp.auth.signInWithPassword({ email, password });
-    try { await tmp.auth.signOut({ scope: "local" }); } catch (e) { /* nothing to clean up */ }
-    if (error) throw new Error(/invalid/i.test(error.message || "") ? "That password isn't right." : error.message);
-  },
   async signIn(email, password) { const { error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error; },
   async signOut() { synced = {}; await sb.auth.signOut(); },
   async resetPassword(email) { await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin }); },
@@ -231,7 +220,6 @@ export const DB = {
     if (!isLab) { res.claims = []; res.outbox = []; }
     return res;
   },
-  async refreshSession() { try { await sb.auth.refreshSession(); } catch (e) { /* keep the current session */ } },
   markSynced(S, isLab) {
     synced = {};
     for (const t of DOC_TABLES) for (const d of S[t] || []) synced[t + ":" + d.id] = JSON.stringify(d);
@@ -335,30 +323,8 @@ export const DB = {
     const { error } = await sb.from("instrument_inbox").update({ status, note: note || null, handled_at: new Date().toISOString(), handled_by: user && user.id }).eq("id", id);
     if (error) throw error;
   },
-  async devicesList() {
-    let { data, error } = await sb.from("instrument_devices").select("id,name,active,created_at,last_seen,scope").order("created_at");
-    if (error && /scope/i.test(error.message || "")) ({ data, error } = await sb.from("instrument_devices").select("id,name,active,created_at,last_seen").order("created_at"));
-    if (error) { if (missingTable(error)) return []; throw error; } return data;
-  },
-  async deviceAdd(name, tokenHash, scope) { const row = { name, token_hash: tokenHash }; if (scope && scope !== "instrument") row.scope = scope; const { error } = await sb.from("instrument_devices").insert(row); if (error) { if (scope && /scope/i.test(error.message || "")) throw new Error("Run supabase/migrations/0012_referrals.sql first."); throw error; } },
-
-  async clinicUsage(id) { const { data, error } = await sb.rpc("clinic_usage", { p_clinic: id }); if (error) { if (/clinic_usage/.test(error.message || "")) throw new Error("Run supabase/migrations/0013_clinic_archive.sql first."); throw error; } return data; },
-  async clinicDelete(id) { const { data, error } = await sb.from("clinics").delete().eq("id", id).select("id"); if (error) throw error; if (!data || !data.length) throw new Error("The clinic couldn't be deleted. Check it has no patients, orders or users, and that migration 0013 is installed."); },
-
-  // ---------- Amico DX electronic referrals ----------
-  async referralsQueue(rows) {
-    const { error } = await sb.from("referrals").insert(rows);
-    if (error) { if (missingTable(error)) { const e = new Error("Referral queue isn't set up: run supabase/migrations/0012_referrals.sql."); e.missing = true; throw e; } throw error; }
-  },
-  async referralsFor(orderIds) {
-    if (!orderIds.length) return [];
-    const { data, error } = await sb.from("referrals").select("id,order_id,accession,manifest,status,created_at,delivered_at,acked_at,note,attempts").in("order_id", orderIds);
-    if (error) { if (missingTable(error)) return null; throw error; }
-    return data || [];
-  },
-  async referralMessages(ids) { const { data, error } = await sb.from("referrals").select("id,accession,message").in("id", ids); if (error) throw error; return data || []; },
-  async referralSet(id, status, note) { const { error } = await sb.from("referrals").update({ status, note: note || null }).eq("id", id); if (error) throw error; },
-  async referralNotify(body) { const { data, error } = await sb.functions.invoke("send-alerts", { body: { action: "referral", ...body } }); if (error) throw error; return data; },
+  async devicesList() { const { data, error } = await sb.from("instrument_devices").select("id,name,active,created_at,last_seen").order("created_at"); if (error) { if (missingTable(error)) return []; throw error; } return data; },
+  async deviceAdd(name, tokenHash) { const { error } = await sb.from("instrument_devices").insert({ name, token_hash: tokenHash }); if (error) throw error; },
   async deviceSetActive(id, active) { const { error } = await sb.from("instrument_devices").update({ active }).eq("id", id); if (error) throw error; },
   // ---------- patient portal ----------
   async patientReports() { const { data, error } = await sb.from("report_versions").select("id,order_id,version,data,released_at"); if (error) throw error; return data; },

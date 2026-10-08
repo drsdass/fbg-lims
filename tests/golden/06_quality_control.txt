@@ -3,7 +3,7 @@ Q1 C560 QC import: 34 control results logged to Quality control | materials 34 r
 Q2 MultiQuant QC import: 258 control results logged to Quality control | materials 292 | sample: {"id":"qm1cgph58","key":"sciex 4500|qc1a|6am","instrument":"SCIEX 4500","control":"QC1A","analyte":"6AM","units":"ng/mL","lot":"","mean":null,"sd":null,"active"
 Q3 re-import does not duplicate: 292
 Q4 QC list: Controls tracked0Control results, last 24 hours1Controls with rejects, last 31 days291Establishing targets All instrumentsSCIEX 4500Yumizen C560 Any statusHas r
-Q5 target set from first 20 runs: {"mean":100,"sd":1.6222} row status: 0<DATE>25Reject2 rejects
+Q5 target set from first 20 runs: {"mean":100,"sd":1.6222} row status: 112.0<DATE> | 25 | Reject2 rejects
 Q6 LJ chart points: 25 | rules shown: 1-3s
 Q7 corrective action saved: "Reran control after recalibration, in range"
 Q8 print view: true true

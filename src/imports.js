@@ -25,7 +25,9 @@ export function parseTable(text, isHeader) {
   let hi = lines.findIndex((l) => l.trim() && (!isHeader || isHeader(l)));
   if (hi < 0) hi = lines.findIndex((l) => l.trim());
   if (hi < 0) return { h: [], rows: [] };
-  const d = lines[hi].includes("\t") ? "\t" : ",";
+  // Pick whichever of tab, semicolon or comma splits the header into the most columns (Excel in some regions saves CSV with semicolons).
+  const count = (l, c) => { let n = 0, q = false; for (const ch of l) { if (ch === '"') q = !q; else if (ch === c && !q) n++; } return n; };
+  const d = ["\t", ";", ","].reduce((best, c) => (count(lines[hi], c) > count(lines[hi], best) ? c : best), ",");
   const h = splitLine(lines[hi], d);
   const rows = lines.slice(hi + 1).filter((l) => l.trim()).map((l) => splitLine(l, d));
   return { h, rows };

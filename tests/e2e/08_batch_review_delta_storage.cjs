@@ -44,7 +44,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  // ---- delta check
  lastConfirm='';click('[data-a="go"][data-v="queue"]');await sleep(20);const bh=w.document.querySelector('[data-a="openOrder"][data-id="oH2"]');bh.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(20);click('[data-a="go"][data-v="entry"]');await sleep(30);
  console.log('D1 previous shown:',/Previous 4 on/.test(txt()),'| delta flag:',!!w.document.querySelector('.flag.A[title^="Delta"]'));
- console.log('D2 review items text:',(txt().match(/Previous 140 on[^]{0,20}/)||[''])[0].trim());
+ console.log('D2 review items text:',(txt().match(/Previous 140 on [A-Z][a-z]{2} \d{1,2}, \d{4}/)||[''])[0].trim());
  // ---- patient history
  click('[data-a="go"][data-v="queue"]');await sleep(20);w.document.querySelector('[data-a="openOrder"][data-id="oH2"]').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(20);const pb=w.document.querySelector('[data-a="openPatient"][data-id="ptH"]');pb.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(20);
  console.log('H1 result history:',/Result history/.test(txt()),'| potassium row:',(txt().replace(/\s+/g,' ').match(/Potassium[^A-Z]{0,30}/)||[''])[0]);
