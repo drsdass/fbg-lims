@@ -57,3 +57,41 @@ export function validityOf(cr, sg, ph) {
 }
 
 export const isControlName = (s) => /^(double\s*blank|blank|cal|std|standard|qc|ec\b|ec$|neg|pos|ctrl|control|solvent|matrix)/i.test(String(s ?? "").trim());
+
+// Yumizen C560 results over the HL7 interface (ORU^R01, HL7 v2.3.1). The bridge saves each message the analyzer sends;
+// this turns a batch of them into the same table the C560 CSV export gives, so one importer handles both.
+// Patient results (MSH-16 = 0): OBR-2 barcode, OBR-3 sample ID, OBX-3 channel, OBX-4 test name, OBX-5 result,
+// OBX-6 unit, OBX-14 finish time, OBX-17 rerun flag. QC results (MSH-16 = 2): OBR-2 channel, OBR-3 test name,
+// OBR-8 finish time, OBR-13 control name, OBR-14 lot, OBR-20 result, OBR-21 unit.
+export const isC560Hl7 = (text) => /(^|[\r\n\x0b])MSH\|/.test(String(text ?? "").slice(0, 2000));
+export function c560Hl7ToTable(text, channelToCode = {}) {
+  const msgs = String(text ?? "").replace(/\x1c\r?/g, "\r").replace(/\x0b/g, "\r").split(/\r\n|\r|\n/)
+    .reduce((acc, line) => { if (line.startsWith("MSH|")) acc.push([line]); else if (line.trim() && acc.length) acc[acc.length - 1].push(line); return acc; }, []);
+  const at = (s) => { const m = String(s || "").match(/^(\d{4})(\d{2})(\d{2})(\d{2})?(\d{2})?(\d{2})?/); return m ? `${m[1]}-${m[2]}-${m[3]}T${m[4] || "00"}:${m[5] || "00"}:${m[6] || "00"}` : ""; };
+  const code = (ch, name) => channelToCode[String(ch || "").trim()] || String(name || "").trim().toUpperCase();
+  const rows = [];
+  let skipped = 0;
+  msgs.forEach((segs) => {
+    const f = (name) => segs.filter((x) => x.startsWith(name + "|")).map((x) => x.split("|").map((v) => v.trim()));
+    const msh = f("MSH")[0] || [];
+    if (!/^ORU/.test(msh[8] || "")) return;
+    const kind = msh[15];
+    const obr = f("OBR")[0] || [];
+    if (kind === "2") {
+      const v = obr[20];
+      if (v === undefined || v === "" || v === "-268435545") { skipped++; return; }
+      rows.push({ type: "C", sid: obr[13] || "", bc: obr[14] || "", chem: code(obr[2], obr[3]), r: v, u: obr[21] || "", fl: "", t: at(obr[8] || obr[6]), rerun: 0 });
+      return;
+    }
+    if (kind && kind !== "0") return; // calibration results aren't imported
+    f("OBX").forEach((x) => {
+      const v = x[5];
+      if (v === undefined || v === "" || v === "-268435545") { skipped++; return; }
+      rows.push({ type: "R", sid: obr[3] || "", bc: obr[2] || "", chem: code(x[3], x[4]), r: v, u: x[6] || "", fl: x[8] && x[8] !== "N" ? x[8] : "", t: at(x[14] || obr[7]), rerun: x[17] === "1" ? 1 : 0 });
+    });
+  });
+  // Oldest first, reruns after originals, so the latest result for a test is the one that stays.
+  rows.sort((a, b) => (a.t || "").localeCompare(b.t || "") || a.rerun - b.rerun);
+  const head = ["Type", "Sample ID", "Bar Code", "Chemistry", "Result", "Unit", "Flag", "Run Date"];
+  return { text: [head, ...rows.map((x) => [x.type, x.sid, x.bc, x.chem, x.r, x.u, x.fl, x.t])].map((r) => r.map((c) => String(c).replace(/[\t\r\n]/g, " ")).join("\t")).join("\n"), rows: rows.length, skipped, messages: msgs.length };
+}

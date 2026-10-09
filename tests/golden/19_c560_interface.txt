@@ -1,0 +1,15 @@
+U1 parse barcode query: {"ctrl":"4","barcode":"0019","from":"","to":"","sampleFrom":"","sampleTo":""}
+U2 batch query: {"ctrl":"7","barcode":"","from":"<TS>","to":"<TS>","sampleFrom":"","sampleTo":""}
+U3 QCK: "MSH|^~\\&|||||<TS>||QCK^Q02|4|P|2.3.1||||||ASCII|||\rMSA|AA|4|Message accepted|||0|\rERR|0|\rQAK|SR|OK|\r" | NF true
+U4 ACK^R01 matches manual: true
+U5 sample: {"barcode":"FBG<YYMMDD>-1009","sampleId":"2610081009","patientId":"1212","name":"Ray, Tommy","dob14":"<TS>","sex":"M","collected14":"<TS>","received14":"<TS>","stat":false,"sampleType":"urine","doctor":"","tests":["1","5"]}
+U6 DSR: 38 segments | MSH|^~\&|||||<TS>||DSR^Q03|4|P|2.3.1||||||ASCII||| / MSA|AA|4|Message accepted|||0| / ERR|0| / QAK|SR|OK| / QRD|<TS>|R|D|2|||RD||OTH|||T| / QRF||||||RCT|COR|ALL|| | DSP|1||1212||| DSP|3||Ray, Tommy||| DSP|4||<TS>||| DSP|5||M||| DSP|12||<TS>||| DSP|21||FBG<YYMMDD>-1009||| DSP|22||2610081009||| DSP|23||<TS>||| DSP|24||N||| DSP|26||urine||| DSP|29||1^^^||| DSP|30||5^^^||| | DSC||
+U7 group DSC and controls: 5:DSC|1| 6:DSC|2| 7:DSC||
+U8 not sent: wrong status / nothing pending: null null | barcode keys ["50018191U1","50018191"] | delimiters cleaned A B C D E F
+P1 C560 panel: true channel inputs 17
+P2 duplicate channel: Channel 1 is used for more than one test.
+P3 saved for the edge function: {"channels":{"AMPH":"1","OXY":"2","THC":"3","CREAT-U":"20"},"tests":[{"code":"AMPH","channel":"1","analyte":"Amphetamines"},{"code":"OXY","channel":"2","analyte":"Oxycodone"},{"code":"THC","channel":"3","analyte":"Cannabinoids (THC)"},{"code":"CREAT-U","channel":"20","analyte":"Urine creatinine (validity)"}],"port":"5100","sampleType":"urine"}
+P4 file picker accepts .hl7: .csv,.txt,.tsv,.xlsx,.hl7
+P5 HL7 import: Import complete3 result rows matched to 1 order from the Yumizen C560. 50018191One, ToxReview and release 1 control result in this file (not attached to patients). Review before reporting.ControlAssayResultFlagCLIN LOWAMPH371.200000 1 control result logged and scored: 1 in control, 0 warnings, 0 rej
+P6 results: AMPH {"v":"Positive","c":"612.4"} | THC (rerun wins) {"v":"Positive","c":"61.0"} | void creatinine skipped true | run [["Yumizen C560","<YMD>"]]
+errors [] []

@@ -1,4 +1,4 @@
-S1 sales nav: Dashboard, New order, Accessioning, Clinics, Test menu, Supply orders, Reports, Compliance
+S1 sales nav: Dashboard, New order, Accessioning, Clinics, Test menu, Supply orders, Reports, Analytics, Compliance
 S2 add clinic button: true approve buttons: false
 S3 clinic created: ["Pacific Coast Pain:active","Mesa Spine Center:pending"]
 S4 no findings column: true
@@ -13,7 +13,7 @@ R4 clinic notify {"email":true,"sms":true,"fax":true,"criticalPhone":"555"} (949
 R4 invoked 1 outbox 3 notes 2
 R4 errors so far []
 R4 released by reporting: Released claims 0 outbox 3
-U1 admin nav: Dashboard, New order, Accessioning, Pickups, Specimen storage, Quality control, Instruments, Billing, Clinics, Test menu, Supply orders, Reports, Compliance, Notification log, Audit log, Users, Lab settings
+U1 admin nav: Dashboard, New order, Accessioning, Pickups, Specimen storage, Quality control, Instruments, Billing, Clinics, Test menu, Supply orders, Reports, Analytics, Compliance, Notification log, Audit log, Users, Lab settings
 U2 users listed: 4
 U3 temp password shown: true profile: ["admin"]
 U4 admin sees approve: true

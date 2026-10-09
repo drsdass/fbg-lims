@@ -297,6 +297,44 @@ When a change is meant to alter behavior, review the difference the runner print
 commit the updated tests/golden files with the change. Test files in tests/fixtures are instrument exports identified
 only by sample barcodes; never add files containing patient names.
 
+## 22. Yumizen C560 two-way interface (HL7)
+
+The C560 talks HL7 v2.3.1 over TCP (HORIBA host interface manual, chapter 1). The bridge on the lab PC is the LIS end:
+
+1. Lab settings > Yumizen C560 interface: enter the analyzer's channel number for each test (C560 Utility > System Setup >
+   LIS Setup lists them), the sample type, and the port the bridge listens on (for example 5100). Save.
+2. Deploy `instrument-upload` (JWT verification OFF). It has two files, `index.ts` and `c560.ts`; with the dashboard
+   editor, paste the one-file bundle instead (`instrument-upload/index.ts` from the delivery folder).
+3. Lab settings > Instrument bridge > Add device, download the script (it carries the port), copy it to `C:\FBG`, allow the
+   port through Windows Firewall, and run it at startup (instructions at the top of the script).
+4. On the C560 LIS Setup: host IP = the bridge PC, the same port, HL7, bidirectional, real-time results, barcode query.
+
+What happens:
+- The analyzer scans a tube (accession label, or a clinic's own vial label linked to the order) and sends QRY^Q02.
+  The bridge asks the portal, which answers with DSR^Q03 listing the screens still outstanding on that order
+  (received or in process, urine drug screen ordered). Unknown barcodes get QCK^Q02 "NF".
+- Results (ORU^R01) are acknowledged at once, saved on the PC, and uploaded every minute as one `.hl7` file to the
+  Instrument inbox. A scientist imports it like a CSV: results post to the orders, controls are scored against the QC
+  targets, and failed controls put the affected results on hold. Reruns replace the original value; void results
+  (-268435545) are skipped.
+- Batch (time-range) queries return every received specimen in the window. Sample-ID-range queries get "NF", because the
+  analyzer's sample numbers aren't known to the portal.
+
+The manual doesn't say which side opens the connection; HORIBA/Mindray analyzers normally connect to the LIS, which is
+what the bridge expects. Confirm on the instrument during setup.
+
+## 23. Custom vial labels, SOF, clinic logins, supply tracking, analytics
+
+- Clinics > Edit > Custom vial labeling: orders for that clinic ask for the vial barcode, the receipt check and the order
+  page let the lab link or change it, search finds orders by it, and instrument results that carry it post to the order.
+- SOF: a clinic with signed paper onboarding on file covers every provider on the account; orders don't ask for a provider
+  signature. Clinics > "Mark SOF on file for all" records it for every clinic without a signed agreement.
+- Adding a clinic creates its first login (username or email) and shows the temporary password. Clinic details >
+  Create a login adds more later. Both need an admin (the Users permission).
+- Supply orders: Ship records the carrier and tracking number (editable later); clinics see a link to the carrier.
+- Analytics (lab users with Reports, and clinics with Analytics turned on, for their own orders only): date range, clinic
+  and test filters; normal vs abnormal findings per test, turnaround by step, kits and supplies sent; CSV download.
+
 ## Before go-live
 
 - [ ] Supabase Team plan, HIPAA add-on, signed BAA, project marked High Compliance

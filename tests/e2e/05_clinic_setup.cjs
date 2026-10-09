@@ -73,7 +73,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  click('[data-a="go"][data-v="supplies"]');await sleep(20);for(const [k,v] of [['address','2 Park Plaza'],['city','Irvine'],['state','CA'],['zip','92614']])type(`[data-b="spf.${k}"]`,v);type('[data-b="spf.qty.0"]','50');type('[data-b="spf.qty.5"]','20');click('[data-a="supUrg"][data-val="STAT"]');await sleep(5);click('[data-a="supSubmit"]');await sleep(500);
  const so=M().store.supply_orders[0];console.log('S2 supply order:',so&&so.data.number,so&&so.data.urgency,so&&JSON.stringify(so.data.items),so&&so.data.shipTo.address);
  click('[data-a="logout"]');await sleep(600);
- await login('lab@fbg.com','labpassword12');click('[data-a="go"][data-v="supplies"]');await sleep(20);w.prompt=()=>'1Z999';click('[data-a="supShip"]');await sleep(500);
+ await login('lab@fbg.com','labpassword12');click('[data-a="go"][data-v="supplies"]');await sleep(20);click('[data-a="supShip"]');await sleep(20);type('[data-b="rej.tracking"]','1Z999');click('[data-a="supShipSave"]');await sleep(500);
  console.log('S3 shipped:',M().store.supply_orders[0].data.status,M().store.supply_orders[0].data.tracking);
  click('[data-a="logout"]');await sleep(600);
  // 2: username sign-in with forced password change

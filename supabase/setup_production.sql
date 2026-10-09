@@ -1109,11 +1109,14 @@ begin
 end $$;
 
 -- On-demand lookups.
+create index if not exists orders_vial_idx on public.orders ((data->>'vialBarcode'));
+create index if not exists orders_accession_idx on public.orders ((data->>'accession'));
 create or replace function public.search_orders(p_q text)
 returns table(id text, data jsonb, updated_at timestamptz)
 language sql stable security invoker set search_path = public as $$
   select o.id, o.data, o.updated_at from orders o
   where o.data->>'accession' ilike '%' || p_q || '%'
+     or o.data->>'vialBarcode' ilike p_q || '%'
      or o.data->>'patientId' in (select p.id from patients p where lower(p.data->>'last') like '%' || lower(p_q) || '%' or lower(p.data->>'first') like '%' || lower(p_q) || '%' or p.data->>'mrn' ilike p_q || '%')
   order by o.updated_at desc limit 200
 $$;

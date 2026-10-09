@@ -1,0 +1,23 @@
+S1 bulk SOF button: true
+S2 Pacific Coast agreement: {"onFile":true,"by":"Jordan Ellis"}
+C1 login section: true true
+C2 clinic: active {"ordering":false,"supplies":true,"resultsScope":"all","vialLabels":true,"analytics":true} | SOF true
+C3 login: oratek.diagnostics@users.firstbiogenetics.com Julie Park clinic | modal: Temporary passwordGive this to Julie Park at Oratek Diagnostics (username oratek.diagnostics) privately, in person or by phone. Don't send i
+O1 vial barcode field: true
+O2 step 3: photo optional true | SOF banner true | provider checkbox false
+O3 order: FBG<YYMMDD>-1001 ORA-55501 | provider consent {"sof":true} | status Received
+O4 order page shows vial: true | SOF wording true
+V1 relinked: ORA-55502 | Vial barcode ORA-55502 linked (was ORA-55501)
+V2 search by vial: true
+V3 C560 row matched by vial barcode: Import complete1 result row matched to 1 order from the Yumizen C560. FBG<YYMMDD>-1001Patient, VialReview and release Clos | OXY {"v":"Positive","c":"250"}
+T1 ship modal: Ship SUP-261008-AAAPacific Coast Pain · 25 × Urine collection kit, 50 × Specimen bagsCarrierUPSFedExUSPSDHLCourierOtherT
+T2 shipped: Shipped UPS 1Z999AA10123456784 | edit button true
+A1 lab analytics: Kit volume, turnaround and findings across clinics. | sections true,true,true
+A2 supplies row: Kits and supplies sentShipped supply orders placed in the date range, by clinic.ClinicSupply ordersShippedItems shippedCollection kitsItemsPacific Coast Pain11752550 × Specimen bags25 × Urine collection kit
+A3 CSV sections: true,true,true,true | lines true
+E1 analytics on: true | ipped | File downloaded | Clinic updated
+K1 clinic tracking link: https://www.ups.com/track?tracknum=1Z999AA10123456784
+K2 clinic analytics nav: true
+K3 clinic analytics scoped: true | no clinic filter true | Oratek hidden true
+K4 clinic order step 3: photo option true | SOF covers provider true | signature pad for provider false
+errors [] []
