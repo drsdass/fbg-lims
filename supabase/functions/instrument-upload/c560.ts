@@ -36,10 +36,24 @@ export function barcodeKeys(raw: string): string[] {
   return [...new Set([b, stripSuffix(b)].filter(Boolean))];
 }
 
+// Compact tube barcodes (portal labels): "7" + 7-digit accession sequence + specimen letter + tube number, e.g. 70001009U1
+// for FBG261005-1009. Old Dendi accessions are all digits and are used as they are.
+export function tubeBase(accession: string): string {
+  const a = String(accession || "").toUpperCase();
+  if (/^\d{6,9}$/.test(a)) return a;
+  const m = a.match(/-(\d+)$/);
+  if (m && +m[1] < 1e7) return "7" + String(+m[1]).padStart(7, "0");
+  return a.replace(/[^0-9A-Z]/g, "").slice(-8);
+}
+// For a compact tube code, the accession sequence it stands for (70001009 -> "1009"), else null.
+export function seqFromTube(key: string): string | null {
+  const m = String(key || "").match(/^7(\d{7})$/);
+  return m ? String(+m[1]).padStart(4, "0") : null;
+}
 // The analyzer's Sample ID field takes up to 10 digits/uppercase letters.
 export function sampleIdFor(accession: string, mode: C560Settings["sampleIds"] = "accession"): string {
   if (mode === "blank") return "";
-  return String(accession || "").toUpperCase().replace(/[^0-9A-Z]/g, "").slice(-10);
+  return (tubeBase(accession) + "U1").slice(0, 10);
 }
 
 // Turn an order (and its patient) into the sample the analyzer should run. Only urine drug screens that are in the lab

@@ -6,7 +6,7 @@
 // It also answers the Yumizen C560's host queries ({action: "c560-query"}) that the bridge forwards: the analyzer scans a
 // tube, asks which tests to run, and gets back DSR^Q03 messages built from the order (see c560.ts).
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { answer, barcodeKeys, parse14, parseQuery, sampleFromOrder, ts14 } from "./c560.ts";
+import { answer, barcodeKeys, parse14, parseQuery, sampleFromOrder, seqFromTube, ts14, tubeBase } from "./c560.ts";
 
 const MAX_BYTES = 15 * 1024 * 1024;
 const KINDS = ["c560", "sciex", "hl7"];
@@ -63,10 +63,13 @@ async function c560Query(admin: any, body: any, device: string) {
   let orders: any[] = [];
   const keys = barcodeKeys(q.barcode);
   if (keys.length) {
-    const ors = keys.flatMap((k) => [`data->>accession.ilike.${k}`, `data->>vialBarcode.ilike.${k}`]).join(",");
+    // As scanned, without the tube suffix, the clinic's vial label, or a compact tube code (70001009U1 -> FBG??????-1009).
+    const ors = keys.flatMap((k) => { const seq = seqFromTube(k); return [`data->>accession.ilike.${k}`, `data->>vialBarcode.ilike.${k}`, ...(seq ? [`data->>accession.like.FBG*-${seq}`] : [])]; }).join(",");
     const { data, error } = await admin.from("orders").select("id,data").or(ors).limit(5);
     if (error) throw error;
     orders = (data || []).map((r: any) => r.data);
+    // "FBG*-1009" could also match a longer sequence written with the same last digits; keep only exact tube matches.
+    orders = orders.filter((o: any) => keys.some((k) => [String(o.accession || "").toUpperCase(), String(o.vialBarcode || "").toUpperCase()].includes(k) || (seqFromTube(k) && tubeBase(o.accession) === k)));
   } else if (q.from || q.to) {
     // Batch download for a time window: specimens received in that window with screens still to run.
     const from = parse14(q.from) ?? Date.now() - DAY, to = parse14(q.to) ?? Date.now();

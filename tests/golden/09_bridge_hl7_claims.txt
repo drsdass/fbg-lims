@@ -3,7 +3,7 @@ I2 toasts:
 I2 imported from inbox: 0 result rows matched to 0 orders | inbox status: imported
 B1 device stored (hash only): Lab PC C560 64 | key shown: 64
 B2 script has URL and key: true true true
-L1 browser labels: true | label html: Reflab, RitaDOB <DATE> · Whole blood, EDTA (lavender)FBG<YYMMDD>-7777-1 · <DATE> | @page: true
+L1 browser labels: true | label html: Reflab, RitaDOB <DATE> · Whole blood, EDTA (lavender)FBG<YYMMDD>-7777 · 70007777B1 · <DATE> | @page: true
 H1 import: 1 result row matched to 1 order | unmapped: 1 result code wasn't matched to a test: 789-8 ErythrocytesMap these codes and import the
 H2 WBC filled by name: {"WBC":{"v":"7.2"}}
 H3 after mapping: {"WBC":{"v":"7.2"},"RBC":{"v":"4.6"}} | map: undefined

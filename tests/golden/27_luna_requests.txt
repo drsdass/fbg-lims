@@ -10,6 +10,10 @@ O4 order page shows vial: true | SOF wording true
 V1 relinked: ORA-55502 | Vial barcode ORA-55502 linked (was ORA-55501)
 V2 search by vial: true
 V3 C560 row matched by vial barcode: Import complete1 result row matched to 1 order from the Yumizen C560. FBG<YYMMDD>-1001Patient, VialReview and release Clos | OXY {"v":"Positive","c":"250"}
+B1 order page shows tube barcode: true | format true
+B2 label text shows accession and tube code: true
+B3 C560 row with the tube code posts to the order: true | THC {"v":"Positive","c":"80"}
+B4 scanning the tube opens the order: true
 T1 ship modal: Ship SUP-261008-AAAPacific Coast Pain · 25 × Urine collection kit, 50 × Specimen bagsCarrierUPSFedExUSPSDHLCourierOtherT
 T2 shipped: Shipped UPS 1Z999AA10123456784 | edit button true
 A1 lab analytics: Kit volume, turnaround and findings across clinics. | sections true,true,true

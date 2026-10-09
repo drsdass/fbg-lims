@@ -34,6 +34,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  console.log('U6 DSR:',d.length,'segments |',d.slice(0,6).join(' / '),'|',d.filter(x=>/^DSP\|(1|3|4|5|12|21|22|23|24|26|29|30|31)\|/.test(x)).join(' '),'|',d.filter(x=>x.startsWith('DSC')).join(''));
  console.log('U7 group DSC and controls:',C.answer('5',[smp,smp,smp],'x').map(m=>m.split('\r')[0].split('|')[9]+':'+m.split('\r').find(x=>x.startsWith('DSC'))).join(' '));
  console.log('U8 not sent: wrong status / nothing pending:',C.sampleFromOrder({...ord,status:'Released'},{},set),C.sampleFromOrder({...ord,results:{UDS:{Amphetamines:{v:'Positive'},Oxycodone:{v:'Negative'},'Cannabinoids (THC)':{v:'Negative'}}}},{},set),'| barcode keys',JSON.stringify(C.barcodeKeys(' 50018191u1 ')),'| delimiters cleaned',C.clean('A|B^C~D\\E&F'));
+ console.log('U9 compact tube codes:',['FBG261005-1009','FBG261008-12345','50018191','60000011'].map(C.tubeBase).join(' '),'| back to sequence',C.seqFromTube('70001009'),C.seqFromTube('60000011'),'| sample ID',C.sampleIdFor('FBG261005-1009'),'| no hyphen, 10 chars',/^[0-9A-Z]{10}$/.test(C.tubeBase('FBG261005-1009')+'U1'));
  // P1-P6: portal settings and the HL7 results import
  const st=acc=>M().store.orders.find(o=>o.data.accession===acc).data;
  const login=async(e,p)=>{await signIn(e,p);if(q('[data-b="lf.code"]')){type('[data-b="lf.code"]','123456');click('[data-a="mfaVerify"]')};await sleep(300)};

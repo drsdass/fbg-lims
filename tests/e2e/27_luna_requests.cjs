@@ -62,6 +62,19 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  type('[data-b="ui.paste_c560"]',csv);click('[data-a="doImport"][data-k="c560"]');await sleep(900);
  console.log('V3 C560 row matched by vial barcode:',mtxt().slice(0,120),'| OXY',JSON.stringify((od().results.UDS||{}).Oxycodone));
  q('#modal-root').innerHTML='';
+ // B1-B4: compact tube barcode (Yumizen/Dendi format) on labels, in instrument files and at the scanner
+ const tb='7'+String(+od().accession.split('-').pop()).padStart(7,'0')+'U1';
+ nav('openOrder',null,M().store.orders.find(o=>o.clinic_id===ora.id).id);await sleep(30);
+ console.log('B1 order page shows tube barcode:',txt().replace(/\s+/g,' ').includes('Tube barcode '+tb),'| format',/^7\d{7}U1$/.test(tb));
+ let lblHtml='';const _ce=w.document.createElement.bind(w.document);
+ click('[data-a="printLabels"]');await sleep(400);const ifr=[...w.document.querySelectorAll('iframe')].pop();lblHtml=ifr?ifr.contentDocument.body.textContent.replace(/\s+/g,' '):'';
+ console.log('B2 label text shows accession and tube code:',lblHtml.includes(od().accession+' · '+tb));
+ click('[data-a="go"][data-v="instruments"]');await sleep(30);click('[data-a="setUi"][data-k="itab"][data-val="c560"]');await sleep(20);
+ type('[data-b="ui.paste_c560"]',['Type,Sample ID,Bar Code,Sample Type,Ordering Date,Chemistry,Result,Response,Replicates,Unit,Flag,Ref Range,Run Date','R,2,'+tb+',Urine,10/9/2026,THC,80,1,1,ng/mL,,,10/9/2026 9:00'].join('\n'));click('[data-a="doImport"][data-k="c560"]');await sleep(900);
+ console.log('B3 C560 row with the tube code posts to the order:',/1 result row matched to 1 order/.test(mtxt()),'| THC',JSON.stringify((od().results.UDS||{})['Cannabinoids (THC)']));
+ q('#modal-root').innerHTML='';click('[data-a="go"][data-v="queue"]');await sleep(30);
+ if(q('[data-b="ui.qq"]')){type('[data-b="ui.qq"]',tb);const qi=q('[data-b="ui.qq"]');qi.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true}));await sleep(40)}
+ console.log('B4 scanning the tube opens the order:',txt().includes(od().accession)&&txt().includes('Tube barcode'));
  // T1-T3: supply shipped with carrier and tracking; the clinic sees a tracking link
  click('[data-a="logout"]');await sleep(600);await login('lab@fbg.com','labpassword12');click('[data-a="go"][data-v="supplies"]');await sleep(30);
  click('[data-a="supShip"][data-id="sup1"]');await sleep(20);console.log('T1 ship modal:',mtxt().slice(0,120));
