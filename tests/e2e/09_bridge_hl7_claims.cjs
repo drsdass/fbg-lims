@@ -50,7 +50,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  const rel=st.orders.find(o=>o.data.status==='Released')||st.orders[0];
  click('[data-a="go"][data-v="queue"]');await sleep(20);w.document.querySelector('[data-a="openOrder"][data-id="oREF"]').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(20);
  const before=w.document.querySelectorAll('iframe').length;click('[data-a="printLabels"]');await sleep(400);const ifr=w.document.querySelectorAll('iframe');
- console.log('L1 browser labels:',ifr.length>before,'| label html:',(ifr[ifr.length-1].contentDocument.body.textContent||'').replace(/\s+/g,' ').replace(/(\d{4})\D*$/,'$1'),'| @page:',/@page\{size:2in 1in/.test(ifr[ifr.length-1].contentDocument.head.innerHTML));
+ console.log('L1 browser labels:',ifr.length>before,'| label html:',(ifr[ifr.length-1].contentDocument.body.textContent||'').replace(/\s+/g,' ').replace(/\b[A-Z][a-z]{2} \d{1,2}, \d{4}(, \d{1,2}:\d{2}( [AP]M)?)?/g,'<DATE>').replace(/\b\d{1,2}\/\d{1,2}\/\d{2,4}(,? \d{1,2}:\d{2}(:\d{2})?( [AP]M)?)?/g,'<DATE>').slice(0,90),'| @page:',/@page\{size:2in 1in/.test(ifr[ifr.length-1].contentDocument.head.innerHTML));
  // ---- 3. HL7 import with a code that needs mapping
  const hl7=['MSH|^~\\&|REFLAB|RL|FBG_LIMS|FBG|20261001120000||ORU^R01|1|P|2.5.1','PID|1||R2^^^FBG^MR||Reflab^Rita','OBR|1|FBG261001-7777|RL123|CBC^Complete Blood Count|||20260930090000','OBX|1|NM|6690-2^WBC^LN||7.2|10*3/uL|4.0-11.0|N|||F','OBX|2|NM|789-8^Erythrocytes^LN||4.6|10*6/uL|4.2-5.4|N|||F'].join('\r');
  click('[data-a="go"][data-v="instruments"]');await sleep(20);click('[data-a="setUi"][data-k="itab"][data-val="ref"]');await sleep(20);

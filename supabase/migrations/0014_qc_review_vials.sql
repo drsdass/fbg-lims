@@ -1,4 +1,4 @@
--- 0012: QC review sign-off, custom vial barcodes.
+-- 0014: QC review sign-off, custom vial barcodes.
 -- Scientists (and anyone with the "qc" permission) can record a daily QC review ("qcreview") in qms_records.
 -- Reviews are insert-only: a new review for the same instrument and day is added, never edited, so the history stays intact.
 drop policy if exists qms_insert on public.qms_records;

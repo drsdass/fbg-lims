@@ -12,6 +12,6 @@ A1 order page: Verified by Luna Sci (ID LS-UT), <DATE>
 A2 status: Released | released by Rita Reporter
 A3 header: First Bio Genetics1830 S. Alma School Rd, Ste 134Mesa, AZ 85210(480) 847-1916Lab Director : Guihua Cao, MD, PhDCLIA ID : 03D2287865 Patient:One, ToxBirth:<DATE>Accession:50018184Patien
 A4 approval: Results reviewed and approved by: Luna Sci (ID LS-UT), <DATE>Released by: Rita Reporter (ID RR-UR), <DATE>
-A5 footer repeats director: false
+A5 footer repeats director: false | e-signature: true
 A6 PDF built: true
 errors [] []

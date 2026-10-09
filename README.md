@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale) and `supabase/migrations/0012_qc_review.sql` (daily QC review sign-off).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale) and `supabase/migrations/0012_referrals.sql` (Amico DX electronic referrals) and `supabase/migrations/0013_clinic_archive.sql` (archiving clinics, clinic two-step) and `supabase/migrations/0014_qc_review_vials.sql` (daily QC review sign-off, custom vial barcodes).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -159,7 +159,7 @@ into service, and print the monthly review sheet for supervisor and director sig
 ## 12. Result PDFs and delivery tests
 
 Reports have **Download PDF** next to Print. The PDF is the same document that is faxed.
-`src/reportpdf.js` is generated from `supabase/functions/send-alerts/index.ts`; if you change the fax layout, regenerate it.
+`src/reportpdf.js` is generated from `supabase/functions/send-alerts/index.ts`; if you change the fax layout, run `node scripts/gen-reportpdf.mjs`.
 **Notification log → Delivery setup** shows which channels are configured and can send a test email, text or fax.
 
 ## 13. Instrument connections
@@ -285,7 +285,7 @@ creatinine was measured. Periods: all, 2 years, 12 months, 6 months. Printable.
 ## 21. Production setup and automated tests
 
 **New production project.** Run `supabase/setup_production.sql` once in the SQL Editor of a new, empty project (it is
-migrations 0001 to 0012 in order). Then deploy the four Edge Functions (manage-users, send-alerts, instrument-upload,
+migrations 0001 to 0014 in order). Then deploy the four Edge Functions (manage-users, send-alerts, instrument-upload,
 patient-access, each with JWT verification off), set their secrets, create the first admin, and point Netlify's
 `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at the new project.
 
@@ -297,7 +297,118 @@ When a change is meant to alter behavior, review the difference the runner print
 commit the updated tests/golden files with the change. Test files in tests/fixtures are instrument exports identified
 only by sample barcodes; never add files containing patient names.
 
-## 22. Yumizen C560 two-way interface (HL7)
+## 22. Amico DX electronic referrals
+
+Send-out orders can go to Amico DX's Icarus system electronically instead of on paper. Other orders still go to the
+reference lab named in Lab settings on a printed manifest.
+
+**Setup (once)**
+
+1. Run `supabase/migrations/0012_referrals.sql`.
+2. Deploy the new function with JWT verification off: `supabase functions deploy referral-feed --no-verify-jwt`.
+   Redeploy `instrument-upload` and `send-alerts` too (both changed).
+3. Lab settings > **Amico DX referrals**: tick *Send referrals to Amico DX electronically*, add the email address Amico
+   wants shipping notices sent to, and tick the tests Amico performs for us. Confirm the receiving facility and
+   application codes (MSH-5/MSH-6) with whoever runs Icarus.
+4. Click **Connect Amico's computer** (admin only). Download the connector script and send it to Amico through a
+   secure channel. On the Icarus computer they save it as `C:\AmicoDX\FBG\amico-connector.ps1`, run it with `-Test`,
+   and add it to Task Scheduler. Icarus imports orders from `C:\AmicoDX\FBG\Inbound` and writes HL7 ORU result files to
+   `C:\AmicoDX\FBG\Results`.
+
+**Daily use**
+
+Instruments > Reference lab > **Ready to send** shows a *Send to* choice per specimen. It defaults to Amico DX when
+every send-out test on the order is on Amico's list; staff can switch any order to the other lab. Tick specimens and
+click **Send to Amico DX**. The portal:
+
+- writes one HL7 v2.5.1 ORM^O01 order per specimen (patient, ordering provider with NPI, tests, collection time,
+  ICD-10 codes, and insurance only if that box is ticked) into the referral queue,
+- marks the specimens sent on a new manifest and opens it for printing to go in the box,
+- emails Amico a shipping notice with counts only (no patient information).
+
+**At the reference lab** shows each electronic order's status: *Waiting for Amico* (queued), *Picked up, not
+confirmed*, *In Icarus* or *Rejected* with Icarus's reason. Fix a rejected order and click *re-send*; the old message
+is cancelled and a fresh one is queued. An order that isn't picked up is handed over again after 10 minutes, so
+Icarus should treat the accession number as the unique key and ignore repeats. If the referral queue can't be reached,
+nothing is marked sent; staff can download the orders as an HL7 file instead.
+
+Results come back through the same connector into the **Instrument inbox** as HL7 files for a scientist to review and
+import, exactly like other reference-lab results. Reports name the lab that performed each send-out test.
+
+## 23. Visual report summary and therapy guide
+
+Every report now opens with a summary page; the full detailed tables follow unchanged.
+
+- **At a glance cards**: markers in range, values outside range, medication compliance, and organisms detected.
+- **Range bars**: each blood and chemistry value is drawn against its reference range, with a small trend line of the
+  patient's last five results. Out-of-range values are filled diamonds and in-range values hollow circles, so the page
+  still reads on a black-and-white fax.
+- **Medication compliance**: one line per prescription (consistent, not detected, not tested) and any unexpected drugs.
+- **Molecular**: detected organisms and resistance genes, with drug options from the therapy guide. Drug classes a
+  detected gene affects are struck through, with the reason.
+
+**Therapy guide** (left menu): organism groups, drug options by specimen site (urine, wound, nail), organisms an option
+does not apply to, and the drug classes each resistance gene removes. It starts as a generic draft. Drug options appear on
+reports only after an admin who is the laboratory director, or the director's delegate, names the source and approves
+it; any later edit returns it to draft. Approval and every change are in the audit log (settings table). Cite only a
+reference the lab is licensed to use (for example a Sanford Guide subscription) or one that is openly available (IDSA
+guidelines, the local antibiogram).
+
+The fax PDF is drawn in `supabase/functions/send-alerts/index.ts`. After changing it, run
+`node scripts/gen-reportpdf.mjs` to regenerate `src/reportpdf.js` (the browser's Download PDF), and redeploy
+`send-alerts`.
+
+## 24. Archiving clinics and clinic two-step verification
+
+Run `supabase/migrations/0013_clinic_archive.sql` once.
+
+- **Archive** (Clinics list, admins): hides a clinic from the clinic list and order screens and closes its users' portal
+  access. Orders, patients and reports are kept. **Show archived** lists them again with **Restore** and **Delete**.
+- **Delete** only works for a clinic with no patients, no orders and no portal users (for example an unused test
+  profile); the database enforces this. Everything else stays archived.
+- **Two-step verification**: always required for lab staff, never for patients. Clinic users are off by default; turn it on
+  for a clinic in Clinics > Edit > *Require two-step verification for this clinic's users*.
+- Only the lab can change a clinic's status, account number or portal settings.
+
+## 25. Supply catalog
+
+Lab settings > **Supply catalog** (also reached from Supply orders > *Edit supply catalog*) lists what clinics can order:
+item name, unit or pack size, an optional maximum per order, and whether it is shown to clinics. Reorder with the arrows,
+pause an item by unticking *Shown to clinics*, or *Restore standard list*. Changes apply on **Save changes**. Clinics see
+the unit and limit on their Supplies page and can't order more than the limit at once.
+
+## 26. Turnaround, signature at release, age-specific ranges
+
+- **Turnaround** (left menu; the badge counts specimens past target): receipt-to-release median, 90th percentile and
+  on-time rate for the last 7, 30 or 90 days, a 12-week trend, a breakdown by test, type or clinic, and a live list of
+  specimens late or due within 4 hours (send-outs included until results are entered). Targets are in Lab settings >
+  Turnaround targets; an order's target is the longest among its tests.
+- **Signature at release**: releasing results asks for the user's password and shows the signature meaning. The
+  signer, time and meaning are stored on the order and its history, locked into the report version, and printed on the
+  report and fax ("Electronically signed by ..."). The password is checked without disturbing the two-step session.
+- **Age-specific reference ranges** (Lab settings): per analyte, optional sex, age band in years ("from" included, "to"
+  not), low and high. The first matching row wins; flags, reports, range bars and trends use them.
+
+## 27. Auto-verification
+
+Left menu > **Auto-verification** (admins edit; scientists and reporting can view).
+
+- **Modes**: Off; Shadow (records a decision on each order, changes nothing); Verify (passing orders are marked verified
+  by "Auto-verification", a person releases); Verify and release (passing orders are released and signed "Released
+  automatically under auto-verification rules approved by ..."). Verify modes unlock only after director approval.
+  **Suspend now** returns to shadow instantly.
+- **Rules** (all must pass): every test enabled; all results entered; no critical values; nothing outside the
+  reference range unless allowed (calculated values included); no delta-check hits; no LC-MS batch review notes; positive
+  screens awaiting confirmation held; definitive tox with no unexpected drugs and every prescribed drug detected;
+  corrected reports always to a person; tests run here need QC run within the window and not rejected.
+- **Validation**: when a scientist verifies or releases an order the rules judged in shadow, the system records whether
+  any measured result changed. A pass the scientist changed is a false pass. Approval needs the configured number of
+  confirmed passes (default 30) and zero false passes under the current rules; changing the rules restarts validation
+  and voids an approval.
+- Decisions and reasons appear on each order and in the Recent decisions table. Document the validation and the rules in the
+  lab's procedure manual; CAP's checklist has specific autoverification requirements.
+
+## 28. Yumizen C560 two-way interface (HL7)
 
 The C560 talks HL7 v2.3.1 over TCP (HORIBA host interface manual, chapter 1). The bridge on the lab PC is the LIS end:
 
@@ -323,7 +434,7 @@ What happens:
 The manual doesn't say which side opens the connection; HORIBA/Mindray analyzers normally connect to the LIS, which is
 what the bridge expects. Confirm on the instrument during setup.
 
-## 23. Custom vial labels, SOF, clinic logins, supply tracking, analytics
+## 29. Custom vial labels, SOF, clinic logins, supply tracking, analytics
 
 - Clinics > Edit > Custom vial labeling: orders for that clinic ask for the vial barcode, the receipt check and the order
   page let the lab link or change it, search finds orders by it, and instrument results that carry it post to the order.

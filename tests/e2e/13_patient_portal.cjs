@@ -14,6 +14,7 @@ const q=s=>w.document.querySelector(s),txt=()=>w.document.querySelector('#app').
 const click=s=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}))};
 const type=(s,v)=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.value=v;el.dispatchEvent(new w.Event('input',{bubbles:true}));el.dispatchEvent(new w.Event('change',{bubbles:true}))};
 const M=()=>w.__mock;
+const signRelease=async()=>{click('[data-a="release"]');await sleep(20);const pw=q('#esig-pw');if(pw){pw.value=M().user.pw;click('#modal-root [data-a="esigRelease"]');await sleep(80)}};
 const toasts=()=>[...w.document.querySelectorAll('#toast .toast')].map(t=>t.textContent).join(' | ');
 async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b="lf.pw"]',pw);click('[data-a="login"]');await sleep(80)}
 (async()=>{
@@ -24,7 +25,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  await login('lab@fbg.com','labpassword12');
  w.document.querySelector('[data-a="go"][data-v="queue"]').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(20);
  w.document.querySelector('[data-a="openOrder"][data-id="oRPT"]').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(20);
- click('[data-a="go"][data-v="entry"]');await sleep(20);click('[data-a="release"]');await sleep(900);
+ click('[data-a="go"][data-v="entry"]');await sleep(20);await signRelease();await sleep(900);
  click('[data-a="ppSlip"]');await sleep(500);const code=(mt().match(/Access code\s*([A-Z0-9]{4}-[A-Z0-9]{4})/)||[])[1];
  console.log('P1 access slip:',!!code,code,'| instructions:',/View your lab results/.test(mt()),'| portal toggle:',!!q('#modal-root [data-a="ppToggle"]'));
  q('#modal-root').innerHTML='';click('[data-a="logout"]');await sleep(600);
@@ -33,7 +34,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  fill(code,'Doe','2000-08-27');click('[data-a="ppRegister"]');await sleep(300);console.log('P3 wrong DOB:',toasts().slice(-110));
  fill(code,'doe','2000-08-26');click('[data-a="ppRegister"]');await sleep(900);
  console.log('P4 patient portal:',/Your lab results/.test(txt()),'| reports:',w.document.querySelectorAll('[data-a="ppView"]').length,'| no lab menu:',!q('.nav'));
- console.log('P5 card:',(txt().replace(/\s+/g,' ').match(/Urine Drug[^A]{0,140}?Collected [A-Z][a-z]{2} \d{1,2}, \d{4}/)||[''])[0]);
+ console.log('P5 card:',((txt().replace(/\s+/g,' ').match(/Urine Drug.{0,140}?(?= · Accession)/)||[''])[0]).slice(0,160));
  click('[data-a="ppView"]');await sleep(40);console.log('P6 report opens:',/Medication Compliance Assessment/.test(mt()),/FINAL/.test(mt()));q('#modal-root').innerHTML='';
  let blob=null;w.URL.createObjectURL=b=>{blob=b;return 'blob:x'};w.URL.revokeObjectURL=()=>{};click('[data-a="ppPdf"]');await sleep(2500);console.log('P7 PDF:',blob&&blob.type,blob&&blob.size);
  console.log('P8 patient profile:',JSON.stringify(st.profiles.find(p=>p.role==='patient')&&{role:'patient',ids:st.profiles.find(p=>p.role==='patient').patient_ids}));

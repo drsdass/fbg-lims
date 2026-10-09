@@ -8,12 +8,14 @@ const errs=[];w.addEventListener('error',e=>errs.push(e.message));w.addEventList
 const ctxStub=new Proxy({},{get:(t,k)=>typeof k==='string'?(()=>{}):undefined,set:()=>true});
 w.CSS={escape:s=>String(s).replace(/["\\]/g,'\\$&')};w.HTMLCanvasElement.prototype.getContext=function(){return ctxStub};w.HTMLCanvasElement.prototype.toDataURL=()=>'data:image/png;base64,iVBORw0KGgo=';w.HTMLCanvasElement.prototype.setPointerCapture=()=>{};
 w.eval(fs.readFileSync(BUNDLE,'utf8'));
+const toastLog=[];new w.MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.textContent)toastLog.push(n.textContent)}))).observe(w.document.querySelector('#toast'),{childList:true});
 const sign=k=>{const c=w.document.querySelector(`canvas.sigc[data-k="${k}"]`);if(!c)return false;for(const t of ['pointerdown','pointermove','pointerup'])c.dispatchEvent(new w.MouseEvent(t,{bubbles:true,clientX:10,clientY:10}));return true};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const q=s=>w.document.querySelector(s),txt=()=>w.document.querySelector('#app').textContent;
 const click=s=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}))};
 const type=(s,v)=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.value=v;el.dispatchEvent(new w.Event('input',{bubbles:true}));el.dispatchEvent(new w.Event('change',{bubbles:true}))};
 const M=()=>w.__mock;
+const signRelease=async()=>{click('[data-a="release"]');await sleep(20);const pw=q('#esig-pw');if(pw){pw.value=M().user.pw;click('#modal-root [data-a="esigRelease"]');await sleep(80)}};
 const toasts=()=>[...w.document.querySelectorAll('#toast .toast')].map(t=>t.textContent).join(' | ');
 async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b="lf.pw"]',pw);click('[data-a="login"]');await sleep(80)}
 (async()=>{
@@ -58,7 +60,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  // go to entry, fill normals, release (reflex CONF now needs results -> fill normals covers)
  [...w.document.querySelectorAll('[data-a="go"]')].find(b=>b.dataset.v==='queue').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(10);
  w.document.querySelector(`[data-a="openOrder"][data-id="${oid}"]`).dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(10);
- click('[data-a="go"][data-v="entry"]');await sleep(10);click('[data-a="fillNormals"]');await sleep(5);click('[data-a="release"]');await sleep(600);
+ click('[data-a="go"][data-v="entry"]');await sleep(10);click('[data-a="fillNormals"]');await sleep(5);await signRelease();await sleep(600);
  console.log('13b alerts:',JSON.stringify(M().store.outbox.map(r=>r.data.channel+':'+r.data.status)),'invoked',M().invoked);fs.writeFileSync(OUT('report.json'),JSON.stringify(M().lastFax||null));
  console.log('13 released:',M().store.orders[0].data.status,'claim:',M().store.claims.map(c=>c.id+':'+c.data.lines.map(l=>l.cpt).join('/')).join(),'outbox:',M().store.outbox.length,'clinic note:',M().store.notes.filter(n=>n.aud==='c1001').length);
  click('[data-a="go"][data-v="clinics"]');await sleep(10);
@@ -116,5 +118,5 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  for(const k of ['agree','baa']){const c=q(`[data-b="reg.${k}"]`);c.checked=true;c.dispatchEvent(new w.Event('input',{bubbles:true}))}
  sign('reg');click('[data-a="regNext"]');await sleep(300);
  console.log('16 registered clinic:',JSON.stringify(M().store.clinics.map(c=>c.id+':'+c.data.status+':'+c.data.acct)),'screen:',txt().slice(0,60));
- console.log('toasts:',toasts());console.log('errors',errs);process.exit(0)
+ console.log('toasts:',toastLog.slice(-6).join(' | '));console.log('errors',errs);process.exit(0)
 })();

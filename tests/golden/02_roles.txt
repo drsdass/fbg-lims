@@ -1,11 +1,11 @@
-S1 sales nav: Dashboard, New order, Accessioning, Clinics, Test menu, Supply orders, Reports, Analytics, Compliance
+S1 sales nav: Dashboard, New order, Accessioning, Clinics, Test menu, Supply orders, Turnaround, Reports, Analytics, Compliance
 S2 add clinic button: true approve buttons: false
 S3 clinic created: ["Pacific Coast Pain:active","Mesa Spine Center:pending"]
 S4 no findings column: true
 S5 no receive button for sales: true
-T1 scientist nav: Dashboard, Accessioning, Pickups, Specimen storage, Quality control, Instruments, Clinics, Test menu, Compliance, Notification log
+T1 scientist nav: Dashboard, Accessioning, Pickups, Specimen storage, Quality control, Instruments, Clinics, Test menu, Turnaround, Compliance, Notification log, Auto-verification, Therapy guide
 T2 verified on server: "Luna Sci" In Process
-R1 reporting nav: Dashboard, New order, Accessioning, Pickups, Specimen storage, Quality control, Instruments, Clinics, Test menu, Supply orders, Compliance, Notification log
+R1 reporting nav: Dashboard, New order, Accessioning, Pickups, Specimen storage, Quality control, Instruments, Clinics, Test menu, Supply orders, Turnaround, Compliance, Notification log, Auto-verification, Therapy guide
 R2 verified banner + report button: true true
 R3 read-only (no inputs): true report out btn: true no verify btn: true
 R4 clinic0 {"id":"c1001","data":{"id":"c1001","acct":"FBG-1001","name":"Pacific Coast Pain","status":"active","settings":{"ordering":true,"supplies":true},"providers":[{"id":"p1","name":"Daniel Reyes","cred":"MD","npi":"1639201847","email":"d@pc.com","phone":"(949) 555-0150"}],"notify":{"email":true,"sms":true,"fax":true,"criticalPhone":"555"},"fax":"(949) 555-0143","contactName":"Maria Lopez","contactEmail"
@@ -13,7 +13,7 @@ R4 clinic notify {"email":true,"sms":true,"fax":true,"criticalPhone":"555"} (949
 R4 invoked 1 outbox 3 notes 2
 R4 errors so far []
 R4 released by reporting: Released claims 0 outbox 3
-U1 admin nav: Dashboard, New order, Accessioning, Pickups, Specimen storage, Quality control, Instruments, Billing, Clinics, Test menu, Supply orders, Reports, Analytics, Compliance, Notification log, Audit log, Users, Lab settings
+U1 admin nav: Dashboard, New order, Accessioning, Pickups, Specimen storage, Quality control, Instruments, Billing, Clinics, Test menu, Supply orders, Turnaround, Reports, Analytics, Compliance, Notification log, Audit log, Users, Auto-verification, Therapy guide!, Lab settings
 U2 users listed: 4
 U3 temp password shown: true profile: ["admin"]
 U4 admin sees approve: true

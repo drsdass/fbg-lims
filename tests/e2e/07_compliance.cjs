@@ -14,6 +14,7 @@ const q=s=>w.document.querySelector(s),txt=()=>w.document.querySelector('#app').
 const click=s=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}))};
 const type=(s,v)=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.value=v;el.dispatchEvent(new w.Event('input',{bubbles:true}));el.dispatchEvent(new w.Event('change',{bubbles:true}))};
 const M=()=>w.__mock;
+const signRelease=async()=>{click('[data-a="release"]');await sleep(20);const pw=q('#esig-pw');if(pw){pw.value=M().user.pw;click('#modal-root [data-a="esigRelease"]');await sleep(80)}};
 const toasts=()=>[...w.document.querySelectorAll('#toast .toast')].map(t=>t.textContent).join(' | ');
 async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b="lf.pw"]',pw);click('[data-a="login"]');await sleep(80)}
 (async()=>{
@@ -26,10 +27,10 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  // locked report: release the seeded order, then correct it
  w.document.querySelector('[data-a="go"][data-v="queue"]').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(20);
  w.document.querySelector('[data-a="openOrder"][data-id="oRPT"]').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(20);
- click('[data-a="go"][data-v="entry"]');await sleep(20);click('[data-a="release"]');await sleep(900);
+ click('[data-a="go"][data-v="entry"]');await sleep(20);await signRelease();await sleep(900);
  console.log('R1 locked copy saved:',JSON.stringify(M().store.report_versions.map(v=>v.id+':'+v.data.status)));
  click('[data-a="report"]');await sleep(300);console.log('R2 version bar:',(mt().match(/Locked copies:.{0,60}/)||['none'])[0]);q('#modal-root').innerHTML='';
- click('[data-a="startCorrect"]');await sleep(10);type('#modal-root [data-b="rej.reason"]','Typo in THC value');click('#modal-root [data-a="confirmCorrect"]');await sleep(400);click('[data-a="release"]');await sleep(900);
+ click('[data-a="startCorrect"]');await sleep(10);type('#modal-root [data-b="rej.reason"]','Typo in THC value');click('#modal-root [data-a="confirmCorrect"]');await sleep(400);await signRelease();await sleep(900);
  console.log('R3 versions after correction:',JSON.stringify(M().store.report_versions.map(v=>v.id+':'+v.data.status)));
  click('[data-a="report"]');await sleep(300);console.log('R4 shows both versions:',mt().includes('Version 1'),mt().includes('Version 2 (corrected)'));
  click('#modal-root [data-a="reportVer"][data-i="0"]');await sleep(20);console.log('R5 version 1 view status FINAL:',mt().includes('FINAL'),'| pills:',[...w.document.querySelectorAll('#modal-root [data-a="reportVer"]')].map(p=>p.className+':'+p.textContent).join(' / '),'| status el:',(q('#modal-root .rp-status')||{}).textContent);q('#modal-root').innerHTML='';

@@ -18,6 +18,7 @@ const toasts=()=>[...w.document.querySelectorAll('#toast .toast')].map(t=>t.text
 async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b="lf.pw"]',pw);click('[data-a="login"]');await sleep(80)}
 (async()=>{
  await sleep(80);
+ {const L=M().store.settings.find(x=>x.key==='lab').data;L.address='1830 S. Alma School Rd Ste 134, Mesa, AZ 85210';L.director='Dr. Guihua Cao';}
  const st=acc=>M().store.orders.find(o=>o.data.accession===acc).data;
  st('50018186').status='Released';st('50018188').status='Ordered';
  const login=async(e,p)=>{await signIn(e,p);if(q('[data-b="lf.code"]')){type('[data-b="lf.code"]','123456');click('[data-a="mfaVerify"]')};await sleep(300)};
@@ -68,13 +69,13 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  await login('rita@fbg.com','ritapassword12');
  nav('openOrder',null,'ox50018184');await sleep(30);
  console.log('A1 order page:',(txt().replace(/\s+/g,' ').match(/Verified by[^.]{0,80}/)||['none'])[0]);
- nav('go','entry','ox50018184');await sleep(30);click('[data-a="release"]');await sleep(900);
+ nav('go','entry','ox50018184');await sleep(30);click('[data-a="release"]');await sleep(300);q('#esig-pw').value='ritapassword12';click('#modal-root [data-a="esigRelease"]');await sleep(1400);
  console.log('A2 status:',st('50018184').status,'| released by',st('50018184').released&&st('50018184').released.by);
  click('[data-a="report"]');await sleep(60);
  const rp=q('#modal-root .rp').textContent.replace(/\s+/g,' ');
  console.log('A3 header:',(rp.match(/First Bio Genetics.{0,170}/)||['none'])[0]);
- console.log('A4 approval:',(rp.match(/Results reviewed and approved by.{0,140}?(?= Flags:)/)||['none'])[0]);
- console.log('A5 footer repeats director:',/Laboratory Director:/.test(rp));
+ console.log('A4 approval:',(rp.match(/Results reviewed and approved by.{0,140}?(?= Flags:|Electronically signed)/)||['none'])[0]);
+ console.log('A5 footer repeats director:',/Laboratory Director:/.test(rp),'| e-signature:',/Electronically signed by Rita Reporter/.test(rp));
  let bs=0,bb=null;w.URL.createObjectURL=b=>{bs=b.size;bb=b;return 'blob:x'};w.URL.revokeObjectURL=()=>{};click('#modal-root [data-a="dlReport"]');await sleep(2500);console.log('A6 PDF built:',bs>1000);if(bb){const fr=new w.FileReader();const ab=await new Promise(r=>{fr.onload=()=>r(fr.result);fr.readAsArrayBuffer(bb)});fs.writeFileSync(OUT('report17.pdf'),Buffer.from(ab))}
  console.log('errors',errs,M().errors);process.exit(0)
 })();
