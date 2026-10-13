@@ -87,8 +87,6 @@ function dirty(S, isLab) {
   }
   if (isLab && canSettings) for (const key of SETTINGS) {
     if (S[key] === undefined) continue;
-    // Never write a lab profile that has lost its identity (an empty load must not overwrite the real one).
-    if (key === "lab" && !(String(S.lab.name || "").trim() && String(S.lab.clia || "").trim())) continue;
     const k = "settings:" + key, j = JSON.stringify(S[key]);
     if (synced[k] !== j) out.push({ t: "settings", key, d: S[key], k, j });
   }
@@ -148,15 +146,6 @@ export const DB = {
   async passwordChanged() { const { error } = await sb.rpc("password_changed"); if (error) throw error; },
   onAuth(fn) { sb.auth.onAuthStateChange((event, session) => fn(event, session)); },
   async session() { const { data } = await sb.auth.getSession(); return data.session; },
-  // Re-checks a password for an electronic signature without touching the current session (which carries two-step
-  // verification): a separate, memory-only client signs in, and is signed out locally straight away.
-  async verifyPassword(email, password) {
-    const tmp = createClient(CONFIG_ERROR ? "https://invalid.supabase.co" : url, CONFIG_ERROR ? "invalid-key-placeholder" : key,
-      { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false, storageKey: "fbg-esign" } });
-    const { error } = await tmp.auth.signInWithPassword({ email, password });
-    try { await tmp.auth.signOut({ scope: "local" }); } catch (e) { /* nothing to clean up */ }
-    if (error) throw new Error(/invalid/i.test(error.message || "") ? "That password isn't right." : error.message);
-  },
   async signIn(email, password) { const { error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error; },
   async signOut() { synced = {}; await sb.auth.signOut(); },
   async resetPassword(email) { await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin }); },
@@ -231,7 +220,6 @@ export const DB = {
     if (!isLab) { res.claims = []; res.outbox = []; }
     return res;
   },
-  async refreshSession() { try { await sb.auth.refreshSession(); } catch (e) { /* keep the current session */ } },
   markSynced(S, isLab) {
     synced = {};
     for (const t of DOC_TABLES) for (const d of S[t] || []) synced[t + ":" + d.id] = JSON.stringify(d);
@@ -409,12 +397,6 @@ export const DB = {
     return out;
   },
   async qcInsertMaterials(list) { if (!list.length) return; const { error } = await sb.from("qc_materials").upsert(list.map((m) => ({ id: m.id, data: m })), { onConflict: "id", ignoreDuplicates: true }); if (error) throw error; },
-  async qcSaveMaterials(list) {
-    for (let i = 0; i < list.length; i += 500) {
-      const { error } = await sb.from("qc_materials").upsert(list.slice(i, i + 500).map((m) => ({ id: m.id, data: m })), { onConflict: "id" });
-      if (error) throw error;
-    }
-  },
   async qcSaveMaterial(m) { const { error } = await sb.from("qc_materials").upsert({ id: m.id, data: m }); if (error) throw error; },
   async qcAddResults(list) {
     for (let i = 0; i < list.length; i += 500) {

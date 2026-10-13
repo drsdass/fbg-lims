@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale) and `supabase/migrations/0012_referrals.sql` (Amico DX electronic referrals) and `supabase/migrations/0013_clinic_archive.sql` (archiving clinics, clinic two-step) and `supabase/migrations/0014_qc_review_vials.sql` (daily QC review sign-off, custom vial barcodes).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale) and `supabase/migrations/0012_referrals.sql` (Amico DX electronic referrals) and `supabase/migrations/0013_clinic_archive.sql` (archiving clinics, clinic two-step).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -285,7 +285,7 @@ creatinine was measured. Periods: all, 2 years, 12 months, 6 months. Printable.
 ## 21. Production setup and automated tests
 
 **New production project.** Run `supabase/setup_production.sql` once in the SQL Editor of a new, empty project (it is
-migrations 0001 to 0014 in order). Then deploy the four Edge Functions (manage-users, send-alerts, instrument-upload,
+migrations 0001 to 0011 in order). Then deploy the four Edge Functions (manage-users, send-alerts, instrument-upload,
 patient-access, each with JWT verification off), set their secrets, create the first admin, and point Netlify's
 `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` at the new project.
 
@@ -376,75 +376,6 @@ Lab settings > **Supply catalog** (also reached from Supply orders > *Edit suppl
 item name, unit or pack size, an optional maximum per order, and whether it is shown to clinics. Reorder with the arrows,
 pause an item by unticking *Shown to clinics*, or *Restore standard list*. Changes apply on **Save changes**. Clinics see
 the unit and limit on their Supplies page and can't order more than the limit at once.
-
-## 26. Turnaround, signature at release, age-specific ranges
-
-- **Turnaround** (left menu; the badge counts specimens past target): receipt-to-release median, 90th percentile and
-  on-time rate for the last 7, 30 or 90 days, a 12-week trend, a breakdown by test, type or clinic, and a live list of
-  specimens late or due within 4 hours (send-outs included until results are entered). Targets are in Lab settings >
-  Turnaround targets; an order's target is the longest among its tests.
-- **Signature at release**: releasing results asks for the user's password and shows the signature meaning. The
-  signer, time and meaning are stored on the order and its history, locked into the report version, and printed on the
-  report and fax ("Electronically signed by ..."). The password is checked without disturbing the two-step session.
-- **Age-specific reference ranges** (Lab settings): per analyte, optional sex, age band in years ("from" included, "to"
-  not), low and high. The first matching row wins; flags, reports, range bars and trends use them.
-
-## 27. Auto-verification
-
-Left menu > **Auto-verification** (admins edit; scientists and reporting can view).
-
-- **Modes**: Off; Shadow (records a decision on each order, changes nothing); Verify (passing orders are marked verified
-  by "Auto-verification", a person releases); Verify and release (passing orders are released and signed "Released
-  automatically under auto-verification rules approved by ..."). Verify modes unlock only after director approval.
-  **Suspend now** returns to shadow instantly.
-- **Rules** (all must pass): every test enabled; all results entered; no critical values; nothing outside the
-  reference range unless allowed (calculated values included); no delta-check hits; no LC-MS batch review notes; positive
-  screens awaiting confirmation held; definitive tox with no unexpected drugs and every prescribed drug detected;
-  corrected reports always to a person; tests run here need QC run within the window and not rejected.
-- **Validation**: when a scientist verifies or releases an order the rules judged in shadow, the system records whether
-  any measured result changed. A pass the scientist changed is a false pass. Approval needs the configured number of
-  confirmed passes (default 30) and zero false passes under the current rules; changing the rules restarts validation
-  and voids an approval.
-- Decisions and reasons appear on each order and in the Recent decisions table. Document the validation and the rules in the
-  lab's procedure manual; CAP's checklist has specific autoverification requirements.
-
-## 28. Yumizen C560 two-way interface (HL7)
-
-The C560 talks HL7 v2.3.1 over TCP (HORIBA host interface manual, chapter 1). The bridge on the lab PC is the LIS end:
-
-1. Lab settings > Yumizen C560 interface: enter the analyzer's channel number for each test (C560 Utility > System Setup >
-   LIS Setup lists them), the sample type, and the port the bridge listens on (for example 5100). Save.
-2. Deploy `instrument-upload` (JWT verification OFF). It has two files, `index.ts` and `c560.ts`; with the dashboard
-   editor, paste the one-file bundle instead (`instrument-upload/index.ts` from the delivery folder).
-3. Lab settings > Instrument bridge > Add device, download the script (it carries the port), copy it to `C:\FBG`, allow the
-   port through Windows Firewall, and run it at startup (instructions at the top of the script).
-4. On the C560 LIS Setup: host IP = the bridge PC, the same port, HL7, bidirectional, real-time results, barcode query.
-
-What happens:
-- The analyzer scans a tube (accession label, or a clinic's own vial label linked to the order) and sends QRY^Q02.
-  The bridge asks the portal, which answers with DSR^Q03 listing the screens still outstanding on that order
-  (received or in process, urine drug screen ordered). Unknown barcodes get QCK^Q02 "NF".
-- Results (ORU^R01) are acknowledged at once, saved on the PC, and uploaded every minute as one `.hl7` file to the
-  Instrument inbox. A scientist imports it like a CSV: results post to the orders, controls are scored against the QC
-  targets, and failed controls put the affected results on hold. Reruns replace the original value; void results
-  (-268435545) are skipped.
-- Batch (time-range) queries return every received specimen in the window. Sample-ID-range queries get "NF", because the
-  analyzer's sample numbers aren't known to the portal.
-
-The manual doesn't say which side opens the connection; HORIBA/Mindray analyzers normally connect to the LIS, which is
-what the bridge expects. Confirm on the instrument during setup.
-
-## 29. Custom vial labels, SOF, clinic logins, supply tracking, analytics
-
-- Clinics > Edit > Custom vial labeling: orders for that clinic ask for the vial barcode, the receipt check and the order
-  page let the lab link or change it, search finds orders by it, and instrument results that carry it post to the order.
-- SOF: a clinic with signed paper onboarding on file covers every provider on the account; orders don't ask for a provider
-  signature. Clinics > "Mark SOF on file for all" records it for every clinic without a signed agreement.
-- Adding a clinic creates its first login (username or email) and shows the temporary password. Clinic details >
-  Create a login adds more later. Both need an admin (the Users permission).
-- Supply orders: Ship records the carrier and tracking number (editable later); clinics see a link to the carrier.
-- Analytics (lab users with Reports, and clinics with Analytics turned on, for their own orders only): date range, clinic
-  and test filters; normal vs abnormal findings per test, turnaround by step, kits and supplies sent; CSV download.
 
 ## Before go-live
 
