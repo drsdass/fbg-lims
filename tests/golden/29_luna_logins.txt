@@ -1,0 +1,8 @@
+E1 edit form: Clinic logins section true | button true
+E2 Add user opened: true | Username pill on true | username pacific.coast.pain
+D1 details: Create a login true
+O1 Users banner: true
+O2 toast: Username logins need the current manage-users function in Supabase (Edge Functions → manag | saved 0 | hint in form true
+N2 saved: curana_healthaz@users.firstbiogenetics.com clinic c1001 | modal: true
+N3 banner gone after a username login works: true
+errors [] []

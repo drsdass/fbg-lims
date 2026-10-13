@@ -441,7 +441,10 @@ what the bridge expects. Confirm on the instrument during setup.
 - SOF: a clinic with signed paper onboarding on file covers every provider on the account; orders don't ask for a provider
   signature. Clinics > "Mark SOF on file for all" records it for every clinic without a signed agreement.
 - Adding a clinic creates its first login (username or email) and shows the temporary password. Clinic details >
-  Create a login adds more later. Both need an admin (the Users permission).
+  Create a login (also in Clinics > Edit > Clinic logins) adds more later. All need an admin (the Users permission).
+- Username logins need the current manage-users function (it answers the user list with `usernames: true`). An older
+  copy only accepts email addresses and refuses a username with "Enter a valid email address"; Users then shows a
+  warning, and the portal says to redeploy manage-users instead of saving anything.
 - Supply orders: Ship records the carrier and tracking number (editable later); clinics see a link to the carrier.
 - Analytics (lab users with Reports, and clinics with Analytics turned on, for their own orders only): date range, clinic
   and test filters; normal vs abnormal findings per test, turnaround by step, kits and supplies sent; CSV download.

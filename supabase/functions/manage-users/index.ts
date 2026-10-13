@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
         }
         const { data: profs } = await admin.from("profiles").select("*");
         const byId = new Map((profs ?? []).map((p: any) => [p.user_id, p]));
-        return json({ users: users.map((x) => {
+        return json({ usernames: true, users: users.map((x) => {
           const p: any = byId.get(x.id) ?? {};
           return {
             id: x.id, email: x.email, name: p.name ?? x.user_metadata?.name ?? "", kind: p.role ?? null,
