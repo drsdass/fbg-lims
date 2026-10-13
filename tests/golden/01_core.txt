@@ -10,7 +10,7 @@
 9 audit views: 4
 10 lab dashboard: true sees clinic order: true
 11 received on server: Received
-12 reflex added: Oxycodone,Oxymorphone UDS+CONF
+12 reflex added: Oxycodone UDS+CONF
 13b alerts: ["Email:Sent","Text:Sent","Fax:Sent"] invoked 1
 13 released: Released claim: CLM-FBG<YYMMDD>-1001:80307/G0480 outbox: 3 clinic note: 1
 14 clinic sees released result: true new-results count: 1

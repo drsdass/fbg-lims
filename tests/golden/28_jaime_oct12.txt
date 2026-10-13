@@ -1,0 +1,18 @@
+M1 urine confirmation tests: Amphetamines | Barbiturates | Benzodiazepines | Buprenorphine | Cocaine | Ecstasy (MDMA) | Fentanyl | Heroin (6-AM) | Methadone | Opiates | Oxycodone | PCP | THC | Ketamine | Tramadol | Methylphenidate
+M2 analytes: Benzodiazepines = Alprazolam, Aminoclonazepam, Hydroxyalprazolam, Lorazepam, Nordiazepam, Temazepam | Methadone = EDDP, Methadone | Cocaine = Benzoylecgonine | Heroin = 6AM | Ketamine = Norketamine | Tramadol = Desmethyltramadol, Tramadol | THC = THC-COOH
+M3 60000004 by confirmation test: Amphetamines=Positive [Amphetamine 2,376; Methamphetamine 529] | Barbiturates=Positive [Butalbital 1,358; Phenobarbital 1,350] | Benzodiazepines=Positive [Alprazolam 2,723; Aminoclonazepam 1,063; Hydroxyalprazolam 1,174; Lorazepam 553; Nordiazepam 591; Temazepam 571] | Buprenorphine=Positive [Buprenorphine 601; Norbuprenorphine 563] | Cocaine=Positive [Benzoylecgonine 270] | Ecstasy (MDMA)=Positive [MDMA 550] | Fentanyl=Positive [Fentanyl 151; Norfentanyl 1,015] | Heroin (6-AM)=Positive [6AM 234] | Methadone=Positive [EDDP 1,458; Methadone 1,194] | Opiates=Positive [Codeine 561; Hydrocodone 506; Hydromorphone 524; Morphine 521] | Oxycodone=Positive [Oxycodone 573; Oxymorphone 544] | PCP=Positive [PCP 2,906] | THC=Positive [THC-COOH 328] | Ketamine=Positive [Norketamine 504] | Tramadol=Positive [Desmethyltramadol 1,374; Tramadol 1,447]
+M4 60000003 (placed before the change) keeps requisition drugs: Amphetamine, Methamphetamine, Alprazolam, Clonazepam, Buprenorphine
+M5 order page: Confirmation tests (15 tests, 15 billing classes, G0482) | requisition: Ordered on the requisition: Oxycodone, Clonazepam, Methadone Consents and signat
+R1 paste box help: true
+R2 pasted file imported: 34 result rows matched to 6 orders | default prevented true
+R3 dropped file imported: 34 result rows matched to 6 orders
+M6 reflex adds confirmation tests: ["Oxycodone"] | requisition drugs recorded: 2
+Q1 period options: Current month | Last month | Last 30 days | Last 90 days | Last 180 days | Last 365 days
+Q2 tabs: Overview | Control list | Control sets | QC reports
+Q3 control list: 32 controls | first: OFQC1A20260903JASCIEX 450020260903JA2027-03-0966NoneEdit code | pH 11.5 row: pH 11.575738247Yumizen C560757382472027-01-311NoneEdit code
+Q4 code saved on every analyte of that control: FENT 1 FEN | list shows it: true
+Q5 suggested sets: Yumizen C560 - Urine drug screen (20) | SCIEX 4500 - Urine LC-MS/MS (6) | SCIEX 4500 - Oral fluid LC-MS/MS (6)
+Q6 custom set: [["Yumizen C560",["FENT 1","FENT 3"]]]
+Q7 set report: QC report: Yumizen C560 - Urine drug screen | 20 controls, 34 analytes, 34 runs: 1 reject, 0 warnings | charts 36 | pH 11.5 reject listed true
+Q8 CSV: 34 analyte rows | header Control,Code,Lot,Analyte,Runs,Target mean,Target SD,Observed mean,Observed SD,CV %,Bias %,Warnings,Rejects
+errors [] []

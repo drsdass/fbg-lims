@@ -1,0 +1,9 @@
+P1 access slip: true <CODE> | instructions: true | portal toggle: true
+P2 login screen link: true
+P3 wrong DOB: t | We couldn't match that code, last name and date of birth. Check them against your paperwork and try again.
+P4 patient portal: true | reports: 1 | no lab menu: true
+P5 card: Urine Drug Screen, Immunoassay · Urine Drug Confirmation, LC-MS/MSCollected <DATE>
+P6 report opens: true true
+P7 PDF: application/pdf <BYTES>
+P8 patient profile: {"role":"patient","ids":["ptJ"]}
+errors [] []

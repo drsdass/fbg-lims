@@ -29,7 +29,7 @@ let user=null,aal='aal1',seq=5000,acc=1000;
 const errors=[];
 globalThis.__mock={store,errors,get user(){return user}};
 const prof=()=>user&&store.profiles.find(p=>p.user_id===user.id);
-function visible(t){const p=prof();if(!p)return t==='profiles'?[]:[];if(aal!=='aal2'&&!['clinic','patient'].includes(p.role)&&t!=='profiles')return[];
+function visible(t){if(t==='settings'&&globalThis.__mock&&globalThis.__mock.hideSettings>0){globalThis.__mock.hideSettings--;return[]}const p=prof();if(!p)return t==='profiles'?[]:[];if(aal!=='aal2'&&!['clinic','patient'].includes(p.role)&&t!=='profiles')return[];
  if(p.role==='patient'){if(t==='profiles')return store.profiles.filter(x=>x.user_id===user.id);if(t==='settings')return store.settings.filter(x=>x.key==='lab');if(t==='report_versions')return store.report_versions.filter(v=>{const o=store.orders.find(x=>x.id===v.order_id);return o&&(p.patient_ids||[]).includes(o.data.patientId)&&o.data.patientPortal!==false});return []}
  if(t==='profiles')return store.profiles.filter(x=>x.user_id===user.id||p.role==='lab');
  if(t==='audit_log')return p.role==='lab'&&aal==='aal2'?store.audit_log:[];
@@ -53,7 +53,8 @@ function canWrite(t,row,op){const p=prof();if(!p||(aal!=='aal2'&&p.role!=='clini
  if(t==='invoices')return false;
  if(t==='audit_log')return true;return false}
 const thenable=v=>({then:(a,b)=>Promise.resolve(v).then(a,b)});
-export function createClient(){
+export function createClient(u,k,opts){
+ if(opts&&opts.auth&&opts.auth.persistSession===false)return{auth:{async signInWithPassword({email,password}){const u=USERS.find(x=>x.email===email&&x.pw===password);globalThis.__mock.esigns=(globalThis.__mock.esigns||0)+1;return u?{error:null}:{error:{message:'Invalid login credentials'}}},async signOut(){return{error:null}}}};
  const auth={async getSession(){return{data:{session:user?{user}:null}}},
   async signInWithPassword({email,password}){const u=USERS.find(x=>x.email===email&&x.pw===password);if(!u)return{error:{message:'Invalid login credentials'}};user=u;aal='aal1';return{error:null}},
   async signOut(){user=null;aal='aal1'},async getUser(){return{data:{user}}},onAuthStateChange(){},async resetPasswordForEmail(){return{}},async updateUser(){return{error:null}},

@@ -1,0 +1,18 @@
+G1 draft banner: true | groups: 10 | genes: true
+G2 approve without source: Name the source before approving. | prompts: 0
+V1 glance: Blood and chemistry7 of 12in range | ● Outside range5Glucose high, ALT high, HDL Cholesterol low… | ▲ Wound panel2 detected1 resistance gene
+V2 no therapy yet: true | drug lines: 0 | organisms: ▲ Staphylococcus aureus, ▲ Pseudomonas aeruginosa
+G3 approved: true | prompt asks for name: true
+G4 stored: true
+V3 markers: 12 | first rows: Glucose118 mg/dLHIGH109 on <D> || ALT61 U/LHIGH52 on <D> || HDL Cholesterol38 mg/dLLOW38 on <D> || LDL Cholesterol104 mg/dLHIGH118 on <D>
+V4 range bars: 12 | diamonds (out of range): 5 | circles: 7
+V5 trend for glucose: Previous results <D>: 96, <D>: 104, <D>: 109
+V6 organism table:
+  ▲ Staphylococcus aureusStaphylococci | Trimethoprim-sulfamethoxazole Folate antagonistDoxycycline TetracyclineClindamycin LincosamideLinezolid OxazolidinoneVancomycin Glycopeptide | ✗ Cefazolin / cephalexin mecA detected✗ Dicloxacillin mecA detected
+  ▲ Pseudomonas aeruginosaPseudomonas | Piperacillin-tazobactam Beta-lactam/beta-lactamase inhibitorCefepime CephalosporinCiprofloxacin / levofloxacin FluoroquinoloneMeropenem CarbapenemTobramycin Aminoglycoside | —
+V7 genes and caveat: Resistance genes detected: mecA — Methicillin resistance (MRSA pattern) | true
+V8 source note: true | detail tables still follow: true
+P1 PDF made: true
+G5 edit returns to draft: true | aved. The guide needs approval before it appears on reports.
+G6 report no longer shows drugs: 0
+errors: []

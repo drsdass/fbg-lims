@@ -1,0 +1,23 @@
+T1 import targets button: true | review panel: true
+T2 summary: QC targets loaded688 targets read: 688 new controls, 0 updated, 0 new lots (the previous lot is retired and kept on record). InstrumentControlsAnalytesYumizen C5602034SCIEX 450012654 CloseOpen Quality control
+T3 materials: 688 | FENT 1 ["Yumizen C560","FEN","75554285","<YMD>",1,0.1,"ng/mL"] | OFQC1A ["SCIEX 4500","6-Acetylmorphine","20260903JA",8,0.8] | CRE-U units mg/dL
+T4 re-import is idempotent: 688 QC targets loaded688 targets read: 0 new controls, 688 updated, 0 new lots (the previous lot is retired and kept on record). InstrumentContr
+Q1 C560 QC scored: 34 control results logged and scored: 33 in control, 0 warnings, 1 reject.
+Q2 flagged rows: pH 11.5PH-U11.406.000 ± 0.700+7.7Reject1-3s
+H1 LCMS QC: 258 control results logged and scored: 220 in control, 28 warnings, 10 rejects. 2 orders are on QC hold: the affected results can't be verified until corrective action is documented.
+H2 hold on 60000003: ["Buprenorphine","THC (Cannabinoids)"] | items 4 | runs [["SCIEX 4500","<YMD>"]]
+H3 entry banner: QC hold. A control failed in the run that produced these results: QC2A Norbuprenorphine 286.1 (+4.3 SD, 1-3s); QC1B Norbuprenorphine 118.8 (+4.8 SD, 1-3s); QC3B Norbupr
+H4 verify blocked by hold: true | QC hold: document the corrective action on this order before verifying.
+H5 needs details: ing. | Describe what was done.
+H6 hold released: true Controls re-run and acceptable; patient results accepted | banner true
+G1 confirm asked: QC for SCIEX 4500 on <DATE> hasn't been approved yet. Verify these results anyway?
+G2 not verified after No: true
+R1 review modal: QC review: SCIEX 4500, <DATE>258 control results: 220 in control, 28 warnings, 10 rejects. 10 rejects have no corrective action recorded on the control. Describe it in the notes, or add it on the control's Levey-Jennings page. ControlAnalyteResultTarget
+R2 approve needs notes when rejects: ribe the corrective action for the rejects before approving.
+R3 review saved: {"inst":"SCIEX 4500","day":"<YMD>","n":258,"rejects":10,"approved":true,"by":"Luna Sci","code":true}
+R4 recent reviews table: Run dateInstrumentControlsDecisionReviewed byNotes<DATE>SCIEX 4500258 (10 rejects) (28 warnings)ApprovedLuna Sci (ID LS-UT)
+G3 verified without prompt: true asked false
+S1 setting: true warn
+S2 block mode, approved day: true
+S3 block mode, unreviewed C560 day: true | QC for Yumizen C560 on <DATE> hasn't been approved yet. Approve it on the Quality control page first.
+errors [] []

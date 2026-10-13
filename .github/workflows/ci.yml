@@ -1,0 +1,29 @@
+name: Build and test
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://example.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_ci_placeholder_key_000000
+      - name: End-to-end tests
+        run: npm test
+      - name: Keep the output of failed suites
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output
+          path: tests/.out/
