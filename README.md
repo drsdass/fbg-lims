@@ -445,6 +445,10 @@ what the bridge expects. Confirm on the instrument during setup.
 - Username logins need the current manage-users function (it answers the user list with `usernames: true`). An older
   copy only accepts email addresses and refuses a username with "Enter a valid email address"; Users then shows a
   warning, and the portal says to redeploy manage-users instead of saving anything.
+- The requisition's Specimen labels section and its header barcode use the same compact codes as the printed labels
+  (70001011U1 per tube, 70001011 for the order); the accession is printed as text beside them.
+- NPI checks: the clinic form warns while typing when a group or provider NPI fails the check-digit test, or when another
+  clinic already has the group NPI, and asks before saving. The Clinics list flags invalid NPIs.
 - Supply orders: Ship records the carrier and tracking number (editable later); clinics see a link to the carrier.
 - Analytics (lab users with Reports, and clinics with Analytics turned on, for their own orders only): date range, clinic
   and test filters; normal vs abnormal findings per test, turnaround by step, kits and supplies sent; CSV download.

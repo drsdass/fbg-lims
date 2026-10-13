@@ -1,0 +1,11 @@
+R0 order: FBG<YYMMDD>-1001 UDS
+R1 header barcode: 70001001 | accession shown true
+R2 label barcodes: 70001001U1 | all 10 chars or less true
+R3 label text: <DATE>70001001U1 · FBG<YYMMDD>-1001
+N1 invalid NPI flags in list: 1
+N2 current NPI warning: ""
+N3 fake NPI: This NPI fails the check-digit test, so it isn't a real NPI. Check it in the NPPES registry; claims with it will be rejected.
+N4 duplicate NPI: Curana Health of Arizona (FBG-2002) already has this NPI.
+N5 provider fake NPI: true
+N6 confirm asked: 1 | 4 lines | cancelled, NPI unchanged: true
+errors [] []
