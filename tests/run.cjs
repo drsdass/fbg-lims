@@ -12,6 +12,7 @@ async function build() {
   await esbuild.build({
     entryPoints: [path.join(root, "src/main.js")], bundle: true, format: "iife", outfile: path.join(__dirname, ".bundle.js"), logLevel: "warning",
     alias: { "@supabase/supabase-js": path.join(__dirname, "mock.js") }, loader: { ".css": "empty" },
+    external: ["tesseract.js", "pdfjs-dist"],
     define: { "import.meta.env.VITE_SUPABASE_URL": '"https://abc.supabase.co"', "import.meta.env.VITE_SUPABASE_ANON_KEY": '"sb_publishable_testkey1234567890"' },
   });
 }

@@ -380,6 +380,27 @@ export const DB = {
     const { error } = await sb.from("report_versions").insert({ id: `${orderId}-v${version}`, order_id: orderId, version, data: model, released_by: user && user.id });
     if (error && !missingTable(error)) throw error;
   },
+  // ---------- insurance checks (0016) ----------
+  async insChecks() {
+    const { data, error } = await sb.from("insurance_checks").select("id,data").order("at", { ascending: false }).limit(200);
+    if (error) { if (missingTable(error)) return null; throw error; }
+    return (data || []).map((r) => ({ ...r.data, id: r.id }));
+  },
+  async insCheckSave(rec) {
+    const { error } = await sb.from("insurance_checks").upsert({ id: rec.id, at: new Date(rec.at || Date.now()).toISOString(), data: rec });
+    if (error) { if (missingTable(error)) throw new Error("Saving checks needs migration 0016_insurance_checks.sql in Supabase (README section 31)."); throw error; }
+  },
+  async insCheckDel(id) { const { error } = await sb.from("insurance_checks").delete().eq("id", id); if (error) throw error; },
+  async eligibility(action, payload) {
+    const { data, error } = await sb.functions.invoke("eligibility", { body: { action, ...(payload || {}) } });
+    if (error) {
+      let msg = error.message || "Couldn't reach the eligibility service.";
+      try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) {}
+      if (/Failed to send|404|not found/i.test(msg)) return { configured: false, missing: true, error: "The eligibility function isn't deployed in Supabase (README section 31)." };
+      throw new Error(msg);
+    }
+    return data || {};
+  },
   // ---------- compliance records ----------
   async qmsAll() { const rows = await fetchAll("qms_records", "id,kind,ref,data"); return rows.map((r) => ({ ...r.data, id: r.id, kind: r.kind, ref: r.ref })); },
   async qmsSave(rec) {

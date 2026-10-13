@@ -5,6 +5,8 @@ import { BRIDGE_PS1 } from "./bridgeScript.js";
 import { AMICO_PS1 } from "./amicoScript.js";
 import { THERAPY_SEED, SITES, therapyHash, therapyApproved, therapyFor } from "./therapy.js";
 import { Offline } from "./offline.js";
+import { classifyPlan, PLAN_TYPES, DECISIONS, readEligibility, parseCard as insParseCard, payerOf as insPayerOf, mapHeader as insMapHeader, rowsFromTable as insRowsFromTable, normDob as insNormDob, splitName as insSplitName } from "./insurance.js";
+import { cardTexts, ocr } from "./ocr.js";
 import { parseTable as parseExport, normName, stripSuffix, validityOf, C560_ALIAS, VALIDITY, VALIDITY_CODES, isControlName, isC560Hl7, c560Hl7ToTable } from "./imports.js";
 
 const LOGO="/logo.png";
@@ -390,10 +392,10 @@ function render(){
  if(openForm&&$("#modal-root").innerHTML){refreshing=true;formModal(openForm);refreshing=false}
  if(fb){const el=document.querySelector(`[data-b="${CSS.escape(fb)}"]`);if(el&&el!==document.activeElement){el.focus();try{if(pos!=null)el.setSelectionRange(pos,pos)}catch(e){}}}
 }
-function labAllowed(v){if(S.offline)return ["offline","order-new","order"].includes(v);const need={pickups:["pickups"],reports:["reports"],analytics:["reports"],invoice:["billing","billing.view"],storage:["orders.receive","results.enter"],qc:["qc","results.view"],qcm:["qc","results.view"],supplies:["supplies"],"order-new":["orders.enter"],instruments:["instruments","sendouts"],billing:["billing","billing.view"],clinics:["clinics.view"],outbox:["alerts"],audit:["audit"],users:["users"],labset:["settings"],autoverify:["settings","results.release"],tat:["reports","results.view"],therapy:["settings","results.release"],entry:["results.enter","results.release"]}[v];return !need||need.some(can)}
+function labAllowed(v){if(S.offline)return ["offline","order-new","order"].includes(v);const need={pickups:["pickups"],reports:["reports"],analytics:["reports"],invoice:["billing","billing.view"],storage:["orders.receive","results.enter"],qc:["qc","results.view"],qcm:["qc","results.view"],supplies:["supplies"],"order-new":["orders.enter"],instruments:["instruments","sendouts"],billing:["billing","billing.view"],clinics:["clinics.view"],insurance:["clinics.view","billing","billing.view"],outbox:["alerts"],audit:["audit"],users:["users"],labset:["settings"],autoverify:["settings","results.release"],tat:["reports","results.view"],therapy:["settings","results.release"],entry:["results.enter","results.release"]}[v];return !need||need.some(can)}
 function page(){
  const v=route.v,lab=isLab();if(!lab&&((v==="order-new"&&!cset(myClinic(),"ordering"))||(v==="supplies"&&!cset(myClinic(),"supplies"))||(v==="analytics"&&!cset(myClinic(),"analytics"))))route={v:"dash",p:{}};if(lab&&!labAllowed(v))route={v:"dash",p:{}};
- const map=lab?{dash:vLabDash,queue:vQueue,order:vOrder,entry:vEntry,clinics:vClinics,menu:vMenu,instruments:vInstruments,billing:vBilling,"order-new":vOrderNew,audit:vAudit,users:vUsers,supplies:vSupplies,qc:vQC,qcm:vQCM,qms:vQMS,qmsd:vQMSDetail,storage:vStorage,pickups:vPickups,reports:vReports,analytics:vAnalytics,offline:vOffline,outbox:vOutbox,labset:vLabSet,autoverify:vAutoVerify,tat:vTat,therapy:vTherapy,notes:vNotes,patient:vPatient}
+ const map=lab?{insurance:vInsurance,dash:vLabDash,queue:vQueue,order:vOrder,entry:vEntry,clinics:vClinics,menu:vMenu,instruments:vInstruments,billing:vBilling,"order-new":vOrderNew,audit:vAudit,users:vUsers,supplies:vSupplies,qc:vQC,qcm:vQCM,qms:vQMS,qmsd:vQMSDetail,storage:vStorage,pickups:vPickups,reports:vReports,analytics:vAnalytics,offline:vOffline,outbox:vOutbox,labset:vLabSet,autoverify:vAutoVerify,tat:vTat,therapy:vTherapy,notes:vNotes,patient:vPatient}
              :{dash:vClinicDash,patients:vPatients,patient:vPatient,"order-new":vOrderNew,results:vResults,order:vOrder,notes:vNotes,menu:vMenu,settings:vSettings,supplies:vSupplies,pickups:vPickups,invoices:vInvoices,analytics:vAnalytics};
  return (map[v]||map.dash)();
 }
@@ -401,7 +403,7 @@ function shell(content){
  const u=me(),lab=isLab(),c=lab?null:myClinic(),n=unread();
  const openQ=S.orders.filter(o=>["Ordered","Received","In Process"].includes(o.status)).length;
  const unreadRes=lab?0:S.orders.filter(o=>o.clinicId===u.clinicId&&o.status==="Released"&&!o.readAt).length;
- const items=S.offline?[["offline","Offline orders",I.cloud,S.orders.length||""],["order-new","New order",I.plus]]:lab?[["dash","Dashboard",I.home],["order-new","New order",I.plus],["queue","Accessioning",I.flask,openQ],["pickups","Pickups",I.truck,(S.pickups||[]).filter(x=>x.status==="Requested").length||""],["storage","Specimen storage",I.box,(()=>{const n=S.orders.filter(o=>o.storage&&!o.storage.disposedAt&&o.storage.retainUntil<Date.now()).length;return n||""})()],["qc","Quality control",I.chart],["instruments","Instruments",I.chip,(IB.list||[]).length||(can("instruments")?pendingFor("UDS").length+pendingFor("CONF").length+pendingFor("CONFOF").length:0)+(can("sendouts")?refPending().length:0)||""],["billing","Billing",I.dollar,can("billing")?S.claims.filter(c=>claimStatus(c)==="Ready").length||"":""],["clinics","Clinics",I.building,can("clinics.approve")?S.clinics.filter(x=>x.status==="pending").length||"":""],["menu","Test menu",I.list],["supplies","Supply orders",I.box,S.supply_orders.filter(x=>x.status==="New").length||""],["tat","Turnaround",I.chart,(()=>{const n=tatLate().filter(x=>x.left<0).length;return n?String(n):""})()],["reports","Reports",I.chart],["analytics","Analytics",I.chart],["qms","Compliance",I.shield,qmsDueCount()||""],["outbox","Notification log",I.send],["audit","Audit log",I.list],["users","Users",I.users],["autoverify","Auto-verification",I.check,(()=>{const c=avCfg();return c.mode==="off"?"":c.mode==="shadow"?"":avApproved(c)?"":"!"})()],["therapy","Therapy guide",I.doc,can("settings")&&S.therapy&&!therapyApproved(S.therapy)?"!":""],["labset","Lab settings",I.gear]].filter(([v])=>labAllowed(v))
+ const items=S.offline?[["offline","Offline orders",I.cloud,S.orders.length||""],["order-new","New order",I.plus]]:lab?[["dash","Dashboard",I.home],["order-new","New order",I.plus],["queue","Accessioning",I.flask,openQ],["pickups","Pickups",I.truck,(S.pickups||[]).filter(x=>x.status==="Requested").length||""],["storage","Specimen storage",I.box,(()=>{const n=S.orders.filter(o=>o.storage&&!o.storage.disposedAt&&o.storage.retainUntil<Date.now()).length;return n||""})()],["qc","Quality control",I.chart],["instruments","Instruments",I.chip,(IB.list||[]).length||(can("instruments")?pendingFor("UDS").length+pendingFor("CONF").length+pendingFor("CONFOF").length:0)+(can("sendouts")?refPending().length:0)||""],["billing","Billing",I.dollar,can("billing")?S.claims.filter(c=>claimStatus(c)==="Ready").length||"":""],["clinics","Clinics",I.building,can("clinics.approve")?S.clinics.filter(x=>x.status==="pending").length||"":""],["insurance","Insurance check",I.scan],["menu","Test menu",I.list],["supplies","Supply orders",I.box,S.supply_orders.filter(x=>x.status==="New").length||""],["tat","Turnaround",I.chart,(()=>{const n=tatLate().filter(x=>x.left<0).length;return n?String(n):""})()],["reports","Reports",I.chart],["analytics","Analytics",I.chart],["qms","Compliance",I.shield,qmsDueCount()||""],["outbox","Notification log",I.send],["audit","Audit log",I.list],["users","Users",I.users],["autoverify","Auto-verification",I.check,(()=>{const c=avCfg();return c.mode==="off"?"":c.mode==="shadow"?"":avApproved(c)?"":"!"})()],["therapy","Therapy guide",I.doc,can("settings")&&S.therapy&&!therapyApproved(S.therapy)?"!":""],["labset","Lab settings",I.gear]].filter(([v])=>labAllowed(v))
   :[["dash","Dashboard",I.home],["patients","Patients",I.users],...(cset(c,"ordering")?[["order-new","New order",I.plus]]:[]),["results","Orders & results",I.doc,unreadRes||""],...(cset(c,"supplies")?[["supplies","Supplies",I.box]]:[]),["pickups","Pickups",I.truck],...((S.invoices||[]).length?[["invoices","Invoices",I.doc]]:[]),...(cset(c,"analytics")?[["analytics","Analytics",I.chart]]:[]),["notes","Notifications",I.bell,n||""],["menu","Test menu",I.list],["settings","Clinic settings",I.gear]];
  const act=v=>route.v===v||(v==="qc"&&route.v==="qcm")||(v==="qms"&&route.v==="qmsd")||(v==="results"&&route.v==="order"&&!lab)||(v==="queue"&&["order","entry"].includes(route.v)&&lab)||(v==="patients"&&route.v==="patient");
  return `<div class="shell"><aside class="side">
@@ -493,7 +495,7 @@ function ordersTable(list,opts={}){
  if(!list.length)return `<div class="empty"><h3>${opts.emptyTitle||"No orders yet"}</h3><p>${opts.emptyText||""}</p></div>`;
  const lab=isLab();
  return `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Accession</th><th>Patient</th>${lab?"<th>Clinic</th>":""}<th>Tests</th><th>Collected</th><th>Status</th>${!lab||can("results.view")?"<th>Findings</th>":""}</tr></thead><tbody>
- ${list.map(o=>{const p=patientOf(o.patientId);const un=!lab&&o.status==="Released"&&!o.readAt;return `<tr class="click" data-a="openOrder" data-id="${o.id}"><td>${un?'<span class="unread-dot" title="New result"></span>':""}<span class="acc">${o.accession}</span>${o.stat?' <span class="flag C">STAT</span>':""}</td><td><div class="nm">${esc(pname(p))}</div><div class="xs muted">DOB ${fmtDOB(p?.dob)}</div></td>${lab?`<td class="small">${esc(clinicOf(o.clinicId)?.name)}</td>`:""}<td class="small">${o.tests.map(c=>`<span class="tag">${isDef(c)?`Def ×${o.confirm.length}`:c}</span>`).join("")}</td><td class="small">${fmtD(o.collectedAt)}</td><td>${badge(o.status)}</td>${!lab||can("results.view")?`<td class="small">${flagSummary(o)}</td>`:""}</tr>`}).join("")}</tbody></table></div>`}
+ ${list.map(o=>{const p=patientOf(o.patientId);const un=!lab&&o.status==="Released"&&!o.readAt;return `<tr class="click" data-a="openOrder" data-id="${o.id}"><td>${un?'<span class="unread-dot" title="New result"></span>':""}<span class="acc">${o.accession}</span>${o.stat?' <span class="flag C">STAT</span>':""}</td><td><div class="nm">${esc(pname(p))}</div><div class="xs muted">DOB ${fmtDOB(p?.dob)}</div>${lab&&p&&["Ordered","Received"].includes(o.status)?(()=>{const x=patInsRes(p);return x&&x.decision==="decline"?`<span class="dec decline" style="font-size:11px" title="${esc(x.why)}">${esc(x.label)}: out of network</span>`:""})():""}</td>${lab?`<td class="small">${esc(clinicOf(o.clinicId)?.name)}</td>`:""}<td class="small">${o.tests.map(c=>`<span class="tag">${isDef(c)?`Def ×${o.confirm.length}`:c}</span>`).join("")}</td><td class="small">${fmtD(o.collectedAt)}</td><td>${badge(o.status)}</td>${!lab||can("results.view")?`<td class="small">${flagSummary(o)}</td>`:""}</tr>`}).join("")}</tbody></table></div>`}
 
 function vSearch(){
  const q=ui.gq.trim().toLowerCase();serverSearch(ui.gq);
@@ -541,7 +543,7 @@ function patientForm(){const f=ptForm;const i=(k,l,o={})=>`<div class="field ${o
  <div class="field"><label class="req">Sex</label><select class="input" data-b="pt.sex">${[["","Select"],["F","Female"],["M","Male"],["X","Other / unknown"]].map(([v,l])=>`<option value="${v}" ${f.sex===v?"selected":""}>${l}</option>`).join("")}</select></div>
  ${i("phone","Phone",{type:"tel"})}${i("email","Email",{type:"email"})}${i("address","Street address",{cls:"spanall"})}${i("city","City")}<div class="grid g2">${i("state","State")}${i("zip","ZIP")}</div>
  <div class="field"><label class="req">Coverage</label><select class="input" data-b="pt.ins.type" data-live="1">${["","Medicare","Medicaid","Commercial","Self-pay"].map(x=>`<option value="${x}" ${f.ins.type===x?"selected":""}>${x||"Select"}</option>`).join("")}</select></div>
- ${f.ins.type!=="Self-pay"?`${cardSection(f)}${i("ins.payer","Payer name",{req:1})}${i("ins.member",f.ins.type==="Medicare"?"Medicare beneficiary ID (MBI)":"Member ID",{req:1})}${i("ins.group","Group number")}${i("ins.payerId","Payer ID (electronic claims)")}${i("ins.subscriber","Subscriber name, if not the patient")}`:""}</div>`}
+ ${f.ins.type!=="Self-pay"?`${cardSection(f)}${i("ins.payer","Payer name",{req:1})}${i("ins.member",f.ins.type==="Medicare"?"Medicare beneficiary ID (MBI)":"Member ID",{req:1})}${i("ins.group","Group number")}${i("ins.plan","Plan name or type, as on the card (e.g. Choice Plus, PPO, HMO)")}${i("ins.payerId","Payer ID (electronic claims)")}${i("ins.subscriber","Subscriber name, if not the patient")}`:""}</div>`}
 function cardTile(f,k,label){const img=f.ins[k];
  return img?`<div class="cardtile has"><img src="${img}" alt="${label} of insurance card"><div class="acts"><label class="link">Retake<input type="file" accept="image/*" data-card="${k}" hidden></label><button class="link" data-a="cardRemove" data-k="${k}">Remove</button></div></div>`
  :`<label class="cardtile">${I.camera}<span>${label} of card</span><span class="xs muted" style="font-weight:500">Take a photo or upload</span><input type="file" accept="image/*" data-card="${k}" hidden></label>`}
@@ -720,7 +722,7 @@ function vOrder(){
  <div class="panel"><div class="panel-h"><h2>Order details</h2></div><div class="panel-b grid g4">
   ${k("Patient",`<button class="link" style="font-size:14px" data-a="openPatient" data-id="${p.id}">${esc(pname(p))}</button><div class="xs muted">DOB ${fmtDOB(p.dob)} · ${p.sex} · ${p.mrn}</div>`)}
   ${k("Ordering provider",`${esc(pr?.name)}, ${esc(pr?.cred)}<div class="xs muted">NPI ${pr?.npi}</div>`)}
-  ${k("Billing",`${esc(o.billType||p.ins.type)}<div class="xs muted">${esc(p.ins.payer)} ${esc(p.ins.member)}</div>`)}
+  ${k("Billing",`${esc(o.billType||p.ins.type)}<div class="xs muted">${esc(p.ins.payer)} ${esc(p.ins.member)}</div>${lab?patInsLine(p):""}`)}
   ${k("Collected",fmtDT(o.collectedAt)+(o.fasting?`<div class="xs muted">Fasting</div>`:"")+(o.collector?`<div class="xs muted">By ${esc(o.collector)}</div>`:"")+(o.recollect?`<div class="xs muted">Recollected specimen</div>`:""))}
   <div class="span2">${k("Tests",o.tests.map(c=>`<div>${esc(testLabel(o,c))} <span class="faint small">CPT ${isDef(c)?gcode(classCount(o.confirm)):T(c).cpt}</span>${lab?` <span class="tag">${routeOf(c)==="ref"?esc(S.lab.refLab||"Reference lab"):ROUTE_NAME[routeOf(c)]}</span>`:""}</div>`).join("")+(o.sendout?`<div class="xs muted" style="margin-top:4px">Sent to ${esc(o.sendout.lab||"reference lab")} on ${o.sendout.manifest}, ${fmtDT(o.sendout.at)}</div>`:""))}</div>
   ${k("Diagnosis codes",o.icd.map(x=>`<span class="tag">${esc(x)}</span>`).join(""))}
@@ -2882,7 +2884,7 @@ function setPath(b,val){const parts=b.split(".");const r=parts.shift();
  if(r==="res"){const o=S.orders.find(x=>x.id===resEdit._id);const[code,idx,field]=parts;const a=analytesFor(o,T(code))[+idx];if(!a)return;resEdit[code]=resEdit[code]||{};resEdit[code][a.name]=resEdit[code][a.name]||{};const cur=resEdit[code][a.name];if(field==="k")manualConc(o,code,a,cur,+parts[3],val);else{cur[field]=val;manualDerive(o,code,a,cur,field)}return}let o=roots[r]&&roots[r]();if(!o)return;
  // result keys may contain dots? analyte names don't; codes don't.
  for(let i=0;i<parts.length-1;i++){if(o[parts[i]]==null)o[parts[i]]={};o=o[parts[i]]}o[parts[parts.length-1]]=val}
-function onInput(ev){const t=ev.target,b=t.dataset&&t.dataset.b;if(!b)return;setPath(b,t.type==="checkbox"?t.checked:t.value);if(/^clf\.(providers\.\d+\.)?npi$/.test(b)&&clf){const k=b.slice(4),w=document.querySelector(`[data-npiw="${k}"]`);if(w)w.textContent=npiWarn(t.value,k==="npi"?(clf.id||null):undefined)||""}
+function onInput(ev){const t=ev.target,b=t.dataset&&t.dataset.b;if(!b)return;setPath(b,t.type==="checkbox"?t.checked:t.value);{const m=b.match(/^ins\.rows\.(\d+)\./);if(m){const r=INS.rows[+m[1]],c=document.querySelector(`[data-insres="${m[1]}"]`);if(r&&c){if(r.elig&&!/\.(first|last)$/.test(b))r.elig=null;c.innerHTML=insResCell(r)}}}if(/^clf\.(providers\.\d+\.)?npi$/.test(b)&&clf){const k=b.slice(4),w=document.querySelector(`[data-npiw="${k}"]`);if(w)w.textContent=npiWarn(t.value,k==="npi"?(clf.id||null):undefined)||""}
  if(b==="ui.gq"){render();return}
  if(t.dataset.live){if(ev.type==="input"&&t.tagName==="SELECT")return;render()}}
 document.addEventListener("input",onInput);
@@ -2907,5 +2909,140 @@ function drawMolecule(){const cv=$("#molecule");if(!cv||!cv.getContext)return;co
  x.lineWidth=3;pts.forEach((p,i)=>{if(i%2===0){const q=pts[(i+1)%pts.length];x.strokeStyle=col(p[3]);x.globalAlpha=.8;x.beginPath();x.moveTo(p[0],p[1]);x.lineTo(q[0],q[1]);x.stroke()}});
  x.globalAlpha=1;pts.forEach(p=>{x.fillStyle=col(p[3]);x.beginPath();x.arc(p[0],p[1],p[2],0,7);x.fill()})}
 window.addEventListener("resize",()=>{if($("#molecule"))drawMolecule()});
+
+
+/* ---------- insurance check: is the plan a PPO (accept) or an HMO/EPO (decline)? ---------- */
+// The lab is out of network with every commercial payer, so a clinic is only worth taking on if its patients have plans
+// that pay out-of-network labs. Patients can be typed in, pasted from Excel, or uploaded as spreadsheets, card photos or
+// PDFs; card text is read in the browser. When the eligibility function is set up, each plan can be confirmed with the payer.
+const INS={rows:[],name:"",clinicId:"",id:null,saved:undefined,busy:"",paste:"",elig:undefined,sort:""};
+roots.ins=()=>INS;
+let insSeq=0;const insRow=(x={})=>({rid:"r"+(++insSeq),first:"",last:"",dob:"",payer:"",memberId:"",group:"",plan:"",cardText:"",source:"typed",...x});
+// The result for a row: a payer eligibility answer wins over what the card or the typed plan says.
+function insRes(r){const e=r&&r.elig;if(e&&e.active===false)return {type:"INACTIVE",label:"No active coverage",decision:"decline",why:"The payer reports no active coverage for this member.",via:"payer"};
+ if(e&&e.type&&PLAN_TYPES[e.type])return {...PLAN_TYPES[e.type],type:e.type,via:"payer",note:e.planNames&&e.planNames.join(", ")};
+ const c=classifyPlan(r.plan,r.payer,r.cardText);return {...c,via:r.plan||r.payer||r.cardText?"card":""}}
+const insDecTag=res=>`<span class="dec ${res.decision}" title="${esc(res.why||"")}">${esc(DECISIONS[res.decision])}</span>`;
+const insFilled=r=>r.first||r.last||r.payer||r.memberId||r.plan||r.cardText;
+function insEligLoad(){if(INS.elig!==undefined)return;INS.elig=null;DB.eligibility("status").then(r=>{INS.elig=r||{configured:false};render()}).catch(e=>{INS.elig={configured:false,error:errMsg(e)};render()})}
+function insSavedLoad(){if(INS.saved!==undefined)return;INS.saved=null;DB.insChecks().then(r=>{INS.savedMissing=r===null;INS.saved=r||[];render()}).catch(()=>{INS.saved=[];render()})}
+
+function vInsurance(){insEligLoad();insSavedLoad();
+ const rows=INS.rows,filled=rows.filter(insFilled),res=filled.map(insRes),sm={total:filled.length,accept:0,decline:0,verify:0,by:{}};
+ res.forEach(x=>{sm[x.decision]++;sm.by[x.label]=(sm.by[x.label]||0)+1});
+ const pc=n=>sm.total?Math.round(n/sm.total*100)+"%":"—",el=INS.elig,eligOn=!!(el&&el.configured);
+ const cell=(i,k,ph,w)=>`<input class="input sm" style="min-width:${w||90}px" data-b="ins.rows.${i}.${k}" value="${esc(rows[i][k]||"")}" placeholder="${ph}">`;
+ return `<div class="page-h"><div><h1>Insurance check</h1><p class="muted">Before taking on a clinic, check whether its patients' plans pay out-of-network labs. PPO and traditional Medicare or AHCCCS: OK to accept. HMO, EPO and Medicare Advantage HMO: decline.</p></div><div class="row">${filled.length?`<button class="btn" data-a="insCsv">${I.down} CSV</button><button class="btn" data-a="insPrint">${I.print} Print report</button>`:""}</div></div>
+ <div class="stack">
+ <div class="panel"><div class="panel-h"><div><h2>1. Add patients</h2><p class="small muted">Use any mix of the three ways below. Nothing is checked against the payer until you ask.</p></div></div><div class="panel-b">
+  <div class="grid g2" style="margin-bottom:14px"><div class="field"><label>Clinic or prospect</label><input class="input" data-b="ins.name" value="${esc(INS.name)}" placeholder="e.g. Curana Health of Arizona" list="ins-clinics"><datalist id="ins-clinics">${S.clinics.filter(c=>!c.archived).map(c=>`<option value="${esc(c.name)}">`).join("")}</datalist></div></div>
+  <div class="grid g2">
+   <div class="field"><label>Type or paste patients</label><textarea class="input" rows="6" data-b="ins.paste" data-insdrop="1" placeholder="One patient per line, or copy rows from Excel with the header row.&#10;Smith, John · 03/04/1980 · Aetna PPO · W123456789&#10;Jane Doe, 1975-05-05, BCBS of Arizona HMO, XYZ1234567&#10;You can also paste a card photo here (Ctrl+V).">${esc(INS.paste)}</textarea><div class="row" style="margin-top:8px"><button class="btn primary sm" data-a="insAddPaste">${I.plus} Add these patients</button><button class="btn sm" data-a="insAddRow">${I.plus} Add a blank row</button></div></div>
+   <div class="field"><label>Upload files</label><label class="dropzone" data-insdrop="1" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:150px;border:1.5px dashed var(--border-2);border-radius:10px;padding:14px;text-align:center;cursor:pointer;background:var(--sunken)">${I.up||I.down}<b>Choose files or drop them here</b><span class="xs muted">Spreadsheets (.xlsx, .csv), insurance card photos (JPG, PNG) and PDFs of card copies, several at once. Card text is read on this computer; images aren't uploaded or kept.</span><input type="file" multiple data-insfile="1" accept=".csv,.txt,.tsv,.xlsx,.pdf,image/png,image/jpeg,image/webp,image/gif,image/bmp" style="display:none"></label>${INS.busy?`<div class="banner" style="margin-top:8px">${I.info}<div>${esc(INS.busy)}</div></div>`:""}</div>
+  </div></div></div>
+ ${rows.length?`<div class="panel"><div class="panel-h" style="flex-wrap:wrap"><div><h2>2. Patients and plans (${filled.length})</h2><p class="small muted">Correct anything read wrong from a card; the result updates as you type. ${eligOn?"Check with payer confirms the plan type and that coverage is active.":el&&el.configured===false?`Checking with the payer isn't set up yet (README section 31), so results come from the card or the plan typed. <button class="link" data-a="insEligRetry">Check again</button>`:""}</p></div><div class="row">${eligOn?`<button class="btn" data-a="insEligAll">${I.check} Check all with payers</button>`:""}<button class="btn ghost" data-a="insClear">Clear all</button></div></div>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>First</th><th>Last</th><th>DOB</th><th>Insurance company</th><th>Member ID</th><th>Plan name or type</th><th>Result</th><th></th></tr></thead><tbody>
+  ${rows.map((r,i)=>{const x=insRes(r);return `<tr><td>${cell(i,"first","First",80)}</td><td>${cell(i,"last","Last",90)}</td><td><input class="input sm" type="date" data-b="ins.rows.${i}.dob" value="${esc(/^\d{4}-\d{2}-\d{2}$/.test(r.dob)?r.dob:"")}" style="min-width:130px"></td><td>${cell(i,"payer","e.g. Aetna",120)}</td><td>${cell(i,"memberId","ID",110)}</td><td>${cell(i,"plan","e.g. PPO, HMO, Choice Plus",150)}${r.cardText?`<details class="xs muted"><summary>Card text (${esc(r.source)})</summary><div style="white-space:pre-wrap;max-width:320px">${esc(r.cardText.slice(0,1200))}</div></details>`:r.source!=="typed"?`<div class="xs muted">${esc(r.source)}</div>`:""}</td>
+   <td data-insres="${i}" style="min-width:170px">${insResCell(r,x)}</td><td class="row" style="gap:4px">${eligOn?`<button class="btn sm" data-a="insElig" data-i="${i}" title="Check eligibility with the payer">${I.check}</button>`:""}<button class="icon-btn" data-a="insDel" data-i="${i}" title="Remove">${I.x||"×"}</button></td></tr>`}).join("")}
+  </tbody></table></div></div>
+ <div class="panel"><div class="panel-h"><div><h2>3. Summary${INS.name?`: ${esc(INS.name)}`:""}</h2></div><div class="row"><button class="btn primary" data-a="insSave">${INS.id?"Save changes":"Save this check"}</button></div></div><div class="panel-b">
+  <div class="stats"><div class="stat"><div class="v">${sm.total}</div><div class="k">Patients</div></div><div class="stat"><div class="v" style="color:var(--ok)">${sm.accept} <span class="small">(${pc(sm.accept)})</span></div><div class="k">OK to accept</div></div><div class="stat"><div class="v" style="color:var(--danger)">${sm.decline} <span class="small">(${pc(sm.decline)})</span></div><div class="k">Out of network: decline</div></div><div class="stat"><div class="v" style="color:var(--warn)">${sm.verify} <span class="small">(${pc(sm.verify)})</span></div><div class="k">Verify</div></div></div>
+  <p class="small" style="margin-top:12px">${Object.entries(sm.by).sort((a,b)=>b[1]-a[1]).map(([l,n])=>`<span class="tag">${esc(l)}: ${n}</span>`).join(" ")}</p>
+  <p class="xs muted" style="margin-top:8px">Card-based results are a screen: cards can be out of date and many don't print the plan type. Confirm "Verify" rows, and any patient you'll bill, with the payer.</p></div></div>`:""}
+ <div class="panel"><div class="panel-h"><div><h2>Saved checks</h2></div></div>${INS.saved===null?`<div class="empty">Loading…</div>`:INS.saved===undefined?"":!INS.saved.length?`<div class="empty"><p>No saved checks yet.</p></div>`:`<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Clinic or prospect</th><th>Saved</th><th>Patients</th><th>OK</th><th>Decline</th><th>Verify</th><th></th></tr></thead><tbody>${INS.saved.map(c=>`<tr class="click" data-a="insOpen" data-id="${c.id}"><td class="nm">${esc(c.name)}</td><td class="small">${fmtDT(c.at)} · ${esc(c.by||"")}</td><td class="small">${c.summary?c.summary.total:c.rows.length}</td><td class="small">${c.summary?c.summary.accept:""}</td><td class="small">${c.summary?c.summary.decline:""}</td><td class="small">${c.summary?c.summary.verify:""}</td><td>${can("billing")||can("clinics.edit")?`<button class="link" data-a="insDelSaved" data-id="${c.id}">Delete</button>`:""}</td></tr>`).join("")}</tbody></table></div>`}${INS.savedMissing?`<p class="xs muted" style="padding:0 16px 12px">Run migration 0016_insurance_checks.sql in Supabase to save checks.</p>`:""}</div>
+ </div>`}
+function insResCell(r,x){x=x||insRes(r);const e=r.elig;return `${insDecTag(x)}<div class="xs" style="margin-top:3px"><b>${esc(x.label)}</b>${x.via==="payer"?" · from payer":x.via==="card"?" · from card/plan":""}</div><div class="xs muted">${esc(x.note&&x.via==="payer"?x.note:x.why||"")}</div>${e&&e.error?`<div class="xs" style="color:var(--danger)">${esc(e.error)}</div>`:""}`}
+
+// Turn typed or pasted text into rows: a table with a header row, Excel cells, or one patient per line.
+function insParseText(text){const t=String(text||"").trim();if(!t)return [];const {h,rows}=parseExport(t);
+ if(Object.keys(insMapHeader(h)).length>=2)return insRowsFromTable(h,rows);
+ // No header row: split each line on tabs, then "·", "|" or ";", then commas.
+ return t.split(/\r?\n/).map(l=>l.trim()).filter(Boolean).map(l=>insLineRow(/\t/.test(l)?l.split("\t"):/[·|;]/.test(l)?l.split(/[·|;]/):l.split(",")))}
+// One patient on one line: "Smith, John · 03/04/1980 · Aetna PPO · W123456789" or Excel cells without a header.
+function insLineRow(cells){let parts=cells.map(c=>String(c).trim()).filter(Boolean);if(parts.length===1)parts=parts[0].split(/\s*[·|;]\s*|\s{2,}|\t/).filter(Boolean);
+ const r={first:"",last:"",dob:"",payer:"",memberId:"",group:"",plan:"",cardText:parts.join(" · ")};const rest=[];
+ // "Smith, John" split by a comma delimiter arrives as two cells: join a leading pair of plain words back into a name.
+ if(parts.length>=2&&/^[A-Za-z'.-]+$/.test(parts[0])&&/^[A-Za-z'.-]+(\s+[A-Za-z]\.?)?$/.test(parts[1])&&!insPayerOf(parts[0])&&!insPayerOf(parts[1]))parts=[`${parts[0]}, ${parts[1]}`,...parts.slice(2)];
+ parts.forEach((p,i)=>{if(!r.dob&&/^\d{1,4}[/-]\d{1,2}[/-]\d{2,4}$/.test(p)){r.dob=insNormDob(p);return}
+  if(insPayerOf(p)||/\b(HMO|PPO|EPO|POS|medicare|medicaid|ahcccs|insurance|health|plan)\b/i.test(p)){r.payer=r.payer||insPayerOf(p)||p;r.plan=r.plan?r.plan+" "+p:p;return}
+  if(!r.memberId&&/\d/.test(p)&&/^[A-Z0-9-]{3,25}$/i.test(p)){r.memberId=p.toUpperCase();return}
+  if(i===0&&!r.last&&/^[A-Za-z'., -]+$/.test(p)){const n=insSplitName(p);r.first=n.first;r.last=n.last;return}
+  rest.push(p)});
+ if(!r.last&&rest.length&&/^[A-Za-z'., -]+$/.test(rest[0])){const n=insSplitName(rest.shift());r.first=n.first;r.last=n.last}
+ if(rest.length&&!r.group&&/^[A-Z0-9-]{2,15}$/i.test(rest[0]))r.group=rest.shift();
+ if(r.first||r.last||r.memberId||r.dob)r.cardText="";else{const c=insParseCard(r.cardText);Object.assign(r,Object.fromEntries(Object.entries(c).filter(([,v])=>v)))}
+ return r}
+async function insAddFiles(files){files=[...files].filter(Boolean);if(!files.length)return;let added=0,failed=[];
+ for(let n=0;n<files.length;n++){const f=files[n],tag=`${n+1} of ${files.length}`;
+  if(f.size>25*1024*1024){failed.push(`${f.name} (over 25 MB)`);continue}
+  try{
+   if(/\.xlsx$/i.test(f.name)){INS.busy=`Reading ${f.name} (${tag})…`;render();const res=await readXlsxFile(f);const rows=Array.isArray(res[0]&&res[0].data)?res[0].data:res;
+    const txt=rows.map(r=>r.map(c=>c==null?"":c instanceof Date?c.toISOString().slice(0,10):String(c).replace(/[\t\r\n]/g," ")).join("\t")).join("\n");const got=insParseText(txt);got.forEach(x=>INS.rows.push(insRow({...x,source:f.name})));added+=got.length}
+   else if(/\.xls$/i.test(f.name))failed.push(`${f.name} (old .xls: save it as .xlsx or CSV)`);
+   else if(/\.(csv|txt|tsv)$/i.test(f.name)||/^text\//.test(f.type)){const got=insParseText(await readText(f));got.forEach(x=>INS.rows.push(insRow({...x,source:f.name})));added+=got.length}
+   else if(/\.pdf$/i.test(f.name)||/pdf/.test(f.type)||/^image\//.test(f.type)||/\.(jpe?g|png|webp|gif|bmp)$/i.test(f.name)){
+    if(/\.(heic|heif)$/i.test(f.name))throw new Error("HEIC photos can't be read. Set the phone camera to 'Most compatible' (JPG) or save as JPG.");
+    INS.busy=`Reading ${f.name} (${tag}). The first card takes a few seconds while the reader loads…`;render();
+    const pages=await cardTexts(f,m=>{if(m&&m.status==="recognizing text"){const s=`Reading ${f.name}${m.pages?` page ${m.page} of ${m.pages}`:""} (${tag}): ${Math.round((m.progress||0)*100)}%`;if(s!==INS.busy){INS.busy=s;const b=document.querySelector(".page .banner");if(b)b.lastElementChild.textContent=s}}});
+    pages.forEach(pg=>{const c=insParseCard(pg.text);INS.rows.push(insRow({...c,cardText:String(pg.text||"").trim().slice(0,3000),source:pg.name}));added++})}
+   else failed.push(`${f.name} (unsupported type)`)}
+  catch(e){failed.push(`${f.name} (${errMsg(e)})`)}}
+ INS.busy="";render();toast(`${added} patient${added===1?"":"s"} added${failed.length?`. Couldn't read: ${failed.join("; ")}`:""}`)}
+async function insEligOne(r){if(!r.memberId||!r.last||!/^\d{4}-\d{2}-\d{2}$/.test(r.dob)){r.elig={...(r.elig||{}),error:"Needs a member ID, last name and date of birth."};return}
+ try{const out=await DB.eligibility("check",{payerName:r.payer||insPayerOf(r.plan)||"",payerId:r.payerId||"",memberId:r.memberId,first:r.first,last:r.last,dob:r.dob,npi:S.lab.npi||"",org:S.lab.name||"First Bio Genetics"});
+  if(out.error)throw new Error(out.error);const rd=readEligibility(out.response);
+  r.elig={at:Date.now(),active:rd.active,type:rd.type,planNames:rd.planNames,payer:(out.payer&&out.payer.name)||rd.payer,error:rd.errors.length?rd.errors.join("; "):(!rd.type&&rd.active==null?"The payer didn't say.":"")};
+  if(out.payer&&out.payer.id)r.payerId=out.payer.id}
+ catch(e){r.elig={at:Date.now(),error:errMsg(e)}}}
+function insSummary(rows){const s={total:0,accept:0,decline:0,verify:0};rows.filter(insFilled).forEach(r=>{s.total++;s[insRes(r).decision]++});return s}
+function insCsvText(){const q=v=>{v=String(v??"");return /[",\n]/.test(v)?`"${v.replace(/"/g,'""')}"`:v};const L=[["First","Last","DOB","Insurance company","Member ID","Group","Plan","Plan type","Decision","Reason","Checked with payer","Source"].join(",")];
+ INS.rows.filter(insFilled).forEach(r=>{const x=insRes(r);L.push([r.first,r.last,r.dob,r.payer,r.memberId,r.group,r.plan,x.label,DECISIONS[x.decision],x.why,r.elig&&r.elig.at?(r.elig.error?"Error: "+r.elig.error:"Yes"):"No",r.source].map(q).join(","))});return L.join("\r\n")}
+Object.assign(A,{
+ insEligRetry(){INS.elig=undefined;render()},
+ insAddRow(){INS.rows.push(insRow());render();setTimeout(()=>{const els=document.querySelectorAll('[data-b$=".first"][data-b^="ins.rows."]');const el=els[els.length-1];if(el)el.focus()},20)},
+ insAddPaste(){const got=insParseText(INS.paste);if(!got.length)return toast("Type or paste at least one patient.");got.forEach(x=>INS.rows.push(insRow({...x,source:"typed"})));INS.paste="";render();toast(`${got.length} patient${got.length===1?"":"s"} added`)},
+ insDel(e){INS.rows.splice(+e.dataset.i,1);render()},
+ insClear(){if(!confirm("Remove every patient from this check? Saved checks aren't affected."))return;INS.rows=[];INS.id=null;INS.name="";render()},
+ async insElig(e){const r=INS.rows[+e.dataset.i];if(!r)return;e.disabled=true;await insEligOne(r);DB.log("view","eligibility",r.payerId||"",{what:"eligibility check"});render()},
+ async insEligAll(){const list=INS.rows.filter(insFilled);if(!list.length)return;if(!confirm(`Check ${list.length} patient${list.length===1?"":"s"} with their payers? Each check is billed by the clearinghouse.`))return;
+  for(let i=0;i<list.length;i++){INS.busy=`Checking with payers: ${i+1} of ${list.length}…`;render();await insEligOne(list[i])}INS.busy="";render();toast("Payer checks finished")},
+ insCsv(){saveFile(`Insurance_check_${(INS.name||"patients").replace(/[^A-Za-z0-9]+/g,"_")}_${ymd(Date.now(),"-")}.csv`,insCsvText());DB.log("export","insurance_checks",INS.id||"",{what:"insurance check CSV"})},
+ insPrint(){const rows=INS.rows.filter(insFilled),s=insSummary(rows),L=S.lab;lastDoc={tbl:"insurance_checks",id:INS.id||"",what:"insurance check report"};
+  modal("Insurance check report",`<div class="paper" style="color:#1c2638"><div class="ph"><div><img src="${LOGO}" alt="First Bio Genetics"></div><div style="text-align:right"><h2 style="font-size:17px">Insurance check${INS.name?`: ${esc(INS.name)}`:""}</h2><div style="font-size:11.5px;color:#5d687c">Printed ${fmtDT(Date.now())} by ${esc(me().name)}</div></div></div>
+  <p style="margin:12px 0"><b>${s.total}</b> patients: <b style="color:#0d8f63">${s.accept} OK to accept</b> (${s.total?Math.round(s.accept/s.total*100):0}%), <b style="color:#c93545">${s.decline} out of network</b>, <b style="color:#a86a12">${s.verify} to verify</b>.</p>
+  <div class="sect"><table><thead><tr><th>Patient</th><th>DOB</th><th>Insurance</th><th>Member ID</th><th>Plan type</th><th>Decision</th><th>Basis</th></tr></thead><tbody>${rows.map(r=>{const x=insRes(r);return `<tr class="${x.decision==="decline"?"crit-row":x.decision==="verify"?"abn-row":""}"><td>${esc(`${r.last}${r.first?", "+r.first:""}`)}</td><td>${esc(r.dob)}</td><td>${esc(r.payer)}${r.plan?`<div style="font-size:10px;color:#5d687c">${esc(r.plan)}</div>`:""}</td><td>${esc(r.memberId)}</td><td>${esc(x.label)}</td><td>${esc(DECISIONS[x.decision])}</td><td style="font-size:10px">${x.via==="payer"?"Payer eligibility":"Card / plan name"}</td></tr>`}).join("")}</tbody></table></div>
+  <p style="font-size:10px;color:#5d687c;margin-top:12px">${esc(L.name||"First Bio Genetics")} is enrolled with Medicare and AHCCCS and is out of network with commercial payers. Card-based results are a screen; confirm coverage with the payer before testing.</p></div>`,{wide:1,print:1})},
+ async insSave(){const rows=INS.rows.filter(insFilled);if(!rows.length)return toast("Add at least one patient.");if(!INS.name.trim())return toast("Name the clinic or prospect first.");
+  const cl=S.clinics.find(c=>c.name.trim().toLowerCase()===INS.name.trim().toLowerCase());
+  const rec={id:INS.id||"ic"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),at:Date.now(),name:INS.name.trim(),clinicId:cl?cl.id:"",by:me().name,summary:insSummary(rows),
+   rows:rows.map(r=>({first:r.first,last:r.last,dob:r.dob,payer:r.payer,payerId:r.payerId||"",memberId:r.memberId,group:r.group,plan:r.plan,cardText:String(r.cardText||"").slice(0,1500),source:r.source,elig:r.elig||null,result:(({type,label,decision})=>({type,label,decision}))(insRes(r))}))};
+  try{await DB.insCheckSave(rec);INS.id=rec.id;INS.saved=undefined;toast("Check saved")}catch(e){toast(errMsg(e))}render()},
+ insOpen(e){const c=(INS.saved||[]).find(x=>x.id===e.dataset.id);if(!c)return;if(INS.rows.some(insFilled)&&INS.id!==c.id&&!confirm("Replace the patients on screen with this saved check?"))return;
+  INS.id=c.id;INS.name=c.name;INS.rows=c.rows.map(r=>insRow(r));render();window.scrollTo(0,0)},
+ async insDelSaved(e){const id=e.dataset.id;if(!confirm("Delete this saved check?"))return;try{await DB.insCheckDel(id);if(INS.id===id)INS.id=null;INS.saved=undefined;render();toast("Deleted")}catch(err){toast(errMsg(err))}},
+});
+document.addEventListener("change",ev=>{const t=ev.target;if(t.type==="file"&&t.dataset.insfile){const fs=[...(t.files||[])];t.value="";insAddFiles(fs);return}
+ // Leaving an edited cell refreshes the summary (the result cell itself updates while typing).
+ if(t.dataset&&/^ins\.rows\.\d+\./.test(t.dataset.b||""))setTimeout(render,0)});
+document.addEventListener("dragover",ev=>{if(ev.target.closest&&ev.target.closest("[data-insdrop]"))ev.preventDefault()});
+document.addEventListener("drop",ev=>{const z=ev.target.closest&&ev.target.closest("[data-insdrop]");if(!z)return;const fs=[...((ev.dataTransfer&&ev.dataTransfer.files)||[])];if(!fs.length)return;ev.preventDefault();insAddFiles(fs)});
+document.addEventListener("paste",ev=>{const z=ev.target.closest&&ev.target.closest("[data-insdrop]");if(!z)return;const fs=[...((ev.clipboardData&&ev.clipboardData.files)||[])];if(!fs.length)return;ev.preventDefault();insAddFiles(fs)});
+
+// The plan type of an order's patient, for accessioning and the order page.
+function patInsRes(p){const ins=p&&p.ins;if(!ins||!ins.type||ins.type==="Self-pay")return null;if(ins.check&&ins.check.decision)return ins.check;
+ const c=classifyPlan(ins.plan,ins.payer,ins.type==="Medicare"?"Medicare":ins.type==="Medicaid"?"Medicaid":"");return {...c,via:"card"}}
+function patInsLine(p){const x=patInsRes(p);if(!x)return "";const chk=can("clinics.view")||can("billing")||can("orders.receive");
+ return `<div style="margin-top:4px">${insDecTag(x)} <span class="xs">${esc(x.label)}${x.via==="payer"?" · checked with payer":x.at?" · from card":""}</span>${chk?` <button class="link xs" data-a="patInsCheck" data-id="${p.id}">${x.at?"Check again":"Check insurance"}</button>`:""}</div>`}
+Object.assign(A,{
+ async patInsCheck(e){const p=patientOf(e.dataset.id);if(!p)return;const ins=p.ins;toast("Checking insurance…");let text="";
+  try{for(const k of ["cardFront","cardBack"])if(ins[k])text+="\n"+await ocr(ins[k])}catch(err){toast("The card image couldn't be read: "+errMsg(err))}
+  const row={first:p.first,last:p.last,dob:p.dob,payer:ins.payer||"",memberId:ins.member||"",plan:[ins.plan,ins.type==="Medicare"?"Medicare":ins.type==="Medicaid"?"Medicaid":""].filter(Boolean).join(" "),cardText:text.trim()};
+  if(INS.elig===undefined){try{INS.elig=await DB.eligibility("status")}catch(err){INS.elig={configured:false}}}
+  if(INS.elig&&INS.elig.configured&&row.memberId)await insEligOne(row);
+  const x=insRes(row);ins.check={type:x.type,label:x.label,decision:x.decision,why:x.why,via:x.via,at:Date.now(),planNames:(row.elig&&row.elig.planNames)||[],active:row.elig?row.elig.active:null,error:(row.elig&&row.elig.error)||"",cardText:row.cardText.slice(0,800)};
+  save();render();toast(`${x.label}: ${DECISIONS[x.decision]}${row.elig&&row.elig.error?` (payer check: ${row.elig.error})`:""}`)},
+});
+
+const readText=f=>f.text?f.text():new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result||""));fr.onerror=()=>rej(fr.error);fr.readAsText(f)});
 
 boot();

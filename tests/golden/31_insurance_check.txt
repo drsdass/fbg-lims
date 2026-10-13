@@ -1,0 +1,41 @@
+P1 nav item: true
+P2 page: true | payer checks off: (no rows yet)
+T1 typed rows:
+ John Smith|<YMD>|Aetna|W111|Aetna PPO => OK to accept (PPO)
+ Jane Doe|<YMD>|Blue Cross Blue Shield|H222|BCBS of Arizona HMO => Out of network: decline (HMO)
+ Robert Nguyen|<YMD>|Medicare|1EG4TE5MK73|Medicare Part B => OK to accept (Medicare)
+ Ana Ruiz|<YMD>|Mercy Care|A99887766|Mercy Care => OK to accept (AHCCCS)
+T2 Excel rows:
+ Kim Lee|<YMD>|Cigna|U555666777|Open Access Plus => Verify (POS)
+ Julie Park|<YMD>|UnitedHealthcare|912345678|Navigate HMO => Out of network: decline (HMO)
+U1 uploaded rows:
+ Omar Haddad|<YMD>|Oscar|OSC123456|EPO => Out of network: decline (EPO)
+ Liz Grant|<YMD>|Humana|H998877|Medicare Advantage PPO => Verify (Medicare Advantage PPO)
+ John Q Smith|<YMD>|Blue Cross Blue Shield of Arizona|XYZ123456789|PPO BlueCard => OK to accept (PPO)
+ Maria Garcia||Humana|H12345678|Gold Plus HMO => Out of network: decline (Medicare Advantage HMO)
+U2 toast: tients added | 2 patients added | 4 patients added. Couldn't read: IMG_1.heic (HEIC photos can't be read. Set the phone camera to 'Most compatible' (JPG) or save as JPG.)
+E1 after edit: VerifyMedicare Advantage · from card/planMedicare Advantage
+S1 summary: 10Patients | 4 (40%)OK to accept | 3 (30%)Out of network: decline | 3 (30%)Verify
+C1 Check all button: true | per-row buttons 10
+C2 after payer checks:
+ John Smith|<YMD>|Aetna|W111|Aetna PPO => OK to accept (PPO · payer)
+ Jane Doe|<YMD>|Blue Cross Blue Shield|H222|BCBS of Arizona HMO => Out of network: decline (HMO · payer)
+ Robert Nguyen|<YMD>|Medicare|1EG4TE5MK73|Medicare Part B => OK to accept (Medicare)
+ Ana Ruiz|<YMD>|Mercy Care|A99887766|Mercy Care => OK to accept (AHCCCS)
+ Kim Lee|<YMD>|Cigna|U555666777|Open Access Plus => Verify (POS)
+ Julie Park|<YMD>|UnitedHealthcare|912345678|Navigate HMO => Out of network: decline (HMO)
+ Omar Haddad|<YMD>|Oscar|OSC123456|EPO => Out of network: decline (EPO)
+ Liz Grant|<YMD>|Humana|H998877|Medicare Advantage PPO => Verify (Medicare Advantage PPO)
+ John Q Smith|<YMD>|Blue Cross Blue Shield of Arizona|XYZ123456789|PPO BlueCard => OK to accept (PPO)
+ Maria Garcia||Humana|H12345678|Choice Plus => Verify (Medicare Advantage)
+C3 error shown for unknown member: true | calls 9
+X1 CSV: 10 rows | John,Smith,<YMD>,Aetna,W111,,Aetna PPO,PPO,OK to accept,PPO plans pay out-of-network labs.,Yes,typed
+X2 report: true | 10 patients: 4 OK to accept (40%), 3 out of network, 3 to verify.
+V1 saved: true Curana Health of Arizona {"total":10,"accept":4,"decline":3,"verify":3} | clinic matched (none)
+V2 cleared: 0
+V3 reopened rows: 10 | name Curana Health of Arizona
+O1 plan field on patient form: true
+O2 accessioning tag: HMO: out of network
+O3 order page: Out of network: decline HMO Check insurance
+O4 payer check saved: {"label":"HMO","via":"payer","active":true}
+errors [] []

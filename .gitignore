@@ -5,3 +5,4 @@ dist
 .DS_Store
 tests/.bundle.js
 tests/.out/
+public/ocr/

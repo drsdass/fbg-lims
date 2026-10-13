@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale) and `supabase/migrations/0012_referrals.sql` (Amico DX electronic referrals) and `supabase/migrations/0013_clinic_archive.sql` (archiving clinics, clinic two-step) and `supabase/migrations/0014_qc_review_vials.sql` (daily QC review sign-off, custom vial barcodes) and `supabase/migrations/0015_qc_sets.sql` (QC control sets).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale) and `supabase/migrations/0012_referrals.sql` (Amico DX electronic referrals) and `supabase/migrations/0013_clinic_archive.sql` (archiving clinics, clinic two-step) and `supabase/migrations/0014_qc_review_vials.sql` (daily QC review sign-off, custom vial barcodes) and `supabase/migrations/0015_qc_sets.sql` (QC control sets) and `supabase/migrations/0016_insurance_checks.sql` (saved insurance checks).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -469,6 +469,37 @@ what the bridge expects. Confirm on the instrument during setup.
 - **Instrument files** can be pasted as text, pasted as a file (copy it in File Explorer, click the box, Ctrl+V) or dragged
   onto the paste box.
 
+## 31. Insurance check (PPO vs HMO)
+
+The lab is out of network with commercial payers (enrolled with Medicare and AHCCCS only), so a clinic is worth taking
+on only if its patients' plans pay out-of-network labs. **Insurance check** (left menu; lab staff with Clinics or Billing
+access) screens a clinic's patients before onboarding:
+
+- Add patients three ways, in any mix: type them (one per line, e.g. `Smith, John · 03/04/1980 · Aetna PPO · W123456`),
+  paste rows from Excel (with or without a header row), or upload files: spreadsheets (.xlsx, .csv), insurance card
+  photos (JPG, PNG) and PDFs of card copies, many at once (choose, drag and drop, or paste into the box).
+- Card text is read in the browser (Tesseract OCR, served from `/ocr`, about 8 MB on first use). Images are not
+  uploaded or kept, only the text. iPhone HEIC photos can't be read; use JPG ("Most compatible" camera setting).
+- Each patient gets a plan type and a decision: **OK to accept** (PPO, traditional Medicare, AHCCCS plans, indemnity),
+  **Out of network: decline** (HMO, EPO, Medicare Advantage HMO, TRICARE Prime, inactive coverage), or **Verify**
+  (POS, Cigna Open Access Plus, Medicare Advantage PPO, unknown). Correct anything misread; the result updates.
+- Summary with percentages, printable report, CSV, and **Save this check** (per clinic or prospect; reopen later).
+- Orders: the patient form has a "Plan name or type" field. Accessioning flags open orders whose plan is out of network,
+  and the order page shows the plan type with **Check insurance** (reads the stored card photos and, if set up, asks the payer).
+
+Real-time eligibility with the payer (optional, recommended): the `eligibility` edge function sends a 270/271 eligibility
+check through the Stedi clearinghouse and returns whether coverage is active and the plan type (HMO, PPO, EPO, POS).
+
+1. Create a Stedi account (stedi.com), sign their BAA, and create a production API key. Some payers require a one-time
+   eligibility enrollment for the lab's NPI; Stedi's payer list shows which.
+2. Supabase > Edge Functions > Deploy a new function named exactly `eligibility` with the code from
+   `supabase/functions/eligibility/index.ts`. Turn off "Verify JWT" (the function checks the user itself), like the others.
+3. Supabase > Edge Functions > Secrets: add `STEDI_API_KEY`.
+4. Lab settings must have the lab's NPI. Then Insurance check shows **Check all with payers** and a check button per row.
+   Each check is a billable clearinghouse transaction and is written to the audit log (payer and result only).
+
+Run `0016_insurance_checks.sql` in Supabase to save checks.
+
 ## Before go-live
 
 - [ ] Supabase Team plan, HIPAA add-on, signed BAA, project marked High Compliance
@@ -495,7 +526,6 @@ what the bridge expects. Confirm on the instrument during setup.
 
 ## Not in this version yet
 
-- Reading insurance cards automatically (photos are captured and stored). Needs a BAA-covered AI service.
 - Direct instrument connections: C560 host query (ASTM/HL7) and a MultiQuant export folder watcher. Needs the C560 LIS spec from HORIBA.
 - Automatic claim delivery to the billing company over SFTP.
 - Inviting additional clinic users from inside the app (use section 4 for now).
