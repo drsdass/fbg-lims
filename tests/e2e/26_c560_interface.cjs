@@ -43,6 +43,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  await login('lab@fbg.com','labpassword12');
  click('[data-a="go"][data-v="labset"]');await sleep(40);
  console.log('P1 C560 panel:',txt().includes('Yumizen C560 interface'),q('[data-b="labf.c560.channels.AMPH"]')?'channel inputs':'none',[...w.document.querySelectorAll('[data-b^="labf.c560.channels."]')].length);
+ console.log('P1b prefilled from the analyzer:',/sent by Luna, Oct 14/.test(txt()),['AMPH','MTD','6-AM','SG-U'].map(k=>k+'='+q(`[data-b="labf.c560.channels.${k}"]`).value).join(' '));
  type('[data-b="labf.c560.channels.AMPH"]','1');type('[data-b="labf.c560.channels.OXY"]','1');click('[data-a="saveLab"]');await sleep(50);console.log('P2 duplicate channel:',toasts().slice(-50));
  type('[data-b="labf.c560.channels.OXY"]','2');type('[data-b="labf.c560.channels.THC"]','3');type('[data-b="labf.c560.channels.CREAT-U"]','20');type('[data-b="labf.c560.port"]','5100');click('[data-a="saveLab"]');await sleep(800);
  const lab=M().store.settings?M().store.settings.find(x=>x.key==='lab'):null;const c5=lab&&lab.data.c560;
