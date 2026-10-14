@@ -7,7 +7,7 @@ Q2 flagged rows: pH 11.5PH-U11.406.000 ± 0.700+7.7Reject1-3s
 H1 LCMS QC: 258 control results logged and scored: 220 in control, 28 warnings, 10 rejects. 2 orders are on QC hold: the affected results can't be verified until corrective action is documented.
 H2 hold on 60000003: ["Buprenorphine","THC (Cannabinoids)"] | items 4 | runs [["SCIEX 4500","<YMD>"]]
 H3 entry banner: QC hold. A control failed in the run that produced these results: QC2A Norbuprenorphine 286.1 (+4.3 SD, 1-3s); QC1B Norbuprenorphine 118.8 (+4.8 SD, 1-3s); QC3B Norbupr
-H4 verify blocked by hold: true | QC hold: document the corrective action on this order before verifying.
+H4 verify blocked by hold: true | Importing… | QC hold: document the corrective action on this order before verifying.
 H5 needs details: ing. | Describe what was done.
 H6 hold released: true Controls re-run and acceptable; patient results accepted | banner true
 G1 confirm asked: QC for SCIEX 4500 on <DATE> hasn't been approved yet. Verify these results anyway?

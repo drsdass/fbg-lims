@@ -55,10 +55,10 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  const o84=st('50018184');console.log('M4 verified:',!!o84.verified,o84.verified&&o84.verified.by,o84.verified&&/^[A-Z]{1,3}-[A-Z0-9]{2,4}$/.test(o84.verified.code),'| OXY',JSON.stringify(o84.results.UDS.Oxycodone&&{v:o84.results.UDS.Oxycodone.v,c:o84.results.UDS.Oxycodone.c,src:o84.results.UDS.Oxycodone.src}),'| history',o84.history.slice(-1)[0].note);
  // D1-D2: manual definitive entry, one box per analyte
  nav('openOrder',null,'ox60000004');await sleep(30);click('[data-a="manualEntry"]');await sleep(30);
- click(`[data-a="toggleConc"][data-v="${row('Oxycodone').querySelector('[data-a="toggleConc"]').dataset.v}"]`);await sleep(20);
+ // analyte inputs are shown without a click (Jaime, Oct 14)
  const cin=[...row('Oxycodone').querySelectorAll('.conc-grid label')];console.log('D1 oxycodone components:',cin.map(l=>l.textContent.replace(/\s+/g,' ').trim()).join(' | '));
  typeIn(cin[0].querySelector('input'),'1240');await sleep(10);
- click(`[data-a="toggleConc"][data-v="${row('Alprazolam').querySelector('[data-a="toggleConc"]').dataset.v}"]`);await sleep(20);
+ // shown by default
  const al=[...row('Alprazolam').querySelectorAll('.conc-grid input')];console.log('D1b alprazolam components:',[...row('Alprazolam').querySelectorAll('.conc-grid label')].map(l=>l.textContent.replace(/\s+/g,' ').trim()).join(' | '));
  typeIn(al[0],'3');await sleep(10);if(al[1])typeIn(row('Alprazolam').querySelectorAll('.conc-grid input')[1],'99999');await sleep(10);
  const ro=w.__S?null:null;

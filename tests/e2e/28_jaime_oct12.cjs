@@ -48,7 +48,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  Object.assign(st('50018185'),{reflex:true,confV:3,confirm:[],confirmReq:[],tests:['UDS']});
  // R1-R3: paste and drop a file onto the paste box
  click('[data-a="go"][data-v="instruments"]');await sleep(30);click('[data-a="setUi"][data-k="itab"][data-val="c560"]');await sleep(20);
- console.log('R1 paste box help:',/copy it in File Explorer, click the box, Ctrl\+V/.test(txt()));
+ console.log('R1 paste box help:',/drag the file onto the box below.*paste \(Ctrl\+V\)/.test(txt()));
  const buf=fs.readFileSync(FIX('CSV_Screening_Tox_Patient_Samples_1.xlsx'));const file=new w.File([buf],'CSV_Screening_Tox_Patient_Samples_2.xlsx');file.arrayBuffer=async()=>buf.buffer.slice(buf.byteOffset,buf.byteOffset+buf.byteLength);
  const ta=q('textarea[data-b="ui.paste_c560"]');const pe=new w.Event('paste',{bubbles:true,cancelable:true});Object.defineProperty(pe,'clipboardData',{value:{files:[file]}});ta.dispatchEvent(pe);await sleep(1500);
  console.log('R2 pasted file imported:',(mtxt().match(/\d+ result rows? matched to \d+ orders?/)||['none'])[0],'| default prevented',pe.defaultPrevented);

@@ -1,4 +1,4 @@
-E1 entry consistency column: Definitive drug testing, urine (LC-MS/MS)Urine · CPT G0480AnalyteResultPositive analytesConsistencyFlagOxycodoneSelectNegativePositiveConsistentAOxymorphoneSelectNegativePositiveConsistentAAmphetamineSelectNegativePositiveConsistentAMethamphetamineSelectNegativePositiveEnter concentrations (ng/mL)ConsistentAlprazolamSelectNegativePositiveEnter concentrations (ng/mL)Inconsistent, prescribed but not detectedTHC (Cannab
+E1 entry consistency column: Definitive drug testing, urine (LC-MS/MS)Urine · CPT G0480AnalyteResultPositive analytesConsistencyFlagOxycodoneSelectNegativePositiveConsistentAOxymorphoneSelectNegativePositiveConsistentAAmphetamineSelectNegativePositiveConsistentAMethamphetamineSelectNegativePositiveHide analytesMethamphetamine ≥20ConsistentAlprazolamSelectNegativePositiveHide analytesAlprazolam ≥100Hydroxyalprazolam ≥40Inconsistent, prescribed bu
 E2 status Released flags {"ab":7,"crit":0,"inc":2}
 E4 download button: true
 E5 PDF created: application/pdf <BYTES> bytes

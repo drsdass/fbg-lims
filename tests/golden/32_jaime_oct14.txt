@@ -1,0 +1,8 @@
+L1 lab settings panel: true
+L2 opens: true | cutoffs tab on true
+E1 analyte inputs shown: 14 | Amphetamine ≥100, Methamphetamine ≥20, Alprazolam ≥100, Aminoclonazepam ≥40, Hydroxyalprazolam ≥40, Lorazepam ≥20, Nordiazepam ≥20, Temazepam ≥20
+E2 hide works: true | button Show analytes
+P1 busy state: Importing… | default paste blocked true
+P2 imported once: true | second click: true | box cleared true
+P3 empty clipboard: from the clipboard. Browsers can't paste a file copied in File Explorer: drag the file onto the box, or use Choose file.
+errors [] []

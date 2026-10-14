@@ -1,5 +1,5 @@
 I1 inbox shown: true | file: true
-I2 toasts:
+I2 toasts: Importing…
 I2 imported from inbox: 0 result rows matched to 0 orders | inbox status: imported
 B1 device stored (hash only): Lab PC C560 64 | key shown: 64
 B2 script has URL and key: true true true
