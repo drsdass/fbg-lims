@@ -5,7 +5,7 @@ K4 received: Received | receipt: {"c":"Ambient","p":true} | pickup now: Delivere
 J1 rejected: Rejected | clinic note: Specimen rejected, please recollect | FBG<YYMMDD>-0010 for Bill P.: Temperature out of range (Arrived warm, 31 C). Please recollect and send a new spe
 R1 reports: true | bars: 2 | sections: true,true,true,true,true
 R2 CSV first line: Month,Clinic,Accession,Tests,Billing type,Status,Collected,Released,Turnaround hours
-Q1 rejection reasons: Rejections by reason1 of 17 (5.9%)Temperature out of range1100% Review these monthly as part of the
+Q1 rejection reasons: Rejections by reason<n> of <orders in the last 30 days>Temperature out of range1100% Review these monthly as part of the
 V1 candidates: Create 1 invoice
 V2 invoice: INV-<YYMM>-1001 2 lines total 50 | orders tagged: 2
 V3 invoice doc: true true

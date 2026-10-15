@@ -53,7 +53,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  click('[data-a="go"][data-v="reports"]');await sleep(40);console.log('R1 reports:',/Orders by month/.test(txt()),'| bars:',w.document.querySelectorAll('svg[aria-label="Orders by month"] rect').length,'| sections:',['Clinics','Test mix','Payer mix','Screen positivity','Turnaround by month'].map(k=>txt().includes(k)).join(','));
  click('[data-a="rpExport"]');await sleep(100);console.log('R2 CSV first line:',(await lastBlob()).split('\r\n')[0]);
  // ---- quality indicators show rejection reasons
- click('[data-a="go"][data-v="qms"]');await sleep(200);click('[data-a="qmsTab"][data-val="quality"]');await sleep(20);console.log('Q1 rejection reasons:',(txt().replace(/\s+/g,' ').match(/Rejections by reason.{0,80}/)||['none'])[0]);
+ click('[data-a="go"][data-v="qms"]');await sleep(200);click('[data-a="qmsTab"][data-val="quality"]');await sleep(20);console.log('Q1 rejection reasons:',(txt().replace(/\s+/g,' ').match(/Rejections by reason.{0,80}/)||['none'])[0].replace(/\d+ of \d+ \([\d.]+%\)/,'<n> of <orders in the last 30 days>'));// the Sep 15 fixture orders age out of the 30-day window
  // ---- client invoices
  click('[data-a="go"][data-v="billing"]');await sleep(30);click('[data-a="setUi"][data-k="btab"][data-val="invoices"]');await sleep(20);
  console.log('V1 candidates:',(txt().replace(/\s+/g,' ').match(/Create \d+ invoices?/)||['none'])[0]);click('[data-a="invCreate"]');await sleep(800);

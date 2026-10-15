@@ -10,7 +10,8 @@
     1. In the portal: Lab settings > Instrument bridge > Add device. Copy the device key shown.
        For the C560 link, also fill in Lab settings > Yumizen C560 interface (channel numbers and port) first.
     2. Fill in the settings below (or use the copy of this script downloaded from the portal, which has them filled in).
-    3. On the C560: Utility > System Setup > LIS Setup. Host IP = this PC's IP address, port = $C560Port below,
+    3. On the C560: Utility > System Setup > LIS Setup. Host IP = this PC's IP address (127.0.0.1 if the bridge runs on the
+       Yumizen PC itself), port = $C560Port below,
        protocol HL7, bidirectional, real-time results on, real-time sample download (barcode query) on.
        Allow the port through Windows Firewall:  netsh advfirewall firewall add rule name="FBG C560" dir=in action=allow protocol=TCP localport=5100
     4. Test: right-click PowerShell > Run as administrator, then:  powershell -ExecutionPolicy Bypass -File C:\FBG\fbg-bridge.ps1 -Test
@@ -164,16 +165,33 @@ function Upload-C560Results {
 
 Log "Bridge started. Watching: $(($Folders | ForEach-Object { $_.Path }) -join ', ')"
 $listener = $null
-if ($C560Port -gt 0) {
-  $listener = New-Object System.Net.Sockets.TcpListener([Net.IPAddress]::Any, [int]$C560Port)
-  $listener.Start(); Log "C560 link: listening on port $C560Port"
+# Start listening for the C560. If the port is taken (usually another copy of this bridge is still running), say so
+# once and keep retrying every 30 seconds instead of failing.
+function Start-C560Listener {
+  try {
+    $l = New-Object System.Net.Sockets.TcpListener([Net.IPAddress]::Any, [int]$C560Port)
+    $l.Start(); Log "C560 link: listening on port $C560Port"; $script:ListenWarned = $false; return $l
+  } catch {
+    if (-not $script:ListenWarned) {
+      $owner = ""
+      try { $p = (Get-NetTCPConnection -LocalPort $C560Port -State Listen -ErrorAction Stop | Select-Object -First 1).OwningProcess; $owner = " Port $C560Port is used by: $((Get-Process -Id $p).ProcessName) (process $p)." } catch {}
+      Log "C560 link: can't listen on port $C560Port.$owner Is another copy of the bridge running? Retrying every 30 s. ($($_.Exception.Message))"
+      $script:ListenWarned = $true
+    }
+    return $null
+  }
 }
+$script:ListenWarned = $false; $script:NextListenTry = Get-Date; $script:LastLinkError = ""; $script:LastLinkErrorAt = [datetime]::MinValue
+if ($C560Port -gt 0) { $listener = Start-C560Listener; if (-not $listener) { $script:NextListenTry = (Get-Date).AddSeconds(30) } }
 $nextScan = Get-Date
 while ($true) {
   if ((Get-Date) -ge $nextScan) {
     Scan-Folders
     if ($Once) { if ($listener) { Upload-C560Results; $listener.Stop() }; break }
     $nextScan = (Get-Date).AddSeconds($IntervalSeconds)
+  }
+  if ($C560Port -gt 0 -and -not $listener -and (Get-Date) -ge $script:NextListenTry) {
+    $listener = Start-C560Listener; if (-not $listener) { $script:NextListenTry = (Get-Date).AddSeconds(30) }
   }
   if ($listener) {
     try {
@@ -187,11 +205,16 @@ while ($true) {
         while ($script:Queue.Count -gt 0) { Handle-Hl7 ($script:Queue.Dequeue()) }
       } elseif ($script:Client) { Log "C560 disconnected"; $script:Client = $null; $script:Stream = $null }
     } catch {
-      Log "C560 link error: $($_.Exception.Message)"
+      # Log each different error, and a repeat of the same one at most once a minute, so the log can't flood.
+      $msg = $_.Exception.Message
+      if ($msg -ne $script:LastLinkError -or ((Get-Date) - $script:LastLinkErrorAt).TotalSeconds -ge 60) { Log "C560 link error: $msg"; $script:LastLinkError = $msg; $script:LastLinkErrorAt = Get-Date }
+      Start-Sleep -Milliseconds 500
       if ($script:Client) { try { $script:Client.Close() } catch {} }; $script:Client = $null; $script:Stream = $null
     }
     if (((Get-Date) - $script:LastC560Upload).TotalSeconds -ge $C560BatchSeconds) { Upload-C560Results; $script:LastC560Upload = Get-Date }
     Start-Sleep -Milliseconds 100
+  } elseif ($C560Port -gt 0) {
+    Start-Sleep -Seconds 1
   } else {
     Start-Sleep -Seconds $IntervalSeconds
   }
