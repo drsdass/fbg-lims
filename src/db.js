@@ -157,6 +157,11 @@ export const DB = {
     try { await tmp.auth.signOut({ scope: "local" }); } catch (e) { /* nothing to clean up */ }
     if (error) throw new Error(/invalid/i.test(error.message || "") ? "That password isn't right." : error.message);
   },
+  // Signing PIN (0018): an alternative to the password for signing result releases.
+  async pinStatus() { const { data, error } = await sb.rpc("has_signing_pin"); if (error) { if (/has_signing_pin|does not exist|PGRST202/i.test(error.message || "") || error.code === "PGRST202") return null; throw error; } return !!data; },
+  async setPin(pin) { const { error } = await sb.rpc("set_signing_pin", { p_pin: pin }); if (error) throw new Error(/PGRST202|does not exist/i.test(error.message || "") ? "Signing PINs need migration 0018_signing_pins.sql in Supabase." : error.message); },
+  async verifyPin(pin) { const { data, error } = await sb.rpc("verify_signing_pin", { p_pin: pin }); if (error) throw error; return data; },
+  async clearPin() { const { error } = await sb.rpc("clear_signing_pin"); if (error) throw error; },
   async signIn(email, password) { const { error } = await sb.auth.signInWithPassword({ email, password }); if (error) throw error; },
   async signOut() { synced = {}; await sb.auth.signOut(); },
   async resetPassword(email) { await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin }); },
@@ -414,6 +419,15 @@ export const DB = {
     if (error) throw error;
     return { path, name: file.name };
   },
+  // ---------- order attachments (0017): <clinicId>/<orderId>/<uuid>-<name> in the private order-files bucket ----------
+  async orderFileUpload(order, file) {
+    const path = `${order.clinicId}/${order.id}/${crypto.randomUUID()}-${file.name.replace(/[^A-Za-z0-9._-]/g, "_")}`;
+    const { error } = await sb.storage.from("order-files").upload(path, file, { contentType: "application/pdf" });
+    if (error) throw error;
+    return { path };
+  },
+  async orderFileUrl(path) { const { data, error } = await sb.storage.from("order-files").createSignedUrl(path, 300); if (error) throw error; return data.signedUrl; },
+  async orderFileBytes(path) { const { data, error } = await sb.storage.from("order-files").download(path); if (error) throw error; return new Uint8Array(await data.arrayBuffer()); },
   async qmsFileUrl(path) { const { data, error } = await sb.storage.from("qms-docs").createSignedUrl(path, 300); if (error) throw error; return data.signedUrl; },
   // ---------- quality control ----------
   async qcMaterials() { return (await fetchAll("qc_materials", "id,data")).map((r) => r.data); },

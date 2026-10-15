@@ -16,7 +16,7 @@ Frontend: Vite (vanilla JS). Backend: Supabase (Postgres, Auth, Row Level Securi
 ## 2. Database
 
 Open **SQL Editor** in the project, paste `supabase/migrations/0001_init.sql`, and run it once.
-Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale) and `supabase/migrations/0012_referrals.sql` (Amico DX electronic referrals) and `supabase/migrations/0013_clinic_archive.sql` (archiving clinics, clinic two-step) and `supabase/migrations/0014_qc_review_vials.sql` (daily QC review sign-off, custom vial barcodes) and `supabase/migrations/0015_qc_sets.sql` (QC control sets) and `supabase/migrations/0016_insurance_checks.sql` (saved insurance checks).
+Then do the same with `supabase/migrations/0002_audit.sql` (complete audit trail) `supabase/migrations/0003_roles.sql` (lab roles) `supabase/migrations/0004_clinic_settings_supplies.sql` (clinic settings, collectors, supply orders), `supabase/migrations/0005_clinic_defaults.sql`, `supabase/migrations/0006_qc.sql` (quality control), `supabase/migrations/0007_compliance.sql` (compliance records, locked reports, document storage) and `supabase/migrations/0008_instrument_inbox.sql` (instrument inbox) and `supabase/migrations/0009_pickups_invoices.sql` (courier pickups, client invoices, reports) `supabase/migrations/0010_patient_portal.sql` (patient portal) and `supabase/migrations/0011_scale.sql` (loading at scale) and `supabase/migrations/0012_referrals.sql` (Amico DX electronic referrals) and `supabase/migrations/0013_clinic_archive.sql` (archiving clinics, clinic two-step) and `supabase/migrations/0014_qc_review_vials.sql` (daily QC review sign-off, custom vial barcodes) and `supabase/migrations/0015_qc_sets.sql` (QC control sets) and `supabase/migrations/0016_insurance_checks.sql` (saved insurance checks) and `supabase/migrations/0017_order_files.sql` (order attachments) and `supabase/migrations/0018_signing_pins.sql` (signing PINs).
 It creates the tables, security rules, audit log, accession numbering and the lab profile
 (CLIA 03D2287865, Dr. Guihua Cao, Mesa address) shown on reports.
 
@@ -499,6 +499,20 @@ check through the Stedi clearinghouse and returns whether coverage is active and
    Each check is a billable clearinghouse transaction and is written to the audit log (payer and result only).
 
 Run `0016_insurance_checks.sql` in Supabase to save checks.
+
+## 32. Order attachments (reference lab reports) and signing PINs
+
+**Attachments.** On an order page, lab staff who enter, send out or release results see "Attachments and reference lab
+reports" with **Attach PDF**. Use it for the Amico DX report or any other PDF for that order.
+- The clinic sees the attachment on the order page once the order is released (View opens it; links last 5 minutes).
+- Attachments marked "In the report PDF" are added to the end of the downloaded report PDF.
+- Remove hides an attachment from the order; the file and the history entry are kept.
+- Run `0017_order_files.sql` (creates the private `order-files` storage bucket and its access rules).
+
+**Signing PINs.** Lab staff can set a 4- to 6-digit PIN (key icon at the top > Set up or change my signing PIN; needs
+their password) and sign result releases with it instead of the password. The PIN is stored only as a bcrypt hash.
+Repeated or sequential PINs (1111, 1234) are refused, and five wrong PINs lock PIN signing for 15 minutes (the password
+still works). The release record notes whether the PIN or the password was used. Run `0018_signing_pins.sql`.
 
 ## Before go-live
 

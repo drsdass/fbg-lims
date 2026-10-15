@@ -43,7 +43,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  q('#modal-root').innerHTML='';
  // M5: the order page and report for the new-style order
  nav('openOrder',null,'ox60000004');await sleep(40);
- console.log('M5 order page:',(txt().replace(/\s+/g,' ').match(/Confirmation tests \(\d+ tests[^)]*\)/)||['none'])[0],'| requisition:',(txt().replace(/\s+/g,' ').match(/Ordered on the requisition: [^.]*?(?=Prescribed|$|Patient)/)||['none'])[0].slice(0,80));
+ console.log('M5 order page:',(txt().replace(/\s+/g,' ').match(/Confirmation tests \(\d+ tests[^)]*\)/)||['none'])[0],'| requisition:',(txt().replace(/\s+/g,' ').match(/Ordered on the requisition: [^.]*?(?=Prescribed|$|Patient|Attachments)/)||['none'])[0].slice(0,80));
  // M6: reflex on a positive screen adds the confirmation test, not the requisition drugs
  Object.assign(st('50018185'),{reflex:true,confV:3,confirm:[],confirmReq:[],tests:['UDS']});
  // R1-R3: paste and drop a file onto the paste box

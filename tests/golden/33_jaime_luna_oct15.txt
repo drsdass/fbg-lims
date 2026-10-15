@@ -1,0 +1,16 @@
+Q1 oral fluid targets: 396 targets read: 396 new controls, 0 updated, 0 new lots (the previous lot is retired and kept on record) | SCIEX controls SCIEX 45006396
+Q2 OFQC1A fentanyl: {"mean":0.8,"sd":0.08000000000000002,"lot":"20260903JA","expires":"<YMD>","units":"ng/mL"}
+P1 PIN option in account: true
+P2 sequential PIN refused: true
+P3 wrong password refused: true
+P4 PIN saved: true | Signing PIN saved
+A1 attachments panel: true | attach button true
+A2 attached: [{"name":"Amico report 50018184.pdf","kind":"Reference lab report","inReport":true,"path":true}] | history Attached Amico report 50018184.pdf
+A3 non-PDF refused: true
+R1 sign box asks for PIN: true | password option true
+R2 wrong PIN: true | still open true
+R3 released: Released | signed by Jordan Ellis | method PIN PIN
+D1 report PDF pages (report + 2 attached): true
+C1 clinic sees reference lab report: true | file true | no remove button true
+C2 opens signed link: true
+errors [] []
