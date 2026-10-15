@@ -1,0 +1,9 @@
+K1 urine sections: Definitive tests on the requisition | Screen reflex tests
+K2 urine screen reflex vs sheet: 13 tests compared | differences: none
+K3 urine definitive vs sheet: 36 tests compared | differences: none
+K4 oral fluid definitive vs sheet: 57 tests compared | differences: none
+K5 Hydroxyalprazolam cutoff under Benzodiazepines after editing it under Alprazolam: 45
+E1 manual entry analytes: Alprazolam = Hydroxyalprazolam | Diazepam = Nordiazepam, Temazepam | Codeine = Codeine, Morphine | Benzodiazepines = 6
+E2 typed once under Alprazolam, also filled under Benzodiazepines: 500 | result Positive
+R1 reflex tests: ["Oxycodone"] | reflexTests ["Oxycodone"] | requisition drugs recorded: 0
+errors [] []

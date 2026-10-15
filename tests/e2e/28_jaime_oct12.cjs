@@ -33,7 +33,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  const rowsTxt=[...w.document.querySelectorAll('tbody tr')].map(tr=>tr.textContent.replace(/\s+/g,' ').trim()).filter(Boolean);
  const _x=0,firstCol=[...w.document.querySelectorAll('tbody td.nm')].map(td=>td.textContent.trim());
  console.log('M1 urine confirmation tests:',firstCol.slice(0,16).join(' | '));
- const comps=t=>[...w.document.querySelectorAll('tbody tr')].reduce((acc,tr)=>{const n=tr.querySelector('td.nm');if(n)acc.cur=n.textContent.trim();if(acc.cur===t)acc.out.push(tr.querySelector('input[data-b$=".name"]').value);return acc},{cur:'',out:[]}).out.join(', ');
+ const comps=t=>[...w.document.querySelectorAll('tbody tr')].reduce((acc,tr)=>{const n=tr.querySelector('td.nm');if(n)acc.cur=n.textContent.trim();const i=tr.querySelector('input[data-b$=".name"]');if(acc.cur===t&&i)acc.out.push(i.value);return acc},{cur:'',out:[]}).out.join(', ');
  console.log('M2 analytes: Benzodiazepines =',comps('Benzodiazepines'),'| Methadone =',comps('Methadone'),'| Cocaine =',comps('Cocaine'),'| Heroin =',comps('Heroin (6-AM)'),'| Ketamine =',comps('Ketamine'),'| Tramadol =',comps('Tramadol'),'| THC =',comps('THC'));
  click('[data-a="setUi"][data-k="itab"][data-val="sciex"]');await sleep(20);
  await upload('sciex',FIX('20260715_JA_Urine_Tox_LCMS.csv'),'urine.csv');await sleep(600);

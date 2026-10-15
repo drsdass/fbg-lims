@@ -544,3 +544,13 @@ still works). The release record notes whether the PIN or the password was used.
 - Automatic claim delivery to the billing company over SFTP.
 - Inviting additional clinic users from inside the app (use section 4 for now).
 - Warning when two people edit the same record at the same moment (last save wins today).
+
+## 33. Confirmation test mapping (Toxicology Parameters, Test_Mapping tab)
+
+Orders placed from this release (`confV: 4`) use the lab supervisor's Test_Mapping sheet:
+
+- **Urine, ordered on the requisition:** each drug reports the analytes in "Definitive Test Urine" (for example Alprazolam reports Hydroxyalprazolam; Diazepam reports Nordiazepam and Temazepam; Codeine reports Codeine and Morphine).
+- **Urine, screen reflex:** a positive C560 screen adds the screen's reflex test from "URINE Drug Testing" (Benzodiazepines reports Alprazolam, Aminoclonazepam, Hydroxyalprazolam, Lorazepam, Nordiazepam and Temazepam). ETG has no confirmation.
+- **Oral fluid:** each drug reports the analytes in "Definitive Test Oral Fluid".
+
+The mapping is in `RX_MAP` and `UTESTS` in `src/app.js`; cutoffs and ULOQs come from Sheet1. The maps are stored as `confMap["Urine definitive"]` and `confMap["Oral fluid definitive"]` (map version 4). Older orders keep the map they were placed with, so their reports don't change. On Instruments > Definitive cutoffs an analyte has one cutoff: editing it under one test changes it under every test. In manual entry, an analyte that two ordered tests share is typed once.
