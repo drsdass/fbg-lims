@@ -64,7 +64,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  const rel=st('50018184');const h=rel.history.find(x=>x.sig);console.log('R3 released:',rel.status,'| signed by',rel.signature&&rel.signature.by,'| method',rel.signature&&rel.signature.method,h&&h.sig.method);
  // D1: the downloaded report PDF ends with the attached report's pages
  let bb=null;w.URL.createObjectURL=b=>{bb=b;return 'blob:x'};w.URL.revokeObjectURL=()=>{};
- click('[data-a="report"]');await sleep(60);click('#modal-root [data-a="dlReport"]');await sleep(2500);
+ click('[data-a="report"]');await sleep(60);console.log('S1 report header specimen:',(q('#modal-root .rp-pt').textContent.replace(/\s+/g,' ').match(/Specimen:\s*[^:]*?(?=$)/)||['none'])[0]);click('#modal-root [data-a="dlReport"]');await sleep(2500);
  if(bb){const ab=await new Promise(r=>{const fr=new w.FileReader();fr.onload=()=>r(fr.result);fr.readAsArrayBuffer(bb)});const doc=await PDFDocument.load(new Uint8Array(ab));console.log('D1 report PDF pages (report + 2 attached):',doc.getPageCount()>=3)}else console.log('D1 no PDF');
  q('#modal-root').innerHTML='';
  // C1-C2: the clinic sees and opens the report

@@ -1095,8 +1095,8 @@ function reportModel(o){const p=patientOf(o.patientId),c=clinicOf(o.clinicId),pr
    lines:[L.name,...addrLines(L.address),L.phone,dirName?`Lab Director : ${dirName}`:"",L.clia?`CLIA ID : ${L.clia}`:""].filter(Boolean)},
   approval:o.verified?{by:o.verified.by,code:o.verified.code||"",at:o.verified.at}:null,
   accession:o.accession,patient:{name:pname(p),dob:fmtDOB(p.dob),age,gender:p.sex==="F"?"Female":p.sex==="M"?"Male":"Other",sex:p.sex,mrn:p.mrn},provider:pr?`${pr.name}, ${pr.cred}`:"",npi:pr?pr.npi:"",clinic:c.name,acct:c.acct||"",
-  collected:fmtDT(o.collectedAt),received:fmtDT((o.history.find(h=>h.s==="Received")||{}).at),reported:o.releasedAt?fmtDT(o.releasedAt):"",releasedBy:(o.released&&o.released.by)||((o.history.filter(h=>h.s==="Released").slice(-1)[0])||{}).by||"",esign:o.signature?`Electronically signed by ${o.signature.by} on ${fmtDT(o.signature.at)}: ${o.signature.meaning}`:"",
-  icd:o.icd.join(", "),specimen:[...new Set(o.tests.map(x=>T(x).specimen))].join(", "),flags:o.flags,blocks:B}}
+  specimen:orderSpecimen(o),collected:fmtDT(o.collectedAt),received:fmtDT((o.history.find(h=>h.s==="Received")||{}).at),reported:o.releasedAt?fmtDT(o.releasedAt):"",releasedBy:(o.released&&o.released.by)||((o.history.filter(h=>h.s==="Released").slice(-1)[0])||{}).by||"",esign:o.signature?`Electronically signed by ${o.signature.by} on ${fmtDT(o.signature.at)}: ${o.signature.meaning}`:"",
+  icd:o.icd.join(", "),flags:o.flags,blocks:B}}
 // Range bar: shaded band = reference range; hollow circle in range, filled diamond outside (readable in black and white).
 function rangeBarSVG(r){const W=260,H=22,y=11;let lo=r.lo,hi=r.hi;if(lo==null)lo=0;if(hi==null)hi=lo*2||1;
  const span=(hi-lo)||Math.abs(hi)||1,min=Math.min(lo-span*.6,r.v-span*.1),max=Math.max(hi+span*.6,r.v+span*.1),x=v=>6+(v-min)/(max-min)*(W-12);
@@ -1108,7 +1108,7 @@ function sparkSVG(r){const pts=[...r.hist.map(h=>h.v),r.v];if(pts.length<2)retur
  return `<span class="rp-sp"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="Previous results ${esc(r.hist.map(h=>`${h.d}: ${h.v}`).join(", "))}"><polyline points="${pts.map((v,i)=>`${X(i)},${Y(v)}`).join(" ")}" fill="none" stroke="#6b7280" stroke-width="1.4"/>${pts.map((v,i)=>`<circle cx="${X(i)}" cy="${Y(v)}" r="${i===pts.length-1?2.6:1.6}" fill="${i===pts.length-1?"#111":"#6b7280"}"/>`).join("")}</svg><small>${esc(String(prev.v))} on ${esc(prev.d)}</small></span>`}
 const RP_TONE={green:"#16803a",red:"#d0263b",blue:"#1f5fd6",bold:"#0e1726"};
 function reportHTML(m){const td=(v,t)=>`<td${t?` style="color:${RP_TONE[t]};font-weight:${t==="bold"?700:600}"`:""}>${esc(v??"")}</td>`;
- const pt=[["Patient",m.patient.name],["Birth",m.patient.dob],["Accession",m.accession],["Patient #",m.patient.mrn],["Age",m.patient.age],["Collection Date",m.collected],["Doctor",m.provider],["Gender",m.patient.gender],["Received Date",m.received],["Organization",m.clinic+(m.acct?` (${m.acct})`:"")],["Diagnosis",m.icd],["Reported Date",m.reported||"Pending"]];
+ const pt=[["Patient",m.patient.name],["Birth",m.patient.dob],["Accession",m.accession],["Patient #",m.patient.mrn],["Age",m.patient.age],["Collection Date",m.collected],["Doctor",m.provider],["Gender",m.patient.gender],["Received Date",m.received],["Organization",m.clinic+(m.acct?` (${m.acct})`:"")],["Diagnosis",m.icd],["Reported Date",m.reported||"Pending"],["Specimen",m.specimen||""]];
  const body=m.blocks.map(b=>{
   if(b.type==="title")return `<h3 class="rp-title">${esc(b.text)}</h3>`;
   if(b.type==="lines")return `<div class="rp-lines">${b.lines.map(([k,v])=>`<div><b>${esc(k)}:</b> <i>${esc(v)}</i></div>`).join("")}</div>`;
@@ -3096,5 +3096,9 @@ document.addEventListener("change",async ev=>{const t=ev.target;if(!(t.type==="f
 function esigField(){const pin=ui.esigMode!=="password"&&ui.hasPin;if(ui.esigMode===undefined&&ui.hasPin)ui.esigMode="pin";
  return `<div id="esig-field"><div class="field" style="margin-top:12px"><label for="esig-pw">${pin?"Your signing PIN":"Your password"}</label><input id="esig-pw" class="input" type="password" ${pin?'inputmode="numeric" maxlength="6" autocomplete="off"':'autocomplete="current-password"'}></div><p class="xs muted" style="margin-top:6px">Entering your ${pin?"PIN":"password"} is your electronic signature. It is recorded with the report.${pin?` <button class="link xs" data-a="esigUse" data-val="password">Use my password instead</button>`:ui.hasPin?` <button class="link xs" data-a="esigUse" data-val="pin">Use my PIN instead</button>`:isLab()?` <button class="link xs" data-a="setPinOpen">Set up a signing PIN</button>`:""}</p></div>`}
 function esigFocus(){setTimeout(()=>{const el=document.getElementById("esig-pw");if(el){el.focus();el.onkeydown=ev=>{if(ev.key==="Enter")A.esigRelease()}}},40)}
+
+// Specimen collection type for the report header: Urine, Oral fluid (saliva kit), Swab, Blood, Nail.
+function specimenType(sp){const t=String(sp||"");if(/oral|saliva/i.test(t))return "Oral fluid (saliva kit)";if(/swab/i.test(t))return "Swab";if(/nail/i.test(t))return "Nail";if(/urine/i.test(t))return "Urine";if(/serum|plasma|whole blood|edta|sst|blood/i.test(t))return "Blood";return t.split(/[,;(]/)[0].trim()}
+function orderSpecimen(o){const tox=o.toxSpec&&/oral/i.test(o.toxSpec)?"Oral fluid (saliva kit)":null;return [...new Set((o.tests||[]).map(c=>{const t=T(c);if(!t)return "";if(t.cat==="tox"||t.cat==="conf")return t.spec==="Oral fluid"||tox?"Oral fluid (saliva kit)":specimenType(t.specimen);return specimenType(t.specimen)}).filter(Boolean))].join(", ")}
 
 boot();

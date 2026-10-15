@@ -10,6 +10,7 @@ A3 non-PDF refused: true
 R1 sign box asks for PIN: true | password option true
 R2 wrong PIN: true | still open true
 R3 released: Released | signed by Jordan Ellis | method PIN PIN
+S1 report header specimen: Specimen:Urine
 D1 report PDF pages (report + 2 attached): true
 C1 clinic sees reference lab report: true | file true | no remove button true
 C2 opens signed link: true

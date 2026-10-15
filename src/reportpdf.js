@@ -71,11 +71,13 @@ async function reportPdf(m) {
       ["Received Date", m.received],
       ["Organization", `${m.clinic ?? ""}${m.acct ? ` (${m.acct})` : ""}`],
       ["Diagnosis", m.icd],
-      ["Reported Date", m.reported || "Pending"]
+      ["Reported Date", m.reported || "Pending"],
+      ["Specimen", m.specimen]
     ];
     const cw = (R - X) / 3;
     for (let i = 0; i < pt.length; i += 3) {
       for (let j = 0; j < 3; j++) {
+        if (!pt[i + j]) continue;
         const [k, v] = pt[i + j];
         const x = X + j * cw;
         text(`${k}:`, x, y, 8, reg, mute);

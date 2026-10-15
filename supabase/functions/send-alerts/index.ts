@@ -245,10 +245,10 @@ async function reportPdf(m: any): Promise<Uint8Array> {
     }
     page.drawLine({ start: { x: X, y }, end: { x: R, y }, thickness: 0.8, color: ink }); y -= 12;
     const pt = [["Patient", m.patient?.name], ["Birth", m.patient?.dob], ["Accession", m.accession], ["Patient #", m.patient?.mrn], ["Age", m.patient?.age], ["Collection Date", m.collected],
-      ["Doctor", m.provider], ["Gender", m.patient?.gender ?? m.patient?.sex], ["Received Date", m.received], ["Organization", `${m.clinic ?? ""}${m.acct ? ` (${m.acct})` : ""}`], ["Diagnosis", m.icd], ["Reported Date", m.reported || "Pending"]];
+      ["Doctor", m.provider], ["Gender", m.patient?.gender ?? m.patient?.sex], ["Received Date", m.received], ["Organization", `${m.clinic ?? ""}${m.acct ? ` (${m.acct})` : ""}`], ["Diagnosis", m.icd], ["Reported Date", m.reported || "Pending"], ["Specimen", m.specimen]];
     const cw = (R - X) / 3;
     for (let i = 0; i < pt.length; i += 3) {
-      for (let j = 0; j < 3; j++) { const [k, v] = pt[i + j]; const x = X + j * cw; text(`${k}:`, x, y, 8, reg, mute); text(wrap(String(v ?? ""), cw - 70, 8, reg)[0] ?? "", x + 66, y, 8); }
+      for (let j = 0; j < 3; j++) { if (!pt[i + j]) continue; const [k, v] = pt[i + j]; const x = X + j * cw; text(`${k}:`, x, y, 8, reg, mute); text(wrap(String(v ?? ""), cw - 70, 8, reg)[0] ?? "", x + 66, y, 8); }
       y -= 11;
     }
     y -= 6;
