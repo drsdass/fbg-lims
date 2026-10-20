@@ -554,3 +554,9 @@ Orders placed from this release (`confV: 4`) use the lab supervisor's Test_Mappi
 - **Oral fluid:** each drug reports the analytes in "Definitive Test Oral Fluid".
 
 The mapping is in `RX_MAP` and `UTESTS` in `src/app.js`; cutoffs and ULOQs come from Sheet1. The maps are stored as `confMap["Urine definitive"]` and `confMap["Oral fluid definitive"]` (map version 4). Older orders keep the map they were placed with, so their reports don't change. On Instruments > Definitive cutoffs an analyte has one cutoff: editing it under one test changes it under every test. In manual entry, an analyte that two ordered tests share is typed once.
+
+## 34. Native Health coverage, changing coverage from the order, results documents
+
+- Coverage options are Medicare, Medicaid, Commercial, **Native Health** and Self-pay (`COVERAGES`). Native Health orders bill as "Native Health"; the 837 uses claim filing indicator `OF` (other federal program). Confirm this with the billing company.
+- The order page's Billing box has **Change coverage or insurance** until the order is released. A coverage change updates the billing type of the patient's unreleased orders (client-billed orders stay client-billed) and is noted in each order's history.
+- Received and in-process orders have **Upload results document**: a PDF, or a JPG/PNG photo that is converted to a one-page PDF. It is attached as a "Results document" and added to the end of the report PDF (uses the `order-files` bucket from migration 0017).

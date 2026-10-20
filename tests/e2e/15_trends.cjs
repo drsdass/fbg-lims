@@ -31,7 +31,7 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  click('[data-a="go"][data-v="patients"]');await sleep(30);const pb=q('[data-a="openPatient"][data-id="ptT"]');pb.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(500);
  console.log('T1 trend button:',!!q('[data-a="trendOpen"]'));click('[data-a="trendOpen"]');await sleep(50);
  const cards=[...w.document.querySelectorAll('#modal-root .tr-card')].map(c=>c.textContent.replace(/\s+/g,' ').trim());
- console.log('T2 THC card end:',cards[2].slice(-260));
+ {const e=cards[2].slice(-320),i=e.search(/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{1,2}, \d{4}: 300/);console.log('T2 THC card end:',i>=0?e.slice(i):e.slice(-260))}
  console.log('T3 screen grid:',(mt().match(/Drug screens.{0,200}?For clinical review/)||['none'])[0]);
  console.log('T4 charts:',w.document.querySelectorAll('#modal-root svg[aria-label]').length,'| ref band:',!!q('#modal-root svg rect'),'| cutoff line:',/cutoff 50/.test(mt()));
  click('#modal-root [data-a="trMonths"][data-val="6"]');await sleep(30);console.log('T5 last 6 months:',[...w.document.querySelectorAll('#modal-root .tr-card')].length,'cards');

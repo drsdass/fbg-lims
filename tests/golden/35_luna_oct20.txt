@@ -1,0 +1,8 @@
+N1 change coverage link on a received order: true | billing before: Self pay
+N2 coverage options: Medicare | Medicaid | Commercial | Native Health | Self-pay
+N3 saved: Native Health NATIVE HEALTH | order billing Native Health | history Billing changed from Self pay to Native Health (patient coverage updated) | still on order page true
+N4 order page billing shows: BillingNative HealthNATIVE HEALTH NH123456Verify Unknown
+U1 upload results button: true
+U2 attached: [{"name":"results photo.pdf","kind":"Results document","inReport":true}] | panel lists it true
+U3 other files refused: true
+errors [] []

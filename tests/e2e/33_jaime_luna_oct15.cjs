@@ -45,11 +45,11 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  console.log('P4 PIN saved:',!!(M().pins||{}).uL,'|',toasts().split(' | ').slice(-1)[0]);
  // A1-A3: attach the Amico report to a received send-out order
  nav('openOrder',null,'ox50018184');await sleep(40);
- console.log('A1 attachments panel:',/Attachments and reference lab reports/.test(txt()),'| attach button',!!q('input[data-ofile]'));
+ console.log('A1 attachments panel:',/Attachments and reference lab reports/.test(txt()),'| attach button',!!q('input[data-ofile]:not([data-okind])'));
  const pdf2=await mkPdf(2);const fl=new w.File([pdf2],'Amico report 50018184.pdf',{type:'application/pdf'});fl.arrayBuffer=async()=>pdf2.buffer.slice(pdf2.byteOffset,pdf2.byteOffset+pdf2.byteLength);
- const fi=q('input[data-ofile]');Object.defineProperty(fi,'files',{value:[fl],configurable:true});fi.dispatchEvent(new w.Event('change',{bubbles:true}));await sleep(400);
+ const fi=q('input[data-ofile]:not([data-okind])');Object.defineProperty(fi,'files',{value:[fl],configurable:true});fi.dispatchEvent(new w.Event('change',{bubbles:true}));await sleep(400);
  const o84=st('50018184');console.log('A2 attached:',JSON.stringify((o84.files||[]).map(f=>({name:f.name,kind:f.kind,inReport:f.inReport,path:/^c1001\/ox50018184\//.test(f.path)}))),'| history',o84.history.slice(-1)[0].note);
- const txtFile=new w.File(['x'],'notes.txt',{type:'text/plain'});Object.defineProperty(q('input[data-ofile]'),'files',{value:[txtFile],configurable:true});q('input[data-ofile]').dispatchEvent(new w.Event('change',{bubbles:true}));await sleep(100);
+ const txtFile=new w.File(['x'],'notes.txt',{type:'text/plain'});Object.defineProperty(q('input[data-ofile]:not([data-okind])'),'files',{value:[txtFile],configurable:true});q('input[data-ofile]:not([data-okind])').dispatchEvent(new w.Event('change',{bubbles:true}));await sleep(100);
  console.log('A3 non-PDF refused:',/Attach a PDF file/.test(toasts()));
  // R1-R3: verify, then release signed with the PIN (one wrong PIN first)
  click('[data-a="manualEntry"]');await sleep(30);
