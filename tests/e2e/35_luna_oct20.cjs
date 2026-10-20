@@ -33,6 +33,17 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  const o86=st('50018186'),pt=M().store.patients.find(x=>x.id==='ptA').data;
  console.log('N3 saved:',pt.ins.type,pt.ins.payer,'| order billing',o86.billType,'| history',o86.history.slice(-1)[0].note,'| still on order page',/50018186/.test(q('.crumb')?q('.crumb').textContent:''));
  console.log('N4 order page billing shows:',(txt().replace(/\s+/g,' ').match(/Billing\s*Native Health[^C]*/)||['none'])[0].slice(0,60));
+ // O1-O3: "Other" adds a new coverage that is offered from then on
+ click('[data-a="editPatient"]');await sleep(30);
+ let sl=q('#modal-root select[data-b="pt.ins.type"]');sl.value='__other';sl.dispatchEvent(new w.Event('change',{bubbles:true}));sl.dispatchEvent(new w.Event('input',{bubbles:true}));await sleep(30);
+ console.log('O1 new coverage box:',!!q('#modal-root [data-b="pt._covName"]'));
+ click('#modal-root [data-a="savePatient"]');await sleep(100);console.log('O2 blank name refused:',/Type the name of the new coverage/.test(toasts()));
+ type('#modal-root [data-b="pt._covName"]','  Tricare  West ');click('#modal-root [data-a="savePatient"]');await sleep(1500);
+ const pt2=M().store.patients.find(x=>x.id==='ptA').data;
+ console.log('O3 saved:',JSON.stringify(pt2.ins.type),'| no temp field',!('_covName' in pt2),'| order billing',st('50018186').billType,'| lab settings',JSON.stringify((((M().store.settings||[]).find(r=>r.key==='lab')||{}).data||{}).coverages||null));
+ nav('openOrder',null,'ox50018187');await sleep(40);click('[data-a="editPatient"]');await sleep(30);
+ console.log('O5 offered next time:',[...q('#modal-root select[data-b="pt.ins.type"]').options].map(o=>o.textContent).join(' | '));
+ q('#modal-root').innerHTML='';nav('openOrder',null,'ox50018186');await sleep(40);
  // U1-U3: upload a results document (a phone photo) from the order page
  console.log('U1 upload results button:',!!q('input[data-okind="Results document"]'));
  const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==','base64');
