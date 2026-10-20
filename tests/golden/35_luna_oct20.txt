@@ -9,4 +9,9 @@ O5 offered next time: Select | Medicare | Medicaid | Commercial | Native Health 
 U1 upload results button: true
 U2 attached: [{"name":"results photo.pdf","kind":"Results document","inReport":true}] | panel lists it true
 U3 other files refused: true
+X1 entry page: true | no blank inputs true
+X2 verify: | Verified. Ready to report out.
+X3 released: Released | 3 alerts sent
+X4 report: 1 tests say See attached report | true
+X5 enter here instead: [] | inputs shown true | button to switch back true
 errors [] []

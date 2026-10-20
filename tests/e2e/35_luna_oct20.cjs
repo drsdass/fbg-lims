@@ -21,6 +21,8 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  const st=acc=>M().store.orders.find(o=>o.data.accession===acc).data;
  const login=async(e,p)=>{await signIn(e,p);if(q('[data-b="lf.code"]')){type('[data-b="lf.code"]','123456');click('[data-a="mfaVerify"]')};await sleep(300)};
  const nav=(a,v,id)=>{const b=w.document.createElement('button');b.dataset.a=a;if(v)b.dataset.v=v;if(id)b.dataset.id=id;w.document.body.append(b);b.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));b.remove()};
+ Object.assign(st('50018190'),{tests:['UTIABR'],toxSpec:'',status:'In Process',results:{}});
+ Object.assign(st('50018191'),{tests:['UTIABR'],toxSpec:'',status:'In Process',results:{},files:[{id:'fz',path:'c1001/ox50018191/x.pdf',name:'x.pdf',size:1000,kind:'Reference lab report',inReport:true,by:'x',at:1}]});
  await login('lab@fbg.com','labpassword12');
  // N1-N4: Native Health coverage, changed from the order page
  nav('openOrder',null,'ox50018186');await sleep(40);
@@ -52,5 +54,22 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  console.log('U2 attached:',JSON.stringify((st('50018186').files||[]).map(f=>({name:f.name,kind:f.kind,inReport:f.inReport}))),'| panel lists it',/results photo\.pdf/.test(txt()));
  const tf=new w.File(['x'],'notes.txt',{type:'text/plain'});const fi2=q('input[data-okind="Results document"]');Object.defineProperty(fi2,'files',{value:[tf],configurable:true});fi2.dispatchEvent(new w.Event('change',{bubbles:true}));await sleep(100);
  console.log('U3 other files refused:',/Upload a PDF, or a photo/.test(toasts()));
+ // X1-X5: a send-out UTI panel reported by the attached Amico PDF can be verified and released
+ const {PDFDocument}=require('pdf-lib');const pd=await PDFDocument.create();pd.addPage([300,300]);const pdfb=Buffer.from(await pd.save());
+ nav('openOrder',null,'ox50018190');await sleep(40);
+ const pf=new w.File([pdfb],'J BROYLES - RESULTS.pdf',{type:'application/pdf'});pf.arrayBuffer=async()=>pdfb.buffer.slice(pdfb.byteOffset,pdfb.byteOffset+pdfb.byteLength);
+ const pfi=q('input[data-ofile]:not([data-okind])');Object.defineProperty(pfi,'files',{value:[pf],configurable:true});pfi.dispatchEvent(new w.Event('change',{bubbles:true}));await sleep(500);
+ nav('go','entry','ox50018190');await sleep(60);
+ console.log('X1 entry page:',/Results for this test are in the attached report: J BROYLES - RESULTS\.pdf/.test(txt().replace(/\s+/g,' ')),'| no blank inputs',!q('.re-test input, .re-test select'));
+ click('[data-a="verifyResults"]');await sleep(300);console.log('X2 verify:','|',toasts().split(' | ').slice(-1)[0]);
+ nav('go','entry','ox50018190');await sleep(60);click('[data-a="release"]');await sleep(300);
+ if(q('#esig-pw')){q('#esig-pw').value='labpassword12';click('#modal-root [data-a="esigRelease"]');await sleep(1200)}
+ console.log('X3 released:',st('50018190').status,'|',toasts().split(' | ').slice(-1)[0]);
+ nav('openOrder',null,'ox50018190');await sleep(40);click('[data-a="report"]');await sleep(80);
+ const rt=q('#modal-root').textContent.replace(/\s+/g,' ');console.log('X4 report:',(rt.match(/See attached report/g)||[]).length,'tests say See attached report |',/are reported in the attached report from [^,]*, which follows this report/.test(rt));
+ q('#modal-root').innerHTML='';
+ // X5: switch back to typing results in the portal
+ nav('go','entry','ox50018191');await sleep(60);click('[data-a="extToggle"]');await sleep(60);
+ console.log('X5 enter here instead:',JSON.stringify(st('50018191').extTests),'| inputs shown',!!q('.re-test select, .re-test input'),'| button to switch back',!!q('[data-a="extToggle"]'));
  console.log('errors',errs,M().errors);process.exit(0)
 })();
