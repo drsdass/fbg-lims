@@ -341,12 +341,17 @@ export const DB = {
     if (error) throw error;
   },
   async devicesList() {
-    let { data, error } = await sb.from("instrument_devices").select("id,name,active,created_at,last_seen,scope").order("created_at");
+    let { data, error } = await sb.from("instrument_devices").select("id,name,active,created_at,last_seen,scope,clinic_id").order("created_at");
+    if (error && /clinic_id/i.test(error.message || "")) ({ data, error } = await sb.from("instrument_devices").select("id,name,active,created_at,last_seen,scope").order("created_at"));
     if (error && /scope/i.test(error.message || "")) ({ data, error } = await sb.from("instrument_devices").select("id,name,active,created_at,last_seen").order("created_at"));
     if (error) { if (missingTable(error)) return []; throw error; } return data;
   },
-  async deviceAdd(name, tokenHash, scope) { const row = { name, token_hash: tokenHash }; if (scope && scope !== "instrument") row.scope = scope; const { error } = await sb.from("instrument_devices").insert(row); if (error) { if (scope && /scope/i.test(error.message || "")) throw new Error("Run supabase/migrations/0012_referrals.sql first."); throw error; } },
+  async deviceAdd(name, tokenHash, scope, clinicId) { const row = { name, token_hash: tokenHash }; if (scope && scope !== "instrument") row.scope = scope; if (clinicId) row.clinic_id = clinicId; const { error } = await sb.from("instrument_devices").insert(row); if (error) { if (scope && /scope/i.test(error.message || "")) throw new Error("Run supabase/migrations/0012_referrals.sql first."); throw error; } },
 
+  // Partner lab interface (0019): activity log and which report versions the partner has confirmed.
+  async partnerLog(clinicId) { const { data, error } = await sb.from("partner_log").select("*").eq("clinic_id", clinicId).order("created_at", { ascending: false }).limit(300); if (error) { if (missingTable(error)) return null; throw error; } return data; },
+  async partnerDeliveries(orderIds) { if (!orderIds.length) return []; const { data, error } = await sb.from("partner_deliveries").select("order_id,version,delivered_at,acked_at,attempts").in("order_id", orderIds); if (error) { if (missingTable(error)) return []; throw error; } return data; },
+  async partnerLogHandled(id) { const { data: { user } } = await sb.auth.getUser(); const { error } = await sb.from("partner_log").update({ handled_at: new Date().toISOString(), handled_by: user && user.id }).eq("id", id); if (error) throw error; },
   async clinicUsage(id) { const { data, error } = await sb.rpc("clinic_usage", { p_clinic: id }); if (error) { if (/clinic_usage/.test(error.message || "")) throw new Error("Run supabase/migrations/0013_clinic_archive.sql first."); throw error; } return data; },
   async clinicDelete(id) { const { data, error } = await sb.from("clinics").delete().eq("id", id).select("id"); if (error) throw error; if (!data || !data.length) throw new Error("The clinic couldn't be deleted. Check it has no patients, orders or users, and that migration 0013 is installed."); },
 

@@ -67,6 +67,7 @@ function diff(a, b) {
   for (const f of suites) {
     const t0 = Date.now(), { out, code } = await run(path.join(dir, f)), name = f.replace(/\.cjs$/, ""), norm = normalize(out), gfile = path.join(gold, name + ".txt");
     const fails = failures(out, code), secs = ((Date.now() - t0) / 1000).toFixed(0);
+    if (code === 0 && /^SKIP:/.test(out.trim())) { console.log(`skip  ${name} (${out.trim().slice(6, 120)})`); continue; }
     if (update) { if (!fails.length) fs.writeFileSync(gfile, norm); console.log(`${fails.length ? "FAIL" : "saved"}  ${name} (${secs}s)${fails.length ? "\n  " + fails.join("\n  ") : ""}`); bad += fails.length ? 1 : 0; continue; }
     const want = fs.existsSync(gfile) ? normalize(fs.readFileSync(gfile, "utf8")) : null;
     const changed = want !== null && want !== norm;

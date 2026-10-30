@@ -572,3 +572,23 @@ The mapping is in `RX_MAP` and `UTESTS` in `src/app.js`; cutoffs and ULOQs come 
 - For the lab, a comparison with all FBG clients and an optional note printed at the top. **Download PDF** opens a branded, print-ready page (Save as PDF).
 
 No patient information is included. Statistics come from each released order's stored summary (`order_facts`), which now also records compliance (`summary.cmp`) and validity (`summary.val`); opening the page as lab staff updates loaded orders released before this change.
+
+## 36. Partner labs (order and results interface for another lab's LIMS)
+
+A partner lab (for example Peak Panel Laboratory) sends orders from its own LIMS and collects the released reports through
+the **partner-api** Edge Function. FBG performs and reports the tests under FBG's CLIA. The developer guide is
+`docs/partner-api.md` (the portal's **Developer guide** button downloads it with the endpoint and the partner's name filled in).
+
+Setup:
+1. Run `supabase/migrations/0019_partner_labs.sql`.
+2. Deploy the Edge Function `partner-api` (`supabase/functions/partner-api/index.ts`, one file) with **JWT verification off**.
+3. Create the partner's account under Clinics, then in **Partner labs** turn on the interface, create an API key (admins) and
+   send the key and guide to their developer. Map their own test codes there if they don't use FBG's.
+
+How it works: orders arrive as normal orders on the partner's account (tagged "Interface" in Accessioning, with their order
+number and tube barcode searchable); new ordering providers and patients are added automatically. On release, the locked
+report (`report_versions`) is handed over as structured data plus the same PDF clinics receive, and resent until the partner
+acknowledges it; corrected reports go out as a new version and rejections as version 0. Cancel requests and refused orders
+show on the Partner labs page. The PDF code is copied from send-alerts: after changing it there, run
+`node scripts/sync-partner-pdf.mjs` (test 37 fails until you do). Test 37 also exercises the function with Deno when
+installed (`tests/partner/partner_api.test.ts`).
