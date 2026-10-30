@@ -1,0 +1,51 @@
+const __path=require('path');const FIX=n=>__path.join(__dirname,'..','fixtures',n),ROOT=n=>__path.join(__dirname,'..','..',n),OUT=n=>{const d=__path.join(__dirname,'..','.out');require('fs').mkdirSync(d,{recursive:true});return __path.join(d,n)},BUNDLE=__path.join(__dirname,'..','.bundle.js'),REL=d=>new Date(Date.now()+d*864e5).toISOString().slice(0,10),MID_LAST_MONTH=(()=>{const d=new Date();d.setDate(15);d.setMonth(d.getMonth()-1);d.setHours(10,0,0,0);return d.getTime()})();
+const {JSDOM,VirtualConsole}=require('jsdom');const fs=require('fs');
+const vc=new VirtualConsole();vc.on("jsdomError",e=>{if(!/getContext|Not implemented/.test(e.message))console.log("JSDOMERR",e.message)});
+const dom=new JSDOM('<!doctype html><body><div id="app"></div><div id="modal-root"></div><div id="toast"></div></body>',{runScripts:'outside-only',pretendToBeVisual:true,url:'https://portal.test/',virtualConsole:vc});
+const w=dom.window;w.confirm=()=>true;w.scrollTo=()=>{};w.matchMedia=()=>({matches:false});
+if(!w.crypto.randomUUID)w.crypto.randomUUID=()=>require('crypto').randomUUID();
+const errs=[];w.addEventListener('error',e=>errs.push(e.message));w.addEventListener('unhandledrejection',e=>errs.push('UNHANDLED '+(e.reason&&e.reason.message)));
+const ctxStub=new Proxy({},{get:(t,k)=>typeof k==='string'?(()=>{}):undefined,set:()=>true});
+w.CSS={escape:s=>String(s).replace(/["\\]/g,'\\$&')};w.HTMLCanvasElement.prototype.getContext=function(){return ctxStub};w.HTMLCanvasElement.prototype.toDataURL=()=>'data:image/png;base64,iVBORw0KGgo=';w.HTMLCanvasElement.prototype.setPointerCapture=()=>{};
+w.__TOXSEED=true;w.eval(fs.readFileSync(BUNDLE,'utf8'));
+const sign=k=>{const c=w.document.querySelector(`canvas.sigc[data-k="${k}"]`);if(!c)return false;for(const t of ['pointerdown','pointermove','pointerup'])c.dispatchEvent(new w.MouseEvent(t,{bubbles:true,clientX:10,clientY:10}));return true};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const q=s=>w.document.querySelector(s),txt=()=>w.document.querySelector('#app').textContent;
+const click=s=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.dispatchEvent(new w.MouseEvent('click',{bubbles:true}))};
+const type=(s,v)=>{const el=q(s);if(!el){errs.push('missing '+s);return}el.value=v;el.dispatchEvent(new w.Event('input',{bubbles:true}));el.dispatchEvent(new w.Event('change',{bubbles:true}))};
+const M=()=>w.__mock;
+const toasts=()=>[...w.document.querySelectorAll('#toast .toast')].map(t=>t.textContent).join(' | ');
+async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b="lf.pw"]',pw);click('[data-a="login"]');await sleep(80)}
+(async()=>{
+ await sleep(80);
+ const login=async(e,p)=>{await signIn(e,p);if(q('[data-b="lf.code"]')){type('[data-b="lf.code"]','123456');click('[data-a="mfaVerify"]')};await sleep(300)};
+ const nav=(a,v,id)=>{const b=w.document.createElement('button');b.dataset.a=a;if(v)b.dataset.v=v;if(id)b.dataset.id=id;w.document.body.append(b);b.dispatchEvent(new w.MouseEvent('click',{bubbles:true}));b.remove()};
+ // Released toxicology orders with stored statistics: 6 in the last 90 days, 3 in the 90 days before.
+ const D=864e5,now=Date.now(),mk=(i,ago,sm)=>{const id='oxins'+i;M().store.orders.push({id,clinic_id:'c1001',updated_at:new Date(now-ago*D).toISOString(),data:{id,accession:'9900000'+i,clinicId:'c1001',patientId:'ptJ',providerId:'p1',tests:['UDS','CONF'],confirm:[],meds:[],icd:[],toxSpec:'Urine',status:'Released',createdAt:now-ago*D,collectedAt:now-ago*D,releasedAt:now-ago*D+30*36e5,history:[{s:'Received',at:now-ago*D+2*36e5}],results:{},summary:sm}})};
+ mk(1,10,{scr:{FENT:1,OPI:0},conf:{'Fentanyl':1,'Norfentanyl':1},cmp:{rx:1,ok:0,miss:1,un:['Fentanyl']},val:'Normal'});
+ mk(2,20,{scr:{FENT:1,THC:1},conf:{'Norfentanyl':1,'THC-COOH (Marijuana Metabolite)':1},cmp:{rx:0,ok:0,miss:0,un:['Norfentanyl']},val:'Diluted'});
+ mk(3,30,{scr:{OXY:1},conf:{'Oxycodone':1,'Oxymorphone':1},cmp:{rx:1,ok:1,miss:0,un:[]},val:'Normal'});
+ mk(4,40,{scr:{OXY:0},conf:{'Oxycodone':0},cmp:{rx:1,ok:0,miss:1,un:[]},val:'Normal'});
+ mk(5,50,{scr:{BZO:1},conf:{'Alpha-Hydroxyalprazolam':1},cmp:{rx:1,ok:1,miss:0,un:[]},val:'Normal'});
+ mk(6,60,{scr:{AMP:0},conf:{},val:'Normal'});
+ mk(7,100,{scr:{THC:1},conf:{'THC-COOH (Marijuana Metabolite)':1}});mk(8,110,{scr:{OXY:1},conf:{'Oxycodone':1}});mk(9,120,{scr:{},conf:{'Oxycodone':0}});
+ await login('lab@fbg.com','labpassword12');
+ nav('go','insights');await sleep(60);
+ console.log('I1 lab nav + page:',!!q('[data-v="insights"]'),/Clinic insights/.test(txt()));
+ const sel=q('select[data-b="iq.clinic"]');sel.value='c1001';sel.dispatchEvent(new w.Event('change',{bubbles:true}));sel.dispatchEvent(new w.Event('input',{bubbles:true}));await sleep(60);
+ const T=()=>txt().replace(/\s+/g,' ');
+ console.log('I2 KPIs:',(T().match(/\d+Specimens resulted\d+ in the previous period/)||['none'])[0],'|',(T().match(/\d+%Positive for at least one drug[^%]*?period/)||['none'])[0],'|',(T().match(/\d+%Positive for an illicit drug/)||['none'])[0],'|',(T().match(/\d+%Prescribed medications found/)||['none'])[0]);
+ const tops=[...w.document.querySelectorAll('.panel [title]')].map(x=>x.getAttribute('title')).filter(Boolean);
+ console.log('I3 most detected:',(T().match(/Drugs detected most often.*?(?=Drugs on the rise)/)||['none'])[0].replace(/Share of resulted.*?red\./,'').slice(0,200));
+ console.log('I4 on the rise:',(T().match(/Drugs on the rise.*?(?=Positive and negative)/)||['none'])[0].replace(/Detected more often.*?before\./,''));
+ console.log('I5 compliance + validity:',(T().match(/Prescribed medication found: \d+.*?non-prescribed drug: \d+/)||['none'])[0],'|',(T().match(/Diluted: \d+ \(\d+%\)/)||['none'])[0],'| benchmark',/Compared with all FBG clients/.test(T()),'| no patient names',!/Jane|Doe/.test(T()));
+ type('textarea[data-b="iq.msg"]','Thank you for choosing FBG.');
+ let doc='';w.open=()=>({document:{write:h=>{doc+=h},close(){},querySelector:()=>null},focus(){},print(){doc+='[printed]'}});
+ click('[data-a="insightsPrint"]');await sleep(300);
+ fs.writeFileSync(OUT('insights_print.html'),doc.replace('[printed]',''));console.log('I6 PDF window:',/<title>FBG Insights - Pacific Coast Pain - /.test(doc),'| note',/Thank you for choosing FBG\./.test(doc),'| logo',/<img src="https:\/\/portal\.test\/logo\.png"/.test(doc),'| printed',/\[printed\]$/.test(doc));
+ click('[data-a="insightsDays"][data-val="30"]');await sleep(40);console.log('I7 last 30 days:',(T().match(/\d+Specimens resulted/)||['none'])[0]);
+ click('[data-a="logout"]');await sleep(600);
+ await login('clinic@pc.com','clinicpass123');nav('go','insights');await sleep(80);
+ console.log('C1 clinic sees Insights:',!!q('[data-v="insights"]'),'|',(T().match(/\d+Specimens resulted/)||['none'])[0],'| no clinic picker',!q('select[data-b="iq.clinic"]'),'| no benchmark',!/Compared with all FBG clients/.test(T()));
+ console.log('errors',errs,M().errors);process.exit(0)
+})();

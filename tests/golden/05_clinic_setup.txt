@@ -1,7 +1,7 @@
 L0 login screen: no self-registration: false keep-signed-in option: true username label: true
-L1 lab nav: Dashboard, New order, Accessioning, Pickups, Specimen storage, Quality control, Instruments, Billing, Clinics, Insurance check, Test menu, Supply orders, Turnaround, Reports, Analytics, Compliance, Notification log, Audit log, Users, Auto-verification, Therapy guide!, Lab settings
+L1 lab nav: Dashboard, New order, Accessioning, Pickups, Specimen storage, Quality control, Instruments, Billing, Clinics, Insurance check, Test menu, Supply orders, Turnaround, Reports, Analytics, Clinic insights, Compliance, Notification log, Audit log, Users, Auto-verification, Therapy guide!, Lab settings
 L2 settings shown: true true
-L3 clinic saved: active {"ordering":false,"supplies":true,"resultsScope":"all","mfa":false,"vialLabels":false,"analytics":false} {"onFile":true,"signer":"Ann Ora"}
+L3 clinic saved: active {"ordering":false,"supplies":true,"resultsScope":"all","mfa":false,"vialLabels":false,"analytics":false,"insights":true} {"onFile":true,"signer":"Ann Ora"}
 L4 provider links offered: true
 L5 username user: true ["p1"] temp pw shown: true
 L6 partial label: 15 of 21 tests selected
@@ -15,7 +15,7 @@ L13 released: Released
 L14 reopened: In Process corrections: 1
 L15 corrected report: true true alerts corrected flag: true
 L16 change password: true
-S1 clinic nav: Dashboard, Patients, New order, Orders & results, Supplies, Pickups, Notifications, Test menu, Clinic settings
+S1 clinic nav: Dashboard, Patients, New order, Orders & results, Supplies, Pickups, Insights, Notifications, Test menu, Clinic settings
 S2 supply order: SUP-<ID> STAT [{"name":"Urine collection cups","qty":50},{"name":"Specimen transport bags","qty":20}] 2 Park Plaza
 S3 shipped: Shipped 1Z999
 N1 username sign-in reaches password change: true

@@ -1,0 +1,9 @@
+I1 lab nav + page: true true
+I2 KPIs: 6Specimens resulted3 in the previous period | 67%Positive for at least one drugabout the same as the previous period | 33%Positive for an illicit drug | 50%Prescribed medications found
+I3 most detected: Drugs detected most often Fentanyl33% (2)Marijuana (THC)17% (1)Oxycodone / o<ID>% (1)Alprazolam17% (1)
+I4 on the rise: Drugs on the riseFentanylNew · 33% of specimensAlprazolamNew · 17% of specimens
+I5 compliance + validity: Prescribed medication found: 2Prescribed medication not found: 2Specimens with a non-prescribed drug: 2 | Diluted: 1 (17%) | benchmark true | no patient names true
+I6 PDF window: true | note true | logo true | printed true
+I7 last 30 days: 2Specimens resulted
+C1 clinic sees Insights: true | 6Specimens resulted | no clinic picker true | no benchmark true
+errors [] []

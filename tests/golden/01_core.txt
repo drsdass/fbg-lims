@@ -5,7 +5,7 @@
 5 patient saved to server: 1 c1001
 6 consent step: true
 7 requires signature: true
-8pre toasts: That email and password don't match an account. | That email and password don't match an account. | Patient added | Collect the patient consent signature. | Order submitted | step text:  Pacific Coast Pain DashboardPatientsNew orderOrders & resultsSuppliesPickupsNotificationsTest menuClinic settings You'll be signed out after 15 minutes of inactivity. ML Maria LopezClinic user Orders & results / FBG<YYMMDD>-1001 FBG<YYMMDD>-1001 OrderedDiaz, Ana · Pacific Coast Pain Requisition and lab
+8pre toasts: That email and password don't match an account. | That email and password don't match an account. | Patient added | Collect the patient consent signature. | Order submitted | step text:  Pacific Coast Pain DashboardPatientsNew orderOrders & resultsSuppliesPickupsInsightsNotificationsTest menuClinic settings You'll be signed out after 15 minutes of inactivity. ML Maria LopezClinic user Orders & results / FBG<YYMMDD>-1001 FBG<YYMMDD>-1001 OrderedDiaz, Ana · Pacific Coast Pain Requisition
 8 order on server: FBG<YYMMDD>-1001 c1001 UDS lab note: 1
 9 audit views: 4
 10 lab dashboard: true sees clinic order: true

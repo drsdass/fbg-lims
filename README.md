@@ -562,3 +562,13 @@ The mapping is in `RX_MAP` and `UTESTS` in `src/app.js`; cutoffs and ULOQs come 
 - The order page's Billing box has **Change coverage or insurance** until the order is released. A coverage change updates the billing type of the patient's unreleased orders (client-billed orders stay client-billed) and is noted in each order's history.
 - Received and in-process orders have **Upload results document**: a PDF, or a JPG/PNG photo that is converted to a one-page PDF. It is attached as a "Results document" and added to the end of the report PDF (uses the `order-files` bucket from migration 0017).
 - **Results in an attached report.** A send-out test counts as reported once a reference lab report or results document is attached (and included in the report PDF). Verification and release no longer ask for its results; the report shows "See attached report" for that test and a note that the document follows. On the results page, "Results are in the attached report" and "Enter the results here instead" switch any non-toxicology test between the two (`o.extTests`). Uploading with "Upload results document" marks the order's unresulted tests this way.
+
+## 35. Clinic insights (marketing report for clinics)
+
+**Clinic insights** (lab: Reports or Clinics permission; clinics: the "Insights" clinic setting, on by default) summarizes released toxicology results for a period (30 days to 12 months) against the period before:
+
+- Specimens resulted, positivity, illicit-drug positivity, prescribed medications found, median turnaround.
+- Drugs detected most often (analytes rolled up to the drug, e.g. norfentanyl → fentanyl), drugs on the rise or new this period, positives by month, medication compliance, positives by drug class, urine screen positivity by panel drug, and specimen validity.
+- For the lab, a comparison with all FBG clients and an optional note printed at the top. **Download PDF** opens a branded, print-ready page (Save as PDF).
+
+No patient information is included. Statistics come from each released order's stored summary (`order_facts`), which now also records compliance (`summary.cmp`) and validity (`summary.val`); opening the page as lab staff updates loaded orders released before this change.
