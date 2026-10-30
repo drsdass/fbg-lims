@@ -41,3 +41,12 @@ W6 next run also delivers the earlier corrected report that was pulled but never
 W7 their system refuses the message: {"sent":0,"failed":1}
 W8 push log: ["failed: Results webhook token missing: add the Supabase secret PARTNER_TOKEN_C2001.","failed: Their system answered 500: \"down\"","ok: Report version 1 delivered (received)","ok: Report version 2 delivered (received)","failed: Their system answered 200: [{\"code\":\"UNKNOWN_ANALYTE\",\"message\":\"AMPHETAMINES_SCREEN not mapped\"}]"]
 W9 push needs a lab user or the cron secret: 401
+C1 FBG-URINE-REFLEX: {"ack":"accepted","errors":[],"tests":["UDS"],"screen":"reflex","toxSpec":"Urine","confirm":[],"meds":[],"codes":{"UDS":"FBG-URINE-REFLEX"}}
+C2 FBG-URINE-80307 + FBG-SPEC-VALIDITY: {"ack":"accepted","errors":[],"tests":["UDS"],"screen":"only","toxSpec":"Urine","confirm":[],"meds":[],"codes":{"UDS":"FBG-URINE-80307","VALIDITY":"FBG-SPEC-VALIDITY"}}
+C3 FBG-SPEC-VALIDITY alone: {"ack":"validation_error","errors":["Test code \"FBG-SPEC-VALIDITY\": specimen validity is done with the urine screen. Order it together with a urine screen code."]}
+C4 FBG-URINE-DEF without drugs: {"ack":"validation_error","errors":["Test code \"FBG-URINE-DEF\" is definitive testing by selection: list the drugs in toxicology.definitive (names from catalog).","toxicology needs a screen or at least one definitive drug."]}
+C5 FBG-URINE-DEF with drugs: {"ack":"accepted","errors":[],"tests":["CONF"],"screen":"none","toxSpec":"Urine","confirm":["Fentanyl","Methamphetamine"],"meds":["Alprazolam"],"codes":{"CONF":"FBG-URINE-DEF"}}
+C6 FBG-ORAL-DEF on a urine specimen: {"ack":"validation_error","errors":["Test code \"FBG-ORAL-DEF\" is for oral fluid, but the order's specimen is urine.","Definitive drug \"THC (Cannabinoids)\" isn't on the Urine list. Use catalog to see the names.","toxicology needs a screen or at least one definitive drug."]}
+C7 FBG-ORAL-DEF on oral fluid: {"ack":"accepted","errors":[],"tests":["CONFOF"],"screen":"none","toxSpec":"Oral fluid","confirm":["THC (Cannabinoids)","Fentanyl"],"meds":[],"codes":{"CONFOF":"FBG-ORAL-DEF"}}
+C8 reflex + definitive selection together: {"ack":"accepted","errors":[],"tests":["UDS","CONF"],"screen":"reflex","toxSpec":"Urine","confirm":["Oxycodone"],"meds":[],"codes":{"UDS":"FBG-URINE-REFLEX","CONF":"FBG-URINE-DEF"}}
+C9 validity results under their validity code: [{"code":"FBG-URINE-80307","fbg":"UDS","analytes":["AMPHETAMINES_SCREEN","CANNABINOIDS_THC_SCREEN"]},{"code":"FBG-SPEC-VALIDITY","fbg":"VALIDITY","analytes":["CREATININE"]}]

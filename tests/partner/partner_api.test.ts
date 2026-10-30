@@ -167,3 +167,19 @@ out("W7 their system refuses the message:", await pushPartner(admin, partnerC, u
 out("W8 push log:", db.partner_log.filter((l) => l.kind === "push").map((l) => `${l.ok ? "ok" : "failed"}: ${l.note}`));
 const unauth = await handle(new Request("https://x/functions/v1/partner-api", { method: "POST", body: JSON.stringify({ action: "results.push" }) }), { ...admin, auth: { getUser: async () => ({ data: null }) } });
 out("W9 push needs a lab user or the cron secret:", unauth.status);
+
+// ---------- Peak Panel's sandbox code list ----------
+Object.assign(db.clinics[0].data.partner.map, { "FBG-URINE-80307": "UDS:only", "FBG-URINE-REFLEX": "UDS:reflex", "FBG-URINE-DEF": "CONF:*", "FBG-ORAL-DEF": "CONFOF:*", "FBG-SPEC-VALIDITY": "VALIDITY" });
+const ppOrder = (id: string, codes: string[], extra: any = {}) => bearer({ ...pkg, external_order_id: id, accession_number: "PPL-" + id, tests: codes.map((c) => ({ test_code: c })), ...extra });
+const view = async (id: string, codes: string[], extra: any = {}) => { const r = await ppOrder(id, codes, extra); const o2 = db.orders.find((x) => x.data.partner?.orderId === id)?.data; return { ack: r.body.status, errors: r.body.errors.map((e: any) => e.message), ...(o2 ? { tests: o2.tests, screen: o2.screen, toxSpec: o2.toxSpec, confirm: o2.confirm, meds: o2.meds, codes: o2.partner.codes } : {}) }; };
+out("C1 FBG-URINE-REFLEX:", await view("PP-C1", ["FBG-URINE-REFLEX"]));
+out("C2 FBG-URINE-80307 + FBG-SPEC-VALIDITY:", await view("PP-C2", ["FBG-URINE-80307", "FBG-SPEC-VALIDITY"]));
+out("C3 FBG-SPEC-VALIDITY alone:", await view("PP-C3", ["FBG-SPEC-VALIDITY"]));
+out("C4 FBG-URINE-DEF without drugs:", await view("PP-C4", ["FBG-URINE-DEF"]));
+out("C5 FBG-URINE-DEF with drugs:", await view("PP-C5", ["FBG-URINE-DEF"], { toxicology: { definitive: ["fentanyl", "Methamphetamine"], prescribed: ["Alprazolam"] } }));
+out("C6 FBG-ORAL-DEF on a urine specimen:", await view("PP-C6", ["FBG-ORAL-DEF"], { toxicology: { definitive: ["THC (Cannabinoids)"] } }));
+out("C7 FBG-ORAL-DEF on oral fluid:", await view("PP-C7", ["FBG-ORAL-DEF"], { specimen: { ...pkg.specimen, type: "oral fluid", specimen_id: "OF-7" }, toxicology: { definitive: ["THC (Cannabinoids)", "Fentanyl"] } }));
+out("C8 reflex + definitive selection together:", await view("PP-C8", ["FBG-URINE-REFLEX", "FBG-URINE-DEF"], { toxicology: { definitive: ["Oxycodone"] } }));
+const c2 = db.orders.find((x) => x.data.partner?.orderId === "PP-C2")!.data;
+const valMsg = toPackageResult({ status: "final", version: 1, released_at: null, sections: [screenSec] }, c2, { first: "Test", last: "Patient", dob: "1980-01-01", sex: "X" });
+out("C9 validity results under their validity code:", valMsg.tests.map((t: any) => ({ code: t.test_code, fbg: t.fbg_test_code, analytes: t.results.map((a: any) => a.analyte_code) })));

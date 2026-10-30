@@ -43,6 +43,13 @@ also works). Send `X-Message-Id` if you like; `message_id` in the body is used f
   screen, a screen with reflex to LC-MS/MS, and/or specific definitive drugs (urine or oral fluid). A code can stand for a
   panel. Send FBG your test code list and what each should include before testing starts. An unmapped code is answered
   with `UNKNOWN_TEST_CODE`.
+- **Definitive testing by selection** (for example a "definitive by selection" code): add a `toxicology` object to the
+  `lab_order` listing the drugs, using the names from `catalog` (`toxicology.definitive.Urine` or `["Oral fluid"]`):
+  `"toxicology": { "definitive": ["Fentanyl", "Oxycodone"], "prescribed": ["Oxycodone"], "medications_text": "Percocet 10/325 BID" }`.
+  `prescribed` is optional but recommended: it drives the medication-compliance section of the report. It can be sent
+  with screen orders too.
+- **Specimen validity** (creatinine, specific gravity, pH) is performed with every urine screen. A validity code is
+  accepted together with a urine screen code, and its results come back under that code.
 
 **Cancellations: `cancel_order`.** POST your `cancel_order` message. FBG answers `cancel_ack` with `status`
 `received` (FBG staff cancel it if testing hasn't started), `too_late` (HTTP 409, already resulted or rejected) or

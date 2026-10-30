@@ -102,7 +102,9 @@ async function findOrder(ctx: Ctx, partnerOrderId: string) {
 function validDob(v: string) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v); if (!m) return false; const d = new Date(v + "T12:00:00Z"); return !isNaN(+d) && d.getUTCFullYear() === +m[1] && +m[1] > 1900 && d.getTime() < Date.now(); }
 
 // A partner code can stand for an FBG test ("CMP") or toxicology: "UDS:only", "UDS:reflex", "CONF:<urine drug>",
-// "CONFOF:<oral fluid drug>". One partner code can map to several (a panel), as an array.
+// "CONFOF:<oral fluid drug>", "CONF:*" / "CONFOF:*" (definitive testing of the drugs listed in the order's toxicology
+// block), or "VALIDITY" (urine specimen validity, which comes with every urine screen). One partner code can map to
+// several (a panel), as an array.
 const targetsOf = (map: any, code: string): string[] => { const v = map[code] ?? map[code.toUpperCase()]; return v == null ? [code] : Array.isArray(v) ? v : [v]; };
 
 export function buildOrder(ctx: { partner: any; clinic: any }, o: any) {
@@ -133,7 +135,8 @@ export function buildOrder(ctx: { partner: any; clinic: any }, o: any) {
   if (!icd.length && billTo === "insurance") errors.push("At least one ICD-10 code is required when billing insurance.");
 
   const cat = ctx.partner.catalog || {}, map = ctx.partner.map || {}, allowed = new Set<string>(cat.tests || []);
-  const tests: string[] = [], codeMap: Record<string, string> = {};
+  const tests: string[] = [], codeMap: Record<string, string> = {}, needDrugs: string[] = [];
+  let needScreen = "";
   // Toxicology comes as a "toxicology" block, or from mapped codes (UDS:..., CONF:..., CONFOF:...).
   let tx: any = o.toxicology ? { ...o.toxicology, definitive: [...(o.toxicology.definitive || [])] } : null;
   for (const raw of Array.isArray(o.tests) ? o.tests : []) {
@@ -146,9 +149,10 @@ export function buildOrder(ctx: { partner: any; clinic: any }, o: any) {
         tx = tx || { screen: "none", definitive: [] };
         tx.specimen = tx.specimen || spec;
         if (m[1] === "UDS") { tx.screen = m[2] === "reflex" || tx.screen === "reflex" ? "reflex" : "only"; codeMap.UDS = codeMap.UDS || code; }
-        else { tx.definitive.push(m[2]); codeMap[m[1]] = codeMap[m[1]] || code; }
+        else { if (m[2] === "*") needDrugs.push(code); else tx.definitive.push(m[2]); codeMap[m[1]] = codeMap[m[1]] || code; }
         continue;
       }
+      if (t === "VALIDITY") { needScreen = needScreen || code; codeMap.VALIDITY = codeMap.VALIDITY || code; continue; }
       if (["UDS", "CONF", "CONFOF"].includes(t)) { errors.push(`Test code "${code}": order toxicology with the toxicology block, or ask FBG to map the code to a toxicology profile.`); continue; }
       if (!allowed.has(t)) { errors.push(`Test code "${code}" isn't on your test list. Ask FBG to add or map it.`); continue; }
       if (!tests.includes(t)) tests.push(t);
@@ -170,11 +174,13 @@ export function buildOrder(ctx: { partner: any; clinic: any }, o: any) {
     if (!["none", "only", "reflex"].includes(screen)) { errors.push("toxicology.screen must be none, only or reflex."); screen = "none"; }
     if (spec === "Oral fluid" && screen !== "none") { warnings.push("Oral fluid has no screen; toxicology.screen was ignored."); screen = "none"; }
     const def = pick(tx.definitive, "Definitive drug", true), rx = pick(tx.prescribed, "Prescribed drug", false);
+    if (needDrugs.length && !def.out.length) errors.push(`Test code "${needDrugs[0]}" is definitive testing by selection: list the drugs in toxicology.definitive (names from catalog).`);
     if (spec && screen === "none" && !def.out.length) errors.push("toxicology needs a screen or at least one definitive drug.");
     tox = { spec, screen, confirm: def.out, meds: rx.out, rxMeds: rx.other, medsText: s(tx.medications_text, 500) };
     if (screen !== "none") tests.unshift("UDS");
     if (def.out.length) tests.push(spec === "Urine" ? "CONF" : "CONFOF");
   }
+  if (needScreen && !(tox && tox.screen !== "none")) errors.push(`Test code "${needScreen}": specimen validity is done with the urine screen. Order it together with a urine screen code.`);
   if (!tests.length && !errors.length) errors.push("The order has no tests. Add tests or a toxicology block.");
   if (billTo === "insurance" && cov !== "Self-pay" && (!member || (!payer && !["Medicare", "Medicaid"].includes(cov)))) errors.push("patient.insurance needs payer and member_id when bill_to is insurance.");
   return {
@@ -417,9 +423,15 @@ export function toPackageResult(item: any, o: any, pt: any) {
     const an = analytesOf(sec);
     if (!an.length) continue;
     const { ours, theirs } = codeFor(sec);
-    let t = tests.find((x) => x.test_code === theirs);
-    if (!t) { t = { test_code: theirs, fbg_test_code: ours, test_name: sec.title, status: item.status, results: [] }; tests.push(t); }
-    t.results.push(...an);
+    const put = (code: string, fbg: string | null, name: string, list: any[]) => {
+      if (!list.length) return;
+      let t = tests.find((x) => x.test_code === code);
+      if (!t) { t = { test_code: code, fbg_test_code: fbg, test_name: name, status: item.status, results: [] }; tests.push(t); }
+      t.results.push(...list);
+    };
+    const val = codes.VALIDITY ? an.filter((a) => a.method === "Specimen validity") : [];
+    put(theirs, ours, sec.title, an.filter((a) => !val.includes(a)));
+    put(codes.VALIDITY, "VALIDITY", "Urine Specimen Validity", val);
   }
   return {
     message_type: "lab_result", message_id: `FBG-${o.accession}-v${item.version}`, external_order_id: o.partner?.orderId || null,
