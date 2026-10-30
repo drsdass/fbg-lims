@@ -5,9 +5,14 @@ P4 cancel banner: true | refused shown true | log rows 4
 P5 endpoint: https://abc.supabase.co/functions/v1/partner-api
 P6 key: {"name":"Peak Panel Laboratory LIMS","clinic":"c2001","hashed":true} | shown once true | endpoint in modal true
 P7 mapping: {"PP-UTI":"UTIABR"} | listed true
+P7b panel mapping: ["UDS:reflex","CONF:Fentanyl"] | shown true | options Toxicology / Urine definitive (LC-MS/MS) / Oral fluid definitive (LC-MS/MS) / Other tests
+P7c push settings: true | default secret PARTNER_TOKEN_FBG_2001
+P7d saved: true {"url":"https://peakpanel.example/api/lab-results","tokenSecret":"PARTNER_TOKEN_FBG_2001"}
+P7e send now: [{"action":"results.push"}] | 1 sent
 P8 developer guide: true | for true | endpoint true | actions true
 P9 cancel handled: true | banner gone true
 Q1 queue finds their order number: true | Interface tag true
 Q2 order page: Partner orderPeak Panel Laboratory order PP-1001Tube PP1001U
+Q3 rejection sent to their system right away: [{"action":"results.push","order_id":"oxpp1"}]
 P10 interface off: false
 errors [] []

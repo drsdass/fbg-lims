@@ -6,16 +6,70 @@ nothing retyped on either side. Everything is JSON over HTTPS.
 ## Connection
 
 - **Endpoint:** `POST https://<project>.supabase.co/functions/v1/partner-api`
-- **Headers:** `Content-Type: application/json` and `x-api-key: <your key>`
-- **Body:** a JSON object with an `action` field, described below.
+- **Headers:** `Content-Type: application/json` and `Authorization: Bearer <your key>` (or `x-api-key: <your key>`)
+- **Body:** either a message in your integration package format (with `message_type`, next section), or a JSON object
+  with an `action` field (sections 1-6). Both work on the same address; use whichever suits your LIMS.
 - **Your key** is created by FBG and given to you once. Store it like a password (for example in AWS Secrets Manager).
   If it's ever exposed, tell FBG; they deactivate it and issue a new one.
 - Every response is JSON. Errors have an `error` message (or an `errors` list for a rejected order) and an HTTP status:
   400 bad request, 401 missing/unknown key, 403 interface turned off, 404 not found, 409 conflict, 422 order failed
   validation, 500 FBG-side problem (safe to retry).
 
-Recommended setup on AWS: a Lambda (or any scheduled job) that sends new orders as they're created, and runs
-`results.pull` every 5 minutes.
+## Using your LIMS-to-LIMS integration package
+
+FBG accepts the messages in your integration package as written, so your LIMS can use its own format.
+
+**Orders: `lab_order`.** POST your `lab_order` message to the endpoint above (appending `/api/lab-orders` to the address
+also works). Send `X-Message-Id` if you like; `message_id` in the body is used first. FBG answers with your
+`order_ack`:
+
+```json
+{ "message_type": "order_ack", "message_id": "MSG-20261029-000001", "external_order_id": "M1-ORD-100001",
+  "accession_number": "M1TOX-20261029-0001", "their_accession_number": "FBG261029-1042",
+  "status": "accepted", "received_datetime": "2026-10-29T17:31:00.000Z", "errors": [] }
+```
+
+- `status` is `accepted`, `duplicate` (same `external_order_id` sent before: nothing new is created, and the original
+  FBG accession is returned) or `validation_error` (HTTP 422; nothing is created; `errors` lists `field`, `code` and
+  `message`, with codes such as `UNKNOWN_TEST_CODE`, `INVALID_NPI`, `INVALID_DATE`, `REQUIRED`).
+- Your `accession_number` and `external_order_id` are stored on the FBG order and returned on every acknowledgment and
+  result. `their_accession_number` is FBG's accession (it appears on the report).
+- `specimen.specimen_id` is treated as the tube barcode, so FBG scans your label at receiving.
+- `billing.billing_type`: `client_bill` bills <Partner lab>; `insurance` needs `billing.insurance` with `type`,
+  `payer`, `member_id` (and `group`), plus at least one diagnosis code; `self_pay` bills the patient.
+- `patient.sex` accepts M, F or U. `priority` `stat` is flagged STAT. `chain_of_custody` and `ordering_facility` are
+  recorded on the order.
+- **Test codes:** send your own `test_code` values. FBG maps each one, once, to FBG tests or toxicology profiles: a urine
+  screen, a screen with reflex to LC-MS/MS, and/or specific definitive drugs (urine or oral fluid). A code can stand for a
+  panel. Send FBG your test code list and what each should include before testing starts. An unmapped code is answered
+  with `UNKNOWN_TEST_CODE`.
+
+**Cancellations: `cancel_order`.** POST your `cancel_order` message. FBG answers `cancel_ack` with `status`
+`received` (FBG staff cancel it if testing hasn't started), `too_late` (HTTP 409, already resulted or rejected) or
+`not_found` (HTTP 404).
+
+**Results: `lab_result`, sent to your webhook.** Give FBG your results address (`POST /api/lab-results`) and the bearer
+token for it (through a secure channel, not email). FBG sends each report the moment it's released:
+
+- Headers `Authorization: Bearer <your token>`, `X-Source-System: fbg-lims`, `X-Message-Id: FBG-<FBG accession>-v<version>`.
+- Body: your `lab_result` with `external_order_id`, `accession_number` (yours), `their_accession_number` (FBG's),
+  `status` (`final`, `corrected` or `rejected`), `result_datetime`, `patient`, `performing_lab` (FBG's name and
+  CLIA), and `tests`: one entry per test code you ordered, each with discrete `results`.
+- Each result has `analyte_code`, `analyte_name`, `value` (Positive / Negative for drug tests, or the measured value),
+  `measured_value` (LC-MS/MS concentration), `units`, `cutoff`, `flag` (`N` normal, `A` abnormal/positive, `H`/`L`
+  high/low, `C` critical), `method` (`Immunoassay`, `LC-MS/MS` or `Specimen validity`), `reference_range`, and for
+  confirmations `interpretation` (medication consistency) and `illicit`.
+- `report_pdf_base64` is the signed FBG report (identical to what FBG's clients receive), with `report_pdf_filename`.
+- A corrected report is sent as a new message with `status` `corrected` and a higher `report_version`; it replaces the
+  earlier result. A rejected specimen is sent with `status` `rejected`, `rejection_reason` and `recollect`.
+- Answer with any 2xx status (your `result_ack` is fine). Anything else, or no answer, is retried every 5 minutes. An
+  answer with `status: "rejected"` or a non-empty `errors` list is treated as not received and shown to FBG staff.
+  Use `X-Message-Id` to ignore a result you have already stored.
+
+If you'd rather collect results than receive them, use `results.pull` and `results.ack` below instead.
+
+Recommended setup on AWS: a Lambda (or any scheduled job) that sends new orders as they're created; for collecting
+results, run `results.pull` every 5 minutes.
 
 ## 1. Check the connection: `ping`
 
@@ -175,6 +229,36 @@ A report that isn't acknowledged is sent again on the next pull, so a crash betw
 
 FBG can give you a key for a test account before go-live. Send a few orders with made-up patients, check they appear at
 FBG, and ask FBG to release test reports so you can practice `results.pull` and `results.ack`.
+
+## Answers to your open questions
+
+1. **JSON orders over HTTPS?** Yes, in your format (`lab_order`) or FBG's (`order.create`).
+2. **Your accession as the placer/master accession?** Yes. It's stored on the order and returned on every ack and result.
+3. **Will FBG generate its own accession?** Yes (format `FBGYYMMDD-NNNN`), returned as `their_accession_number`.
+4. **Where is your accession stored?** On the FBG order as the partner accession, next to your `external_order_id` and
+   `message_id`; FBG staff see your order number on the order and can search by it.
+5. **Order endpoint?** `POST https://<project>.supabase.co/functions/v1/partner-api` (optionally with `/api/lab-orders` appended). FBG gives you a sandbox key first.
+6. **Authentication?** `Authorization: Bearer <API key>`; one key per system, created by FBG, revocable at any time.
+7. **Response to an order?** Your `order_ack`, synchronously (see above).
+8. **How are results sent back?** Pushed to your `/api/lab-results` webhook as `lab_result`, with retries; or pulled by you.
+9. **Discrete analyte results?** Yes, every analyte on the report, with flags, units, cutoffs and method.
+10. **PDF reports?** Yes, base64 in `report_pdf_base64`.
+11. **Statuses?** Order status: Ordered, Received, In Process, Released, Corrected, Rejected, Cancelled. Results are sent
+    when final: `final`, `corrected`, `rejected`. Preliminary and partial results are not sent.
+12. **Corrected/amended results?** A new message with `status` `corrected`, a new `message_id` and a higher
+    `report_version`, replacing the earlier result.
+13. **Tox test and analyte codes?** You keep your test codes; FBG maps them (see "Test codes"). Analyte codes are FBG's
+    analyte names in upper case with underscores (for example `FENTANYL`, `NORFENTANYL`, `AMPHETAMINES_SCREEN`). FBG's
+    toxicology menu lists every drug, analyte, cutoff and ULOQ.
+14. **Validation errors?** `validation_error` with `field`, `code` and `message` for each problem (see above).
+15. **Sandbox?** Yes: a test account and key at FBG, used with synthetic patients only, until both sides sign off.
+16. **Technical contact?** See below.
+
+Toxicology details: urine presumptive screen on the Yumizen C560 (14 drugs, immunoassay) with specimen validity
+(creatinine, specific gravity, pH); definitive testing by LC-MS/MS (SCIEX 4500) for urine and oral fluid. With reflex
+ordered, positive screens are confirmed automatically; screen and confirmation results are reported together on one
+report and as separate analytes in `lab_result`. Specimen requirements, containers, storage and stability: ask FBG for the
+current specimen collection guide.
 
 ## Questions
 

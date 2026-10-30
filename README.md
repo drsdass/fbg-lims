@@ -585,6 +585,15 @@ Setup:
 3. Create the partner's account under Clinics, then in **Partner labs** turn on the interface, create an API key (admins) and
    send the key and guide to their developer. Map their own test codes there if they don't use FBG's.
 
+**The partner's own message format.** The function also accepts the partner's LIMS-to-LIMS package as written:
+`lab_order` (answered with `order_ack`: accepted / duplicate / validation_error) and `cancel_order` (`cancel_ack`), with
+`Authorization: Bearer <key>`. Their test codes are mapped once on the Partner labs page to FBG tests or toxicology
+profiles (`UDS:only`, `UDS:reflex`, `CONF:<drug>`, `CONFOF:<drug>`; one code can be a panel). Results can be pushed:
+set **Results delivery** to "FBG sends reports to their system" with their https webhook, and add their bearer token as
+the Supabase secret named there (default `PARTNER_TOKEN_<ACCOUNT>`). Each release or rejection is sent right away as their
+`lab_result` (discrete analytes plus the PDF); anything not accepted is retried by `supabase/partner_push_cron.sql`
+(pg_cron + pg_net every 5 minutes, using the `PARTNER_CRON_SECRET` secret).
+
 How it works: orders arrive as normal orders on the partner's account (tagged "Interface" in Accessioning, with their order
 number and tube barcode searchable); new ordering providers and patients are added automatically. On release, the locked
 report (`report_versions`) is handed over as structured data plus the same PDF clinics receive, and resent until the partner

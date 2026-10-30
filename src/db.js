@@ -463,6 +463,12 @@ export const DB = {
     }
   },
   async qcUpdateResult(r) { const { error } = await sb.from("qc_results").update({ data: r }).eq("id", r.id); if (error) throw error; },
+  // Hand a released (or rejected) partner order's report to the partner's webhook now; the scheduled job retries failures.
+  async partnerPush(orderId) {
+    const { data, error } = await sb.functions.invoke("partner-api", { body: { action: "results.push", ...(orderId ? { order_id: orderId } : {}) } });
+    if (error) { let msg = error.message || "Couldn't reach the partner interface."; try { const j = await error.context.json(); if (j && j.error) msg = j.error; } catch (e) {} throw new Error(msg); }
+    return data;
+  },
   async sendAlerts() {
     const { data, error } = await sb.functions.invoke("send-alerts", { body: {} });
     if (error) {

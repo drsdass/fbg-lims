@@ -45,6 +45,17 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  click('#modal-root [data-a="closeModal"]');await sleep(150);
  type('[data-b="pl.newMap.from"]','PP-UTI');const ms=q('select[data-b="pl.newMap.to"]');ms.value='UTIABR';ms.dispatchEvent(new w.Event('change',{bubbles:true}));click('[data-a="plMap"]');await sleep(1500);
  console.log('P7 mapping:',JSON.stringify(M().store.clinics.find(c=>c.id==='c2001').data.partner.map),'| listed',/PP-UTI.*UTIABR/.test(T()));
+ // P7b-P7d: toxicology profile mapping (a panel), results delivery to their webhook, Send now
+ const addMap=async(code,target)=>{type('[data-b="pl.newMap.from"]',code);const s2=q('select[data-b="pl.newMap.to"]');s2.value=target;s2.dispatchEvent(new w.Event('change',{bubbles:true}));click('[data-a="plMap"]');await sleep(200)};
+ await addMap('TOX_PANEL_URINE','UDS:reflex');await addMap('TOX_PANEL_URINE','CONF:Fentanyl');await sleep(1300);
+ console.log('P7b panel mapping:',JSON.stringify(M().store.clinics.find(c=>c.id==='c2001').data.partner.map.TOX_PANEL_URINE),'| shown',/TOX_PANEL_URINEUrine screen with reflexUrine definitive: Fentanyl/.test(T()),'| options',[...q('select[data-b="pl.newMap.to"]').querySelectorAll('optgroup')].map(g=>g.label).join(' / '));
+ click('[data-a="plMode"][data-val="push"]');await sleep(100);
+ console.log('P7c push settings:',!!q('[data-b="pl.push.url"]'),'| default secret',q('[data-b="pl.push.tokenSecret"]').value);
+ type('[data-b="pl.push.url"]','http://insecure.example');click('[data-a="plPushSave"]');await sleep(50);const httpRefused=/Enter their https:\/\/ results address/.test(toasts());
+ type('[data-b="pl.push.url"]','https://peakpanel.example/api/lab-results');click('[data-a="plPushSave"]');await sleep(1300);
+ console.log('P7d saved:',httpRefused,JSON.stringify(M().store.clinics.find(c=>c.id==='c2001').data.partner.push));
+ click('[data-a="plPushNow"]');await sleep(600);
+ console.log('P7e send now:',JSON.stringify(M().partnerCalls),'|',toasts().split(' | ').slice(-1)[0]);
  let blob=null;w.URL.createObjectURL=b=>{blob=b;return 'blob:x'};w.URL.revokeObjectURL=()=>{};
  click('[data-a="plGuide"]');await sleep(200);
  const guide=blob?await new Promise(r=>{const fr=new w.FileReader();fr.onload=()=>r(fr.result);fr.readAsText(blob)}):'';
@@ -55,6 +66,8 @@ async function signIn(email,pw){type('[data-b="lf.email"]',email);type('[data-b=
  console.log('Q1 queue finds their order number:',/FBG261029-1101/.test(T()),'| Interface tag',!!q('.tag[title*="their order PP-1001"]'));
  nav('openOrder',null,'oxpp1');await sleep(60);
  console.log('Q2 order page:',(T().match(/Partner orderPeak Panel Laboratory order PP-1001Tube PP1001U/)||['none'])[0]);
+ click('[data-a="reject"]');await sleep(30);const rs=q('#modal-root [data-b="rej.reason"]');rs.value=rs.options[1].value;rs.dispatchEvent(new w.Event('change',{bubbles:true}));click('#modal-root [data-a="confirmReject"]');await sleep(1200);
+ console.log('Q3 rejection sent to their system right away:',JSON.stringify(M().partnerCalls.slice(-1)));
 
  nav('go','partners');await sleep(100);q('[data-a="plOn"]').dispatchEvent(new w.MouseEvent('click',{bubbles:true}));await sleep(1500);
  console.log('P10 interface off:',M().store.clinics.find(c=>c.id==='c2001').data.partner.enabled);

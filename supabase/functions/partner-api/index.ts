@@ -1,17 +1,18 @@
 // partner-api: lets a partner laboratory's LIMS (for example Peak Panel Laboratory) send orders to First Bio Genetics and
-// collect the released results, with no one retyping anything.
+// get the released results back, with no one retyping anything.
 //
-// Deploy with JWT verification OFF. Every request carries the partner's API key in the x-api-key header. Keys are created
-// in the portal (Partner labs > Create API key); only a SHA-256 hash is stored, and each key belongs to one partner account.
-// The full developer guide is in docs/partner-api.md.
+// Deploy with JWT verification OFF. The partner authenticates with its API key, sent as "Authorization: Bearer <key>"
+// or "x-api-key: <key>". Keys are created in the portal (Partner labs > Create API key); only a SHA-256 hash is stored,
+// and each key belongs to one partner account. The developer guide is docs/partner-api.md.
 //
-//   POST {action: "ping"}                          -> {ok, partner, lab}
-//   POST {action: "catalog"}                       -> the test codes and toxicology drug names this partner may order
-//   POST {action: "order.create", order: {...}}    -> {ok, accession, status} (sending the same order id again is safe)
-//   POST {action: "order.status", id}              -> {id, accession, status, received_at, released_at, rejected_reason}
-//   POST {action: "order.cancel", id, reason?}     -> {ok}; FBG staff are told and cancel it if testing hasn't started
-//   POST {action: "results.pull", limit?}          -> {results: [...]} released reports (structured + PDF) not yet acknowledged
-//   POST {action: "results.ack", accession, version} -> {ok}; that report version is not sent again
+// Two message styles are accepted on the same address:
+//  1. The partner's integration package ("message_type"): lab_order -> order_ack, cancel_order -> cancel_ack.
+//     Results are pushed to the partner's webhook (POST lab_result; a 2xx answer marks it received).
+//  2. FBG actions ("action"): ping, catalog, order.create, order.status, order.cancel, results.pull, results.ack.
+// Pushing results: {action: "results.push", order_id?} is called by the portal right after a release (signed-in lab
+// user), and by a scheduled job with the x-cron-secret header (PARTNER_CRON_SECRET), which retries failed deliveries.
+// Webhook settings live on the partner account (Partner labs > Results delivery); the webhook's bearer token is a Supabase
+// secret named there (default PARTNER_TOKEN_<ACCOUNT>), never stored in the database.
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "npm:pdf-lib@1.17.1";
 
@@ -34,17 +35,21 @@ const accession = (t: number, n: number) => {
 const s = (v: unknown, max = 200) => String(v ?? "").trim().slice(0, max);
 const norm = (v: unknown) => String(v ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
 const iso = (t: unknown) => (t ? new Date(Number(t)).toISOString() : null);
+const slug = (v: unknown) => String(v ?? "").toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_|_$/g, "");
 
 // Coverage names the portal uses; anything else is kept as the partner sent it (the portal offers it from then on).
 const COVERAGE: Record<string, string> = { medicare: "Medicare", medicaid: "Medicaid", commercial: "Commercial", nativehealth: "Native Health", selfpay: "Self-pay", self: "Self-pay", none: "Self-pay" };
 const BILL: Record<string, string> = { Medicare: "Medicare", Medicaid: "Medicaid", Commercial: "Commercial insurance", "Native Health": "Native Health", "Self-pay": "Self pay" };
 
-type Ctx = { admin: any; dev: any; clinic: any; partner: any };
+type Ctx = { admin: any; dev: any; clinic: any; partner: any; cid: string };
 
 export async function handle(req: Request, admin: any): Promise<Response> {
   if (req.method !== "POST") return json({ error: "Use POST with a JSON body." }, 405);
-  const key = req.headers.get("x-api-key") ?? "";
-  if (key.length < 32) return json({ error: "Missing API key (x-api-key header)." }, 401);
+  let body: any;
+  try { body = await req.json(); } catch { return json({ error: "Send a JSON body." }, 400); }
+  if (body?.action === "results.push") return await pushEndpoint(req, admin, body);
+  const key = (req.headers.get("x-api-key") || (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "")).trim();
+  if (key.length < 32) return json({ error: "Missing API key (Authorization: Bearer <key>, or x-api-key)." }, 401);
   const { data: dev } = await admin.from("instrument_devices").select("id,active,name,scope,clinic_id").eq("token_hash", await sha256(key)).maybeSingle();
   if (!dev || !dev.active) return json({ error: "Unknown or inactive API key." }, 401);
   if (dev.scope !== "partner" || !dev.clinic_id) return json({ error: "This key isn't a partner lab key." }, 403);
@@ -52,19 +57,18 @@ export async function handle(req: Request, admin: any): Promise<Response> {
   const clinic = crow?.data;
   if (!clinic || clinic.status === "archived" || !clinic.partner?.enabled) return json({ error: "The partner interface is turned off for this account. Contact First Bio Genetics." }, 403);
   await admin.from("instrument_devices").update({ last_seen: new Date().toISOString() }).eq("id", dev.id);
-  let body: any;
-  try { body = await req.json(); } catch { return json({ error: "Send a JSON body." }, 400); }
-  const ctx: Ctx = { admin, dev, clinic, partner: clinic.partner };
+  const ctx: Ctx = { admin, dev, clinic, partner: clinic.partner, cid: dev.clinic_id };
   try {
+    if (body?.message_type) return await packageMessage(ctx, body, req.headers.get("x-message-id") || "");
     switch (body?.action) {
       case "ping": return json({ ok: true, partner: clinic.name, lab: "First Bio Genetics" });
       case "catalog": return json(catalog(ctx));
-      case "order.create": return await createOrder(ctx, body.order);
+      case "order.create": { const r = await createOrder(ctx, body.order); return json(r.body, r.status); }
       case "order.status": return await orderStatus(ctx, s(body.id, 64));
-      case "order.cancel": return await cancelOrder(ctx, s(body.id, 64), s(body.reason, 300));
+      case "order.cancel": { const r = await cancelOrder(ctx, s(body.id, 64), s(body.reason, 300)); return json(r.body, r.status); }
       case "results.pull": return await pullResults(ctx, body);
       case "results.ack": return await ackResult(ctx, s(body.accession, 40), Number(body.version));
-      default: return json({ error: "Unknown action. Use ping, catalog, order.create, order.status, order.cancel, results.pull or results.ack." }, 400);
+      default: return json({ error: "Unknown request. Send a message_type (lab_order, cancel_order) or an action (ping, catalog, order.create, order.status, order.cancel, results.pull, results.ack)." }, 400);
     }
   } catch (e) {
     await log(ctx, "error", { ok: false, note: String((e as Error)?.message ?? e).slice(0, 300) });
@@ -72,9 +76,9 @@ export async function handle(req: Request, admin: any): Promise<Response> {
   }
 }
 
-async function log(ctx: Ctx, kind: string, f: { partnerOrderId?: string; orderId?: string; accession?: string; ok?: boolean; note?: string }) {
+async function log(ctx: { admin: any; dev?: any; cid: string }, kind: string, f: { partnerOrderId?: string; orderId?: string; accession?: string; ok?: boolean; note?: string }) {
   try {
-    await ctx.admin.from("partner_log").insert({ device_id: ctx.dev.id, clinic_id: ctx.dev.clinic_id, kind, partner_order_id: f.partnerOrderId || null,
+    await ctx.admin.from("partner_log").insert({ device_id: ctx.dev?.id || null, clinic_id: ctx.cid, kind, partner_order_id: f.partnerOrderId || null,
       order_id: f.orderId || null, accession: f.accession || null, ok: f.ok !== false, note: f.note || null });
   } catch { /* logging never blocks the interface */ }
 }
@@ -91,11 +95,15 @@ function catalog(ctx: Ctx) {
 
 // ---------- orders in ----------
 async function findOrder(ctx: Ctx, partnerOrderId: string) {
-  const { data } = await ctx.admin.from("orders").select("id,data").eq("clinic_id", ctx.dev.clinic_id).eq("data->partner->>orderId", partnerOrderId).limit(1);
+  const { data } = await ctx.admin.from("orders").select("id,data").eq("clinic_id", ctx.cid).eq("data->partner->>orderId", partnerOrderId).limit(1);
   return data && data[0] ? data[0].data : null;
 }
 
 function validDob(v: string) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v); if (!m) return false; const d = new Date(v + "T12:00:00Z"); return !isNaN(+d) && d.getUTCFullYear() === +m[1] && +m[1] > 1900 && d.getTime() < Date.now(); }
+
+// A partner code can stand for an FBG test ("CMP") or toxicology: "UDS:only", "UDS:reflex", "CONF:<urine drug>",
+// "CONFOF:<oral fluid drug>". One partner code can map to several (a panel), as an array.
+const targetsOf = (map: any, code: string): string[] => { const v = map[code] ?? map[code.toUpperCase()]; return v == null ? [code] : Array.isArray(v) ? v : [v]; };
 
 export function buildOrder(ctx: { partner: any; clinic: any }, o: any) {
   const errors: string[] = [], warnings: string[] = [];
@@ -107,7 +115,7 @@ export function buildOrder(ctx: { partner: any; clinic: any }, o: any) {
   if (!first || !last) errors.push("patient.first_name and patient.last_name are required.");
   if (!validDob(dob)) errors.push("patient.dob must be a real date as YYYY-MM-DD.");
   const sexIn = norm(p.sex), sex = sexIn.startsWith("f") ? "F" : sexIn.startsWith("m") ? "M" : sexIn ? "X" : "";
-  if (!sex) errors.push("patient.sex is required (M, F or X).");
+  if (!sex) errors.push("patient.sex is required (M, F, or U/X for unknown).");
   const ins = p.insurance || {};
   const covIn = s(ins.type, 40), cov = COVERAGE[norm(covIn)] || covIn || "Self-pay";
   const member = s(ins.member_id ?? ins.member, 40), payer = s(ins.payer, 80);
@@ -118,19 +126,35 @@ export function buildOrder(ctx: { partner: any; clinic: any }, o: any) {
   const collected = Date.parse(s(o.collected_at, 40));
   if (isNaN(collected)) errors.push("collected_at is required (ISO 8601, e.g. 2026-10-30T09:15:00-07:00).");
   else if (collected > Date.now() + 3600e3) errors.push("collected_at is in the future.");
+  const billTo = s(o.bill_to, 20).toLowerCase() || "insurance";
+  if (!["insurance", "client", "patient"].includes(billTo)) errors.push("bill_to must be insurance, client or patient.");
   const icd = (Array.isArray(o.icd10) ? o.icd10 : []).map((x: unknown) => s(x, 10).toUpperCase().replace(/\s/g, "")).filter(Boolean);
   if (icd.some((c: string) => !/^[A-Z]\d{2}(\.?[A-Z0-9]{1,4})?$/.test(c))) errors.push("icd10 codes must look like Z79.891.");
-  if (!icd.length) errors.push("At least one ICD-10 code is required.");
+  if (!icd.length && billTo === "insurance") errors.push("At least one ICD-10 code is required when billing insurance.");
 
   const cat = ctx.partner.catalog || {}, map = ctx.partner.map || {}, allowed = new Set<string>(cat.tests || []);
-  const tests: string[] = [];
+  const tests: string[] = [], codeMap: Record<string, string> = {};
+  // Toxicology comes as a "toxicology" block, or from mapped codes (UDS:..., CONF:..., CONFOF:...).
+  let tx: any = o.toxicology ? { ...o.toxicology, definitive: [...(o.toxicology.definitive || [])] } : null;
   for (const raw of Array.isArray(o.tests) ? o.tests : []) {
-    const code = s(raw, 40), ours = map[code] || map[code.toUpperCase()] || code;
-    if (["UDS", "CONF", "CONFOF"].includes(ours)) continue; // toxicology is ordered through the "toxicology" block
-    if (!allowed.has(ours)) { errors.push(`Test code "${code}" isn't on your test list. Ask FBG to add or map it.`); continue; }
-    if (!tests.includes(ours)) tests.push(ours);
+    const code = s(raw, 40);
+    for (const t of targetsOf(map, code)) {
+      const m = /^(UDS|CONF|CONFOF):(.+)$/.exec(t);
+      if (m) {
+        const spec = m[1] === "CONFOF" ? "Oral fluid" : "Urine";
+        if (tx && tx.specimen && norm(tx.specimen) !== norm(spec)) { errors.push(`Test code "${code}" is for ${spec.toLowerCase()}, but the order's specimen is ${tx.specimen}.`); continue; }
+        tx = tx || { screen: "none", definitive: [] };
+        tx.specimen = tx.specimen || spec;
+        if (m[1] === "UDS") { tx.screen = m[2] === "reflex" || tx.screen === "reflex" ? "reflex" : "only"; codeMap.UDS = codeMap.UDS || code; }
+        else { tx.definitive.push(m[2]); codeMap[m[1]] = codeMap[m[1]] || code; }
+        continue;
+      }
+      if (["UDS", "CONF", "CONFOF"].includes(t)) { errors.push(`Test code "${code}": order toxicology with the toxicology block, or ask FBG to map the code to a toxicology profile.`); continue; }
+      if (!allowed.has(t)) { errors.push(`Test code "${code}" isn't on your test list. Ask FBG to add or map it.`); continue; }
+      if (!tests.includes(t)) tests.push(t);
+      codeMap[t] = codeMap[t] || code;
+    }
   }
-  const tx = o.toxicology;
   let tox: any = null;
   if (tx) {
     const spec = norm(tx.specimen).startsWith("oral") || norm(tx.specimen) === "saliva" ? "Oral fluid" : norm(tx.specimen) === "urine" ? "Urine" : "";
@@ -152,28 +176,28 @@ export function buildOrder(ctx: { partner: any; clinic: any }, o: any) {
     if (def.out.length) tests.push(spec === "Urine" ? "CONF" : "CONFOF");
   }
   if (!tests.length && !errors.length) errors.push("The order has no tests. Add tests or a toxicology block.");
-  const billTo = s(o.bill_to, 20).toLowerCase() || "insurance";
-  if (!["insurance", "client", "patient"].includes(billTo)) errors.push("bill_to must be insurance, client or patient.");
   if (billTo === "insurance" && cov !== "Self-pay" && (!member || (!payer && !["Medicare", "Medicaid"].includes(cov)))) errors.push("patient.insurance needs payer and member_id when bill_to is insurance.");
   return {
-    errors, warnings, id, tests, tox, icd, collected, billTo,
+    errors, warnings, id, tests, tox, icd, collected, billTo, codeMap,
     patient: { partnerId: s(p.id, 64), first, last, dob, sex, phone: s(p.phone, 30), email: s(p.email, 120), address: s(p.address, 120), city: s(p.city, 60), state: s(p.state, 2).toUpperCase(), zip: s(p.zip, 10),
       ins: { type: cov, payer, member, group: s(ins.group, 40) } },
     provider: { name: prName, npi, cred: s(pr.credentials ?? pr.cred, 20) },
     billType: billTo === "client" ? "Client bill" : billTo === "patient" || cov === "Self-pay" ? "Self pay" : BILL[cov] || cov,
     barcode: s(o.barcode, 40), stat: !!o.stat, notes: s(o.notes, 1000), collector: s(o.collector, 80),
+    accession: s(o.accession, 64), facility: o.facility || null, messageId: s(o.message_id, 80),
   };
 }
 
-async function createOrder(ctx: Ctx, raw: any): Promise<Response> {
+type Out = { status: number; body: any; order?: any };
+async function createOrder(ctx: Ctx, raw: any): Promise<Out> {
   const b: any = buildOrder(ctx, raw);
   if (b.errors.length) {
     await log(ctx, "order", { partnerOrderId: b.id, ok: false, note: b.errors.join(" ").slice(0, 500) });
-    return json({ ok: false, errors: b.errors }, 422);
+    return { status: 422, body: { ok: false, errors: b.errors } };
   }
   const dup = await findOrder(ctx, b.id);
-  if (dup) return json({ ok: true, duplicate: true, accession: dup.accession, status: dup.status });
-  const { admin, clinic } = ctx, cid = ctx.dev.clinic_id, now = Date.now(), by = `${clinic.name} interface`;
+  if (dup) return { status: 200, body: { ok: true, duplicate: true, accession: dup.accession, status: dup.status }, order: dup };
+  const { admin, clinic, cid } = ctx, now = Date.now(), by = `${clinic.name} interface`;
 
   // Provider: matched by NPI; a new ordering provider is added to the partner's account.
   let prov = (clinic.providers || []).find((x: any) => x.npi === b.provider.npi);
@@ -201,21 +225,22 @@ async function createOrder(ctx: Ctx, raw: any): Promise<Response> {
   }
   const { data: seq, error: se } = await admin.rpc("next_seq_internal", { p_name: "accession" });
   if (se) throw se;
-  const t = b.tox;
+  const t = b.tox, fac = b.facility && b.facility.name ? `Ordering facility: ${s(b.facility.name, 120)}${b.facility.client_id ? ` (${s(b.facility.client_id, 40)})` : ""}` : "";
   const ord: any = {
     id: "o" + rid(16), accessCode: accessCode(), accession: accession(now, Number(seq)), clinicId: cid, patientId: pt.id, providerId: prov.id, tests: b.tests,
     confirm: t ? t.confirm : [], confirmReq: t ? [...t.confirm] : [], confV: 4, rxMeds: t ? t.rxMeds : [], parts: {},
     toxSpec: t ? t.spec : "", screen: t ? t.screen : "none", reflex: !!t && t.screen === "reflex", poct: {}, collector: b.collector, recollect: false,
-    billType: b.billType, meds: t ? t.meds : [], medsText: t ? t.medsText : "", icd: b.icd, collectedAt: b.collected, createdAt: now, stat: b.stat, fasting: false, notes: b.notes,
-    source: "partner", scans: [], partner: { lab: cid, orderId: b.id, barcode: b.barcode, patientId: b.patient.partnerId },
+    billType: b.billType, meds: t ? t.meds : [], medsText: t ? t.medsText : "", icd: b.icd, collectedAt: b.collected, createdAt: now, stat: b.stat, fasting: false,
+    notes: [b.notes, fac].filter(Boolean).join("\n"), source: "partner", scans: [],
+    partner: { lab: cid, orderId: b.id, barcode: b.barcode, patientId: b.patient.partnerId, codes: b.codeMap, ...(b.accession ? { accession: b.accession } : {}), ...(b.messageId ? { messageId: b.messageId } : {}) },
     ...(b.barcode ? { vialBarcode: b.barcode } : {}),
     consents: { patient: { method: "file", name: `${pt.first} ${pt.last}`, at: now, by: clinic.name }, provider: { name: `${prov.name}${prov.cred ? ", " + prov.cred : ""}`, sof: true, at: now, attest: true, by: clinic.name } },
-    status: "Ordered", history: [{ s: "Ordered", at: now, by, note: `Received from ${clinic.name} (their order ${b.id})` }], results: {}, readAt: null, releasedAt: null,
+    status: "Ordered", history: [{ s: "Ordered", at: now, by, note: `Received from ${clinic.name} (their order ${b.id}${b.accession ? `, accession ${b.accession}` : ""})` }], results: {}, readAt: null, releasedAt: null,
   };
   const { error: oe } = await admin.from("orders").insert({ id: ord.id, clinic_id: cid, data: ord });
   if (oe) throw oe;
   await log(ctx, "order", { partnerOrderId: b.id, orderId: ord.id, accession: ord.accession, note: b.warnings.join(" ") || undefined });
-  return json({ ok: true, accession: ord.accession, status: ord.status, warnings: b.warnings });
+  return { status: 200, body: { ok: true, accession: ord.accession, status: ord.status, warnings: b.warnings }, order: ord };
 }
 
 async function orderStatus(ctx: Ctx, id: string): Promise<Response> {
@@ -226,72 +251,231 @@ async function orderStatus(ctx: Ctx, id: string): Promise<Response> {
   return json({ id, accession: o.accession, status: o.status, received_at: iso(rcv?.at), released_at: iso(o.releasedAt), rejected_reason: o.status === "Rejected" ? [o.rejectReason, o.rejectDetail].filter(Boolean).join(": ") : null });
 }
 
-async function cancelOrder(ctx: Ctx, id: string, reason: string): Promise<Response> {
-  if (!id) return json({ error: "Send the order id." }, 400);
+async function cancelOrder(ctx: Ctx, id: string, reason: string): Promise<Out> {
+  if (!id) return { status: 400, body: { error: "Send the order id." } };
   const o = await findOrder(ctx, id);
-  if (!o) return json({ error: "No order with that id." }, 404);
-  if (["Released", "Amended", "Corrected", "Rejected", "Cancelled"].includes(o.status)) return json({ ok: false, status: o.status, error: `The order is already ${o.status.toLowerCase()}.` }, 409);
+  if (!o) return { status: 404, body: { error: "No order with that id." } };
+  if (["Released", "Amended", "Corrected", "Rejected", "Cancelled"].includes(o.status)) return { status: 409, body: { ok: false, status: o.status, error: `The order is already ${o.status.toLowerCase()}.` }, order: o };
   await log(ctx, "cancel", { partnerOrderId: id, orderId: o.id, accession: o.accession, note: reason || "Cancel requested" });
-  return json({ ok: true, status: o.status, note: "FBG staff have been asked to cancel this order. Check order.status for the outcome." });
+  return { status: 200, body: { ok: true, status: o.status, note: "FBG staff have been asked to cancel this order. Check order.status for the outcome." }, order: o };
+}
+
+// ---------- the partner's integration package (message_type) ----------
+const ERR_CODE = (m: string) => /test code/i.test(m) ? "UNKNOWN_TEST_CODE" : /isn't on the .* list/.test(m) ? "UNKNOWN_DRUG" : /npi/i.test(m) ? "INVALID_NPI" : /dob|date/i.test(m) ? "INVALID_DATE" : /required|needs/i.test(m) ? "REQUIRED" : "INVALID";
+const PKG_FIELD: Record<string, string> = { "order.id": "external_order_id", "patient.first_name": "patient.first_name", "patient.dob": "patient.dob", "patient.sex": "patient.sex",
+  "provider.name": "ordering_provider", "provider.npi": "ordering_provider.npi", "collected_at": "specimen.collection_datetime", "icd10": "diagnosis_codes", "bill_to": "billing.billing_type",
+  "patient.insurance": "billing.insurance", "toxicology.specimen": "specimen.type", "toxicology": "tests" };
+const ERR_FIELD = (m: string) => { const k = (/^([a-z_0-9]+(\.[a-z_0-9]+)*)/.exec(m) || [])[1]; return (k && PKG_FIELD[k]) || (/test code/i.test(m) ? "tests" : /ICD-10/.test(m) ? "diagnosis_codes" : k || null); };
+
+// Their lab_order -> the order object buildOrder understands.
+export function fromPackage(m: any) {
+  const p = m.patient || {}, pa = p.address || {}, pr = m.ordering_provider || {}, sp = m.specimen || {}, bl = m.billing || {}, ins = bl.insurance || {};
+  const bt = norm(bl.billing_type), billTo = /client/.test(bt) ? "client" : /self|patient/.test(bt) ? "patient" : "insurance";
+  return {
+    id: s(m.external_order_id, 64), accession: s(m.accession_number, 64), message_id: s(m.message_id, 80),
+    barcode: s(sp.specimen_id, 40), collected_at: sp.collection_datetime, collector: sp.collector, stat: /stat|asap|urgent/i.test(s(m.priority, 20)),
+    notes: [s(m.notes, 800), m.chain_of_custody?.required ? `Chain of custody required${m.chain_of_custody.coc_id ? ` (${s(m.chain_of_custody.coc_id, 40)})` : ""}` : ""].filter(Boolean).join("\n"),
+    bill_to: billTo, facility: m.ordering_facility || null,
+    patient: { id: p.patient_id, first_name: p.first_name, last_name: p.last_name, dob: p.dob, sex: p.sex, phone: p.phone, email: p.email,
+      address: [pa.line1, pa.line2].filter(Boolean).join(", "), city: pa.city, state: pa.state, zip: pa.postal_code,
+      insurance: { type: ins.type || ins.plan_type || (billTo === "insurance" ? "Commercial" : ""), payer: ins.payer || ins.payer_name, member_id: ins.member_id || ins.subscriber_id, group: ins.group || ins.group_number } },
+    provider: { name: [pr.first_name, pr.last_name].filter(Boolean).join(" ") || pr.name, npi: pr.npi, credentials: pr.credentials },
+    icd10: m.diagnosis_codes || [],
+    tests: (m.tests || []).map((t: any) => t?.test_code ?? t),
+    ...(m.toxicology ? { toxicology: { specimen: sp.type, ...m.toxicology } } : {}),
+  };
+}
+
+async function packageMessage(ctx: Ctx, m: any, hdrId: string): Promise<Response> {
+  const now = new Date().toISOString(), msgId = s(m.message_id || hdrId, 80);
+  if (m.message_type === "lab_order") {
+    const r = await createOrder(ctx, fromPackage({ ...m, message_id: msgId }));
+    const errs: string[] = r.body.errors || [];
+    const status = r.status === 422 ? "validation_error" : r.body.duplicate ? "duplicate" : r.status === 200 ? "accepted" : "rejected";
+    return json({ message_type: "order_ack", message_id: msgId, external_order_id: s(m.external_order_id, 64), accession_number: s(m.accession_number, 64),
+      their_accession_number: r.order?.accession || null, status, received_datetime: now,
+      errors: errs.map((e) => ({ field: ERR_FIELD(e), code: ERR_CODE(e), message: e })) }, r.status === 422 ? 422 : 200);
+  }
+  if (m.message_type === "cancel_order") {
+    const r = await cancelOrder(ctx, s(m.external_order_id, 64), s(m.reason, 300));
+    return json({ message_type: "cancel_ack", message_id: msgId, external_order_id: s(m.external_order_id, 64), accession_number: s(m.accession_number, 64),
+      their_accession_number: r.order?.accession || null, status: r.status === 200 ? "received" : r.status === 409 ? "too_late" : "not_found",
+      order_status: r.order?.status || null, received_datetime: now, errors: r.status === 200 ? [] : [{ field: "external_order_id", code: r.status === 409 ? "ALREADY_FINAL" : "NOT_FOUND", message: r.body.error }] }, r.status);
+  }
+  return json({ error: `Unknown message_type "${s(m.message_type, 40)}". Send lab_order or cancel_order.` }, 400);
 }
 
 // ---------- results out ----------
 export function sectionsOf(m: any) {
   const out: any[] = [], notes: string[] = [];
   for (const b of m?.blocks || []) {
-    if (b.type === "table") out.push({ title: b.title || "", columns: b.cols || [], rows: (b.rows || []).map((r: any) => r.group ? { group: r.group } : { cells: r.cells }) });
+    if (b.type === "table") out.push({ title: b.title || "", code: b.code || null, columns: b.cols || [], rows: (b.rows || []).map((r: any) => r.group ? { group: r.group } : { cells: r.cells }) });
     else if (b.type === "lines") (b.lines || []).forEach((l: any) => notes.push(`${l[0]}: ${l[1]}`));
     else if (b.type === "note" || b.type === "list") notes.push([b.title, b.text, ...(b.items || []).map((i: any) => `${i[0]}: ${i[1]}`)].filter(Boolean).join(" "));
   }
   return { sections: out, notes };
 }
 
-async function pullResults(ctx: Ctx, body: any): Promise<Response> {
-  const { admin } = ctx, limit = Math.min(Math.max(parseInt(body?.limit) || 10, 1), 25);
+// Report tables -> discrete analyte results, by the table's column names (screen, LC-MS/MS and general test tables differ).
+// Medication-compliance tables (no "Test Name" column) aren't analytes; they reach the partner in the PDF.
+export function analytesOf(sec: any) {
+  const c = (sec.columns || []).map((x: string) => norm(x)), at = (...names: string[]) => c.findIndex((x: string) => names.includes(x));
+  const iName = at("testname"), iRes = at("result", "outcome"), iMeas = at("measuredresult"), iUnits = at("units"), iFlag = at("flag"),
+    iCut = at("cutoff", "referencerangecutoff", "referencerange"), iStatus = at("status"), iIll = at("illicit");
+  if (iName < 0 || iRes < 0) return [];
+  const conf = iMeas >= 0, method = /lc-ms/i.test(sec.title) ? "LC-MS/MS" : /immunoassay|screen/i.test(sec.title) ? "Immunoassay" : null;
+  let group = "";
+  const out: any[] = [];
+  for (const r of sec.rows || []) {
+    if (r.group) { group = r.group; continue; }
+    const cell = (i: number) => (i >= 0 ? String(r.cells?.[i] ?? "") : "");
+    const name = cell(iName).replace(/ \(calculated\)$/, ""), raw = cell(iRes);
+    if (!name) continue;
+    const val = /^[A-Z ]+$/.test(raw) ? raw.charAt(0) + raw.slice(1).toLowerCase() : raw;
+    const validity = /validity/i.test(group), screen = !conf && !validity && method === "Immunoassay";
+    const flagRaw = cell(iFlag).toUpperCase(), cut = cell(iCut), units = cell(iUnits) || (conf || screen ? "ng/mL" : "");
+    const pending = /^pending$/i.test(raw) || raw === "";
+    const flag = pending ? null : /^positive$/i.test(raw) ? "A" : validity ? (/^(LOW|HIGH|ABNORMAL)$/.test(flagRaw) ? flagRaw.charAt(0) : "N") : flagRaw ? (flagRaw === "C" ? "C" : flagRaw.charAt(0)) : "N";
+    out.push({
+      analyte_code: slug(name), analyte_name: name, value: val || null, measured_value: conf ? cell(iMeas) || null : null, units: units || null,
+      cutoff: (conf || screen) && cut ? `${cut.replace(/^</, "")} ng/mL` : null,
+      reference_range: conf || screen ? "Negative" : cut || null,
+      flag, method: validity ? "Specimen validity" : method, interpretation: iStatus >= 0 ? cell(iStatus) || null : null,
+      ...(iIll >= 0 ? { illicit: /^yes$/i.test(cell(iIll)) } : {}), group: group || null,
+    });
+  }
+  return out;
+}
+
+async function pendingFor(admin: any, cid: string, onlyOrder?: string) {
   const since = new Date(Date.now() - 120 * DAY).toISOString();
-  const { data: rows, error } = await admin.from("orders").select("id,data,updated_at").eq("clinic_id", ctx.dev.clinic_id)
-    .in("data->>status", [...DONE, "Rejected"]).gte("updated_at", since).order("updated_at", { ascending: true }).limit(500);
+  let q = admin.from("orders").select("id,data,updated_at").eq("clinic_id", cid);
+  if (onlyOrder) q = q.eq("id", onlyOrder);
+  const { data: rows, error } = await q.in("data->>status", [...DONE, "Rejected"]).gte("updated_at", since).order("updated_at", { ascending: true }).limit(500);
   if (error) throw error;
   const ids = (rows || []).map((r: any) => r.id);
   const { data: dl } = ids.length ? await admin.from("partner_deliveries").select("order_id,version,acked_at,attempts").in("order_id", ids) : { data: [] };
   const acked = new Set((dl || []).filter((d: any) => d.acked_at).map((d: any) => `${d.order_id}:${d.version}`));
   const tries = new Map((dl || []).map((d: any) => [`${d.order_id}:${d.version}`, d.attempts || 0]));
-  const out: any[] = [];
-  for (const r of rows || []) {
+  const ver = (o: any) => (o.status === "Rejected" ? 0 : Number(o.reportVersion || 1));
+  return (rows || []).map((r: any) => r.data).filter((o: any) => !acked.has(`${o.id}:${ver(o)}`)).map((o: any) => ({ o, version: ver(o), tries: tries.get(`${o.id}:${ver(o)}`) || 0 }));
+}
+
+async function pdfB64(m: any) {
+  const pdf = await reportPdf(m);
+  let bin = ""; for (let i = 0; i < pdf.length; i += 0x8000) bin += String.fromCharCode(...pdf.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+
+async function reportItem(admin: any, o: any, version: number) {
+  const rejected = o.status === "Rejected";
+  const item: any = { id: o.partner?.orderId || null, accession: o.accession, version, patient_id: o.partner?.patientId || null, tests: o.tests,
+    status: rejected ? "rejected" : (o.corrections || []).length ? "corrected" : "final", released_at: iso(o.releasedAt) };
+  if (rejected) { item.rejected_reason = [o.rejectReason, o.rejectDetail].filter(Boolean).join(": "); item.recollect = o.recollectRequested !== false; return item; }
+  const { data: rv } = await admin.from("report_versions").select("data").eq("order_id", o.id).eq("version", version).maybeSingle();
+  const m = rv?.data;
+  if (!m) { item.pending_report = true; return item; }
+  const { sections, notes } = sectionsOf(m);
+  Object.assign(item, { performing_lab: m.lab ? { name: m.lab.name, clia: m.lab.clia, director: m.lab.director, address: m.lab.address, phone: m.lab.phone } : null,
+    report_status: m.status, flags: m.flags || null, sections, notes, signed: m.esign || null });
+  item.pdf = { filename: `${o.accession}${version > 1 ? `-v${version}` : ""}.pdf`, content_type: "application/pdf", base64: await pdfB64(m) };
+  return item;
+}
+
+async function pullResults(ctx: Ctx, body: any): Promise<Response> {
+  const { admin } = ctx, limit = Math.min(Math.max(parseInt(body?.limit) || 10, 1), 25);
+  const pend = await pendingFor(admin, ctx.cid), out: any[] = [];
+  for (const { o, version, tries } of pend) {
     if (out.length >= limit) break;
-    const o = r.data, rejected = o.status === "Rejected", version = rejected ? 0 : Number(o.reportVersion || 1), k = `${o.id}:${version}`;
-    if (acked.has(k)) continue;
-    const item: any = { id: o.partner?.orderId || null, accession: o.accession, version, patient_id: o.partner?.patientId || null, tests: o.tests,
-      status: rejected ? "rejected" : (o.corrections || []).length ? "corrected" : "final", released_at: iso(o.releasedAt) };
-    if (rejected) { item.rejected_reason = [o.rejectReason, o.rejectDetail].filter(Boolean).join(": "); item.recollect = o.recollectRequested !== false; }
-    else {
-      const { data: rv } = await admin.from("report_versions").select("data").eq("order_id", o.id).eq("version", version).maybeSingle();
-      const m = rv?.data;
-      if (m) {
-        const { sections, notes } = sectionsOf(m);
-        Object.assign(item, { performing_lab: m.lab ? { name: m.lab.name, clia: m.lab.clia, director: m.lab.director, address: m.lab.address, phone: m.lab.phone } : null,
-          report_status: m.status, flags: m.flags || null, sections, notes, signed: m.esign || null });
-        const pdf = await reportPdf(m);
-        let bin = ""; for (let i = 0; i < pdf.length; i += 0x8000) bin += String.fromCharCode(...pdf.subarray(i, i + 0x8000));
-        item.pdf = { filename: `${o.accession}${version > 1 ? `-v${version}` : ""}.pdf`, content_type: "application/pdf", base64: btoa(bin) };
-      } else item.pending_report = true;
-    }
-    out.push(item);
-    await admin.from("partner_deliveries").upsert({ order_id: o.id, version, delivered_at: new Date().toISOString(), attempts: (tries.get(k) || 0) + 1 }, { onConflict: "order_id,version" });
+    out.push(await reportItem(admin, o, version));
+    await admin.from("partner_deliveries").upsert({ order_id: o.id, version, delivered_at: new Date().toISOString(), attempts: tries + 1 }, { onConflict: "order_id,version" });
   }
   if (out.length) await log(ctx, "results", { note: `${out.length} report${out.length > 1 ? "s" : ""} handed over: ${out.map((x) => x.accession).join(", ")}`.slice(0, 500) });
-  return json({ results: out, more: out.length >= limit });
+  return json({ results: out, more: pend.length > out.length });
 }
 
 async function ackResult(ctx: Ctx, acc: string, version: number): Promise<Response> {
   if (!acc || !Number.isInteger(version) || version < 0) return json({ error: "Send the accession and version you received." }, 400);
-  const { data } = await ctx.admin.from("orders").select("id,data").eq("clinic_id", ctx.dev.clinic_id).eq("data->>accession", acc).limit(1);
+  const { data } = await ctx.admin.from("orders").select("id,data").eq("clinic_id", ctx.cid).eq("data->>accession", acc).limit(1);
   const o = data && data[0] ? data[0].data : null;
   if (!o) return json({ error: "No order with that accession." }, 404);
   const { error } = await ctx.admin.from("partner_deliveries").upsert({ order_id: o.id, version, acked_at: new Date().toISOString() }, { onConflict: "order_id,version" });
   if (error) throw error;
   await log(ctx, "ack", { partnerOrderId: o.partner?.orderId, orderId: o.id, accession: acc, note: `Report version ${version} received` });
   return json({ ok: true });
+}
+
+// The partner's lab_result message for one report: their accession and test codes, discrete analytes, and the PDF.
+export function toPackageResult(item: any, o: any, pt: any) {
+  const codes = o.partner?.codes || {};
+  const codeFor = (sec: any) => {
+    const k = sec.code || (/screen/i.test(sec.title) ? "UDS" : /confirmation|lc-ms/i.test(sec.title) ? (o.toxSpec === "Oral fluid" ? "CONFOF" : "CONF") : null);
+    return { ours: k, theirs: (k && codes[k]) || k || "REPORT" };
+  };
+  const tests: any[] = [];
+  for (const sec of item.sections || []) {
+    const an = analytesOf(sec);
+    if (!an.length) continue;
+    const { ours, theirs } = codeFor(sec);
+    let t = tests.find((x) => x.test_code === theirs);
+    if (!t) { t = { test_code: theirs, fbg_test_code: ours, test_name: sec.title, status: item.status, results: [] }; tests.push(t); }
+    t.results.push(...an);
+  }
+  return {
+    message_type: "lab_result", message_id: `FBG-${o.accession}-v${item.version}`, external_order_id: o.partner?.orderId || null,
+    accession_number: o.partner?.accession || null, their_accession_number: o.accession, status: item.status,
+    result_datetime: item.released_at || new Date().toISOString(),
+    ...(item.status === "rejected" ? { rejection_reason: item.rejected_reason, recollect: item.recollect } : {}),
+    patient: pt ? { patient_id: o.partner?.patientId || null, first_name: pt.first, last_name: pt.last, dob: pt.dob, sex: pt.sex === "X" ? "U" : pt.sex } : null,
+    tests, performing_lab: item.performing_lab || null,
+    report_pdf_base64: item.pdf ? item.pdf.base64 : null, report_pdf_filename: item.pdf ? item.pdf.filename : null,
+    report_version: item.version, flags: item.flags || null, notes: (item.notes || []).join("\n") || null, signed: item.signed || null,
+  };
+}
+
+// Push released reports to each partner's webhook. Called by the portal after a release (signed-in lab user) or by a
+// scheduled job (x-cron-secret), which retries anything that failed.
+async function pushEndpoint(req: Request, admin: any, body: any): Promise<Response> {
+  const secret = env("PARTNER_CRON_SECRET"), hdr = req.headers.get("x-cron-secret") || "";
+  let ok = !!secret && hdr === secret;
+  if (!ok) {
+    const token = (req.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
+    const { data: u } = token ? await admin.auth.getUser(token) : { data: null };
+    if (u?.user) { const { data: me } = await admin.from("profiles").select("role,active").eq("user_id", u.user.id).maybeSingle(); ok = !!me && me.role === "lab" && me.active; }
+  }
+  if (!ok) return json({ error: "Not allowed." }, 401);
+  const { data: cl } = await admin.from("clinics").select("id,data").limit(1000);
+  const partners = (cl || []).map((r: any) => r.data).filter((c: any) => c?.partner?.enabled && c.partner.push?.url && c.status !== "archived" && (!body.clinic_id || c.id === body.clinic_id));
+  const summary: any[] = [];
+  for (const c of partners) summary.push({ partner: c.name, ...(await pushPartner(admin, c, body.order_id ? s(body.order_id, 40) : undefined)) });
+  return json({ ok: true, partners: summary });
+}
+
+export async function pushPartner(admin: any, c: any, onlyOrder?: string, fetcher: typeof fetch = fetch) {
+  const ctx = { admin, cid: c.id }, cfg = c.partner.push, tokenName = s(cfg.tokenSecret, 80) || `PARTNER_TOKEN_${slug(c.acct || c.id)}`, token = env(tokenName);
+  if (!token) { await log(ctx, "push", { ok: false, note: `Results webhook token missing: add the Supabase secret ${tokenName}.` }); return { sent: 0, failed: 0, error: `missing secret ${tokenName}` }; }
+  if (!/^https:\/\//i.test(cfg.url)) { await log(ctx, "push", { ok: false, note: "The results webhook must be an https:// address." }); return { sent: 0, failed: 0, error: "webhook must use https" }; }
+  const pend = await pendingFor(admin, c.id, onlyOrder);
+  let sent = 0, failed = 0;
+  for (const { o, version, tries } of pend.slice(0, 25)) {
+    if (tries >= 50) continue; // stop retrying a report the partner keeps refusing; staff see the failures on the Partner labs page
+    const item = await reportItem(admin, o, version);
+    if (item.pending_report) continue;
+    const { data: prow } = await admin.from("patients").select("data").eq("id", o.patientId).maybeSingle();
+    const msg = toPackageResult(item, o, prow?.data);
+    let okResp = false, note = "";
+    try {
+      const r = await fetcher(cfg.url, { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, "X-Source-System": "fbg-lims", "X-Message-Id": msg.message_id }, body: JSON.stringify(msg) });
+      const j: any = await r.json().catch(() => ({}));
+      okResp = r.ok && !(j && (j.status === "rejected" || (Array.isArray(j.errors) && j.errors.length)));
+      note = okResp ? `Report version ${version} delivered${j && j.status ? ` (${s(j.status, 20)})` : ""}` : `Their system answered ${r.status}${j && (j.errors || j.error) ? ": " + s(JSON.stringify(j.errors || j.error), 300) : ""}`;
+    } catch (e) { note = `Couldn't reach their system: ${s((e as Error)?.message ?? e, 200)}`; }
+    const at = new Date().toISOString();
+    await admin.from("partner_deliveries").upsert({ order_id: o.id, version, delivered_at: at, attempts: tries + 1, ...(okResp ? { acked_at: at } : {}) }, { onConflict: "order_id,version" });
+    await log(ctx, "push", { partnerOrderId: o.partner?.orderId, orderId: o.id, accession: o.accession, ok: okResp, note });
+    if (okResp) sent++; else failed++;
+  }
+  return { sent, failed };
 }
 
 if (!Deno.env.get("PARTNER_API_NO_SERVE")) {

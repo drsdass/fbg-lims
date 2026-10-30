@@ -111,3 +111,59 @@ out("L1 log:", db.partner_log.map((l) => `${l.kind}${l.ok ? "" : " (refused)"}${
 out("X1 sections helper:", sectionsOf({ blocks: [{ type: "lines", lines: [["Corrected report", "Replaces the earlier report"]] }] }));
 db.clinics[0].data.partner.enabled = false;
 out("X2 interface off:", await call({ action: "ping" }));
+
+// ---------- the partner's own integration package (message_type), sent with a bearer token ----------
+const { pushPartner, analytesOf, toPackageResult } = await import("../../supabase/functions/partner-api/index.ts");
+db.clinics[0].data.partner.enabled = true;
+db.clinics[0].data.partner.map["TOX_PANEL_URINE"] = ["UDS:reflex", "CONF:Fentanyl"];
+const bearer = async (body: unknown) => {
+  const r = await handle(new Request("https://x/functions/v1/partner-api/api/lab-orders", { method: "POST", headers: { authorization: `Bearer ${KEY}`, "x-message-id": "HDR-1", "content-type": "application/json" }, body: JSON.stringify(body) }), admin);
+  return { status: r.status, body: await r.json() };
+};
+const pkg = {
+  message_type: "lab_order", message_id: "MSG-20261029-000001", external_order_id: "M1-ORD-100001", accession_number: "M1TOX-20261029-0001", priority: "routine",
+  ordering_facility: { name: "Peak Panel Client Clinic", client_id: "CLIENT123", address: { line1: "123 Example St", city: "Phoenix", state: "AZ", postal_code: "85001" } },
+  ordering_provider: { first_name: "Test", last_name: "Provider", npi: "1234567890", phone: "555-555-5555" },
+  patient: { patient_id: "TESTPAT001", first_name: "Test", last_name: "Patient", dob: "1980-01-01", sex: "U", address: { line1: "100 Test Ave", city: "Phoenix", state: "AZ", postal_code: "85001" } },
+  tests: [{ test_code: "TOX_PANEL_URINE", test_name: "Urine Toxicology Panel" }],
+  specimen: { specimen_id: "SPEC-100001", type: "urine", container: "urine cup", collection_datetime: new Date(Date.now() - 36e5).toISOString(), collector: "Test Collector" },
+  diagnosis_codes: [], billing: { billing_type: "client_bill", insurance: null }, chain_of_custody: { required: true, coc_id: "COC-9" }, notes: "Integration test order",
+};
+const ack = await bearer(pkg);
+out("P1 lab_order ack:", { status: ack.status, ...ack.body, their_accession_number: /^FBG\d{6}-\d{4}$/.test(ack.body.their_accession_number), received_datetime: !!ack.body.received_datetime });
+const po = db.orders.find((r) => r.data.partner?.orderId === "M1-ORD-100001")!.data;
+out("P2 stored:", { tests: po.tests, screen: po.screen, confirm: po.confirm, billType: po.billType, icd: po.icd, barcode: po.vialBarcode, partner: { accession: po.partner.accession, codes: po.partner.codes, messageId: po.partner.messageId }, notes: po.notes, sex: db.patients.find((p) => p.data.partnerId === "TESTPAT001")?.data.sex });
+out("P3 duplicate:", (await bearer(pkg)).body.status);
+const verr = await bearer({ ...pkg, external_order_id: "M1-ORD-100002", tests: [{ test_code: "NOPE" }], ordering_provider: { first_name: "X", npi: "1" } });
+out("P4 validation_error:", { status: verr.status, ack: verr.body.status, errors: verr.body.errors });
+out("P5 cancel_order:", (await bearer({ message_type: "cancel_order", message_id: "CANCEL-1", external_order_id: "M1-ORD-100001", accession_number: "M1TOX-20261029-0001", reason: "Order entered in error" })).body);
+out("P6 cancel unknown:", (await bearer({ message_type: "cancel_order", external_order_id: "NOPE" })).body.status);
+
+// ---------- results pushed to their webhook ----------
+const screenSec = { title: "Urine Drug Screen, Immunoassay", code: "UDS", columns: ["Test Name", "Result", "Units", "Flag", "Reference Range/Cutoff"], rows: [{ group: "Complete Drug Screen, Urine" }, { cells: ["Amphetamines Screen", "NEGATIVE", "ng/mL", "", "<500"] }, { cells: ["Cannabinoids (THC) Screen", "POSITIVE", "ng/mL", "A", "<50"] }, { group: "Specimen Validity, Urine" }, { cells: ["Creatinine", "85", "mg/dL", "NORMAL", "20 - 400"] }] };
+out("V1 screen analytes:", analytesOf(screenSec));
+out("V2 general test analytes:", analytesOf({ title: "Comprehensive Metabolic Panel", code: "CMP", columns: ["Test Name", "Result", "Flag", "Units", "Reference Range"], rows: [{ cells: ["Glucose", "142", "H", "mg/dL", "70 - 99"] }, { cells: ["Sodium", "PENDING", "", "mmol/L", "135 - 145"] }] }));
+Object.assign(po, { status: "Released", releasedAt: Date.now(), reportVersion: 1 });
+db.orders.find((r) => r.data === po)!.updated_at = new Date().toISOString();
+db.report_versions.push({ order_id: po.id, version: 1, data: { ...db.report_versions[0].data, status: "FINAL", accession: po.accession, blocks: [{ type: "table", ...screenSec, cols: screenSec.columns, widths: [200, 90, 60, 60, 122], rows: screenSec.rows }, { ...db.report_versions[0].data.blocks[1], code: "CONF" }] } });
+const partnerC = { ...db.clinics[0].data, partner: { ...db.clinics[0].data.partner, push: { url: "https://peakpanel.example/api/lab-results" } } };
+out("W1 no token secret:", await pushPartner(admin, partnerC, po.id));
+Deno.env.set("PARTNER_TOKEN_C2001", "their-webhook-token");
+const sentMsgs: any[] = [];
+let answer = { status: 500, body: { error: "down" } };
+const fakeFetch = async (url: string, init: any) => { sentMsgs.push({ url, auth: init.headers.Authorization, src: init.headers["X-Source-System"], mid: init.headers["X-Message-Id"], body: JSON.parse(init.body) }); return new Response(JSON.stringify(answer.body), { status: answer.status }); };
+out("W2 their system down:", await pushPartner(admin, partnerC, po.id, fakeFetch as any));
+answer = { status: 200, body: { message_type: "result_ack", status: "received", errors: [] } as any };
+out("W3 retried and received:", await pushPartner(admin, partnerC, po.id, fakeFetch as any));
+const m1 = sentMsgs[sentMsgs.length - 1];
+out("W4 request:", { url: m1.url, auth: m1.auth, src: m1.src, mid: m1.mid === `FBG-${po.accession}-v1` });
+const b1 = m1.body;
+out("W5 lab_result:", { message_type: b1.message_type, external_order_id: b1.external_order_id, accession_number: b1.accession_number, their: b1.their_accession_number === po.accession, status: b1.status, patient: b1.patient,
+  tests: b1.tests.map((t: any) => ({ code: t.test_code, fbg: t.fbg_test_code, n: t.results.length, first: t.results[0] })), lab: b1.performing_lab?.clia, pdf: atob(b1.report_pdf_base64).startsWith("%PDF"), version: b1.report_version });
+out("W6 next run also delivers the earlier corrected report that was pulled but never confirmed:", await pushPartner(admin, partnerC, undefined, fakeFetch as any));
+answer = { status: 200, body: { status: "rejected", errors: [{ code: "UNKNOWN_ANALYTE", message: "AMPHETAMINES_SCREEN not mapped" }] } as any };
+Object.assign(po, { reportVersion: 2, corrections: [{}] }); db.report_versions.push({ order_id: po.id, version: 2, data: { ...db.report_versions[db.report_versions.length - 1].data, status: "CORRECTED" } });
+out("W7 their system refuses the message:", await pushPartner(admin, partnerC, undefined, fakeFetch as any), sentMsgs[sentMsgs.length - 1].body.status);
+out("W8 push log:", db.partner_log.filter((l) => l.kind === "push").map((l) => `${l.ok ? "ok" : "failed"}: ${l.note}`));
+const unauth = await handle(new Request("https://x/functions/v1/partner-api", { method: "POST", body: JSON.stringify({ action: "results.push" }) }), { ...admin, auth: { getUser: async () => ({ data: null }) } });
+out("W9 push needs a lab user or the cron secret:", unauth.status);
