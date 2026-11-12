@@ -40,7 +40,12 @@ function q(t: string) {
   };
   return b;
 }
-const admin = { from: (t: string) => q(t), rpc: (name: string) => Promise.resolve(name === "next_seq_internal" ? { data: ++seq, error: null } : { data: null, error: { message: "no" } }) };
+let acctSeq = 3000;
+const admin = { from: (t: string) => q(t), rpc: (name: string, args: any) => {
+  if (name === "next_seq_internal") return Promise.resolve({ data: ++seq, error: null });
+  if (name === "partner_clinic_insert") { const n = ++acctSeq, id = "c" + n; db.clinics.push({ id, data: { ...args.p_data, id, acct: "FBG-" + n, status: "active", partnerParent: args.p_parent } }); return Promise.resolve({ data: id, error: null }); }
+  return Promise.resolve({ data: null, error: { message: "no" } });
+} };
 const sha = async (t: string) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)))].map((b) => b.toString(16).padStart(2, "0")).join("");
 const KEY = "k".repeat(40), BAD = "x".repeat(40);
 db.instrument_devices.push({ id: "d1", name: "Peak Panel LIMS", token_hash: await sha(KEY), active: true, scope: "partner", clinic_id: "c2001" });
@@ -183,3 +188,18 @@ out("C8 reflex + definitive selection together:", await view("PP-C8", ["FBG-URIN
 const c2 = db.orders.find((x) => x.data.partner?.orderId === "PP-C2")!.data;
 const valMsg = toPackageResult({ status: "final", version: 1, released_at: null, sections: [screenSec] }, c2, { first: "Test", last: "Patient", dob: "1980-01-01", sex: "X" });
 out("C9 validity results under their validity code:", valMsg.tests.map((t: any) => ({ code: t.test_code, fbg: t.fbg_test_code, analytes: t.results.map((a: any) => a.analyte_code) })));
+
+// ---------- Peak Panel's client clinics become FBG accounts automatically ----------
+const fac = (id: string, f: any) => bearer({ ...pkg, external_order_id: id, accession_number: "PPL-" + id, tests: [{ test_code: "FBG-URINE-80307" }], ordering_facility: f, ordering_provider: { first_name: "Ana", last_name: "Lopez", npi: "1992999999" } });
+await fac("PP-F1", { name: "Sunrise Recovery", client_id: "CL-77", address: { line1: "9 Desert Rd", city: "Tempe", state: "az", postal_code: "85281" } });
+const sub = db.clinics.find((c) => c.data.partnerClientId === "CL-77")!.data, f1 = db.orders.find((x) => x.data.partner?.orderId === "PP-F1")!.data;
+out("F1 new clinic account:", { name: sub.name, acct: sub.acct, status: sub.status, parent: sub.partnerParent, city: sub.city, state: sub.state, notify: sub.notify, providers: sub.providers.map((p: any) => p.name), order: { clinic: f1.clinicId === sub.id, partnerLab: f1.partner.lab, history: f1.history[0].note } });
+await fac("PP-F2", { name: "SUNRISE RECOVERY (renamed)", client_id: "CL-77" });
+await fac("PP-F3", { name: "Sunrise  Recovery" });
+await fac("PP-F4", { name: "Valley Detox", client_id: "CL-88" });
+out("F2 reused by client id and by name:", { subAccounts: db.clinics.filter((c) => c.data.partnerParent === "c2001").map((c) => c.data.name), orders: ["PP-F2", "PP-F3", "PP-F4"].map((id) => db.clinics.find((c) => c.id === db.orders.find((x) => x.data.partner?.orderId === id)!.data.clinicId)!.data.name) });
+out("F3 patient filed under the clinic:", { patient: db.patients.find((p) => p.id === f1.patientId)!.data.clinicId === sub.id, log: db.partner_log.filter((l) => l.kind === "clinic").map((l) => l.note) });
+out("F4 status and duplicate still found:", { status: (await call({ action: "order.status", id: "PP-F1" })).body.accession === f1.accession, resend: (await fac("PP-F1", { name: "Sunrise Recovery", client_id: "CL-77" })).body.status });
+Object.assign(f1, { status: "Rejected", rejectReason: "Leaking container" }); db.orders.find((x) => x.data === f1)!.updated_at = new Date().toISOString();
+const fr = await call({ action: "results.pull", limit: 25 });
+out("F5 results for client clinics come back through Peak Panel:", fr.body.results.some((r: any) => r.id === "PP-F1" && r.status === "rejected"));

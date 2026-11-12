@@ -94,9 +94,32 @@ function catalog(ctx: Ctx) {
 }
 
 // ---------- orders in ----------
+// Orders from a partner can belong to the partner's own account or to one of its client clinics (sub-accounts the
+// interface creates), so they're found by the partner they came through (data.partner.lab), not by clinic.
 async function findOrder(ctx: Ctx, partnerOrderId: string) {
-  const { data } = await ctx.admin.from("orders").select("id,data").eq("clinic_id", ctx.cid).eq("data->partner->>orderId", partnerOrderId).limit(1);
+  const { data } = await ctx.admin.from("orders").select("id,data").eq("data->partner->>lab", ctx.cid).eq("data->partner->>orderId", partnerOrderId).limit(1);
   return data && data[0] ? data[0].data : null;
+}
+
+// The partner's client clinic (ordering_facility) gets its own FBG account the first time it orders, so the FBG report,
+// invoices and insights name the real clinic. Matched by the partner's client_id, then by name. No facility: the partner.
+async function facilityFor(ctx: Ctx, f: any): Promise<any> {
+  const name = s(f?.name, 120), clientId = s(f?.client_id, 60);
+  if (!name) return ctx.clinic;
+  const { data: rows } = await ctx.admin.from("clinics").select("id,data").eq("data->>partnerParent", ctx.cid).limit(1000);
+  const subs = (rows || []).map((r: any) => r.data).filter(Boolean);
+  const hit = (clientId && subs.find((c: any) => c.partnerClientId === clientId)) || subs.find((c: any) => norm(c.name) === norm(name));
+  if (hit) return hit;
+  const a = f.address || {};
+  const data = { name, partnerParent: ctx.cid, partnerParentName: ctx.clinic.name, partnerClientId: clientId, address: [s(a.line1, 120), s(a.line2, 60)].filter(Boolean).join(", "),
+    city: s(a.city, 60), state: s(a.state, 2).toUpperCase(), zip: s(a.postal_code ?? a.zip, 10), phone: s(f.phone, 30), fax: "", npi: s(f.npi, 10), taxId: "", specialty: "",
+    contactName: "", contactEmail: "", providers: [], notify: { email: false, sms: false, fax: false, criticalPhone: "" },
+    settings: { ordering: true, supplies: false, insights: true }, createdBy: `${ctx.clinic.name} interface` };
+  const { data: id, error } = await ctx.admin.rpc("partner_clinic_insert", { p_parent: ctx.cid, p_data: data });
+  if (error) throw error;
+  const { data: row } = await ctx.admin.from("clinics").select("id,data").eq("id", id).maybeSingle();
+  await log(ctx, "clinic", { note: `New client clinic: ${name}${clientId ? ` (${clientId})` : ""}, FBG account ${row?.data?.acct || id}` });
+  return row?.data || { ...data, id };
 }
 
 function validDob(v: string) { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v); if (!m) return false; const d = new Date(v + "T12:00:00Z"); return !isNaN(+d) && d.getUTCFullYear() === +m[1] && +m[1] > 1900 && d.getTime() < Date.now(); }
@@ -203,9 +226,10 @@ async function createOrder(ctx: Ctx, raw: any): Promise<Out> {
   }
   const dup = await findOrder(ctx, b.id);
   if (dup) return { status: 200, body: { ok: true, duplicate: true, accession: dup.accession, status: dup.status }, order: dup };
-  const { admin, clinic, cid } = ctx, now = Date.now(), by = `${clinic.name} interface`;
+  const { admin, cid: plab } = ctx, now = Date.now(), by = `${ctx.clinic.name} interface`;
+  const clinic = await facilityFor(ctx, b.facility), cid = clinic.id;
 
-  // Provider: matched by NPI; a new ordering provider is added to the partner's account.
+  // Provider: matched by NPI; a new ordering provider is added to the ordering clinic's account.
   let prov = (clinic.providers || []).find((x: any) => x.npi === b.provider.npi);
   if (!prov) {
     prov = { id: "p" + rid(12), name: b.provider.name, cred: b.provider.cred, npi: b.provider.npi, email: "", phone: "", addedBy: by };
@@ -237,11 +261,11 @@ async function createOrder(ctx: Ctx, raw: any): Promise<Out> {
     confirm: t ? t.confirm : [], confirmReq: t ? [...t.confirm] : [], confV: 4, rxMeds: t ? t.rxMeds : [], parts: {},
     toxSpec: t ? t.spec : "", screen: t ? t.screen : "none", reflex: !!t && t.screen === "reflex", poct: {}, collector: b.collector, recollect: false,
     billType: b.billType, meds: t ? t.meds : [], medsText: t ? t.medsText : "", icd: b.icd, collectedAt: b.collected, createdAt: now, stat: b.stat, fasting: false,
-    notes: [b.notes, fac].filter(Boolean).join("\n"), source: "partner", scans: [],
-    partner: { lab: cid, orderId: b.id, barcode: b.barcode, patientId: b.patient.partnerId, codes: b.codeMap, ...(b.accession ? { accession: b.accession } : {}), ...(b.messageId ? { messageId: b.messageId } : {}) },
+    notes: [b.notes, cid === plab ? fac : ""].filter(Boolean).join("\n"), source: "partner", scans: [],
+    partner: { lab: plab, orderId: b.id, barcode: b.barcode, patientId: b.patient.partnerId, codes: b.codeMap, ...(b.accession ? { accession: b.accession } : {}), ...(b.messageId ? { messageId: b.messageId } : {}) },
     ...(b.barcode ? { vialBarcode: b.barcode } : {}),
-    consents: { patient: { method: "file", name: `${pt.first} ${pt.last}`, at: now, by: clinic.name }, provider: { name: `${prov.name}${prov.cred ? ", " + prov.cred : ""}`, sof: true, at: now, attest: true, by: clinic.name } },
-    status: "Ordered", history: [{ s: "Ordered", at: now, by, note: `Received from ${clinic.name} (their order ${b.id}${b.accession ? `, accession ${b.accession}` : ""})` }], results: {}, readAt: null, releasedAt: null,
+    consents: { patient: { method: "file", name: `${pt.first} ${pt.last}`, at: now, by: ctx.clinic.name }, provider: { name: `${prov.name}${prov.cred ? ", " + prov.cred : ""}`, sof: true, at: now, attest: true, by: ctx.clinic.name } },
+    status: "Ordered", history: [{ s: "Ordered", at: now, by, note: `Received from ${ctx.clinic.name}${cid !== plab ? ` for ${clinic.name}` : ""} (their order ${b.id}${b.accession ? `, accession ${b.accession}` : ""})` }], results: {}, readAt: null, releasedAt: null,
   };
   const { error: oe } = await admin.from("orders").insert({ id: ord.id, clinic_id: cid, data: ord });
   if (oe) throw oe;
@@ -355,7 +379,7 @@ export function analytesOf(sec: any) {
 
 async function pendingFor(admin: any, cid: string, onlyOrder?: string) {
   const since = new Date(Date.now() - 120 * DAY).toISOString();
-  let q = admin.from("orders").select("id,data,updated_at").eq("clinic_id", cid);
+  let q = admin.from("orders").select("id,data,updated_at").eq("data->partner->>lab", cid);
   if (onlyOrder) q = q.eq("id", onlyOrder);
   const { data: rows, error } = await q.in("data->>status", [...DONE, "Rejected"]).gte("updated_at", since).order("updated_at", { ascending: true }).limit(500);
   if (error) throw error;
@@ -402,7 +426,7 @@ async function pullResults(ctx: Ctx, body: any): Promise<Response> {
 
 async function ackResult(ctx: Ctx, acc: string, version: number): Promise<Response> {
   if (!acc || !Number.isInteger(version) || version < 0) return json({ error: "Send the accession and version you received." }, 400);
-  const { data } = await ctx.admin.from("orders").select("id,data").eq("clinic_id", ctx.cid).eq("data->>accession", acc).limit(1);
+  const { data } = await ctx.admin.from("orders").select("id,data").eq("data->partner->>lab", ctx.cid).eq("data->>accession", acc).limit(1);
   const o = data && data[0] ? data[0].data : null;
   if (!o) return json({ error: "No order with that accession." }, 404);
   const { error } = await ctx.admin.from("partner_deliveries").upsert({ order_id: o.id, version, acked_at: new Date().toISOString() }, { onConflict: "order_id,version" });

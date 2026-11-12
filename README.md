@@ -594,6 +594,11 @@ the Supabase secret named there (default `PARTNER_TOKEN_<ACCOUNT>`). Each releas
 `lab_result` (discrete analytes plus the PDF); anything not accepted is retried by `supabase/partner_push_cron.sql`
 (pg_cron + pg_net every 5 minutes, using the `PARTNER_CRON_SECRET` secret).
 
+**The partner's client clinics.** When an order carries an `ordering_facility`, the function files it under an FBG
+account for that clinic, created automatically the first time (migration 0020, `partner_clinic_insert`; matched by the
+partner's `client_id`, then by name; linked with `data.partnerParent`). Reports, insights and the Clinics list show the
+real clinic; client-bill invoices for these clinics go to the partner lab. The Partner labs page lists them.
+
 How it works: orders arrive as normal orders on the partner's account (tagged "Interface" in Accessioning, with their order
 number and tube barcode searchable); new ordering providers and patients are added automatically. On release, the locked
 report (`report_versions`) is handed over as structured data plus the same PDF clinics receive, and resent until the partner

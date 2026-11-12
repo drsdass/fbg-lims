@@ -1,7 +1,8 @@
 P1 nav + empty page: true | true
 P2 interface on: {"enabled":true,"tests":true,"hasUDS":false,"urine":38,"oral":57,"by":"Jordan Ellis"}
-P3 stats: 2Orders received, last 30 days1Open orders1Reports waiting for pickup1Cancel requests to handle
+P3 stats: 3Orders received, last 30 days2Open orders1Reports waiting for pickup1Cancel requests to handle
 P4 cancel banner: true | refused shown true | log rows 4
+P4b client clinics: Their client clinics ClinicFBG accountTheir client IDOrders, last 30 daysLast orderSunrise RecoveryTempe, AZFBG-3001CL-771<DATE>
 P5 endpoint: https://abc.supabase.co/functions/v1/partner-api
 P6 key: {"name":"Peak Panel Laboratory LIMS","clinic":"c2001","hashed":true} | shown once true | endpoint in modal true
 P7 mapping: {"PP-UTI":"UTIABR"} | listed true
@@ -11,6 +12,7 @@ P7d saved: true {"url":"https://peakpanel.example/api/lab-results","tokenSecret"
 P7e send now: [{"action":"results.push"}] | 1 sent
 P8 developer guide: true | for true | endpoint true | actions true
 P9 cancel handled: true | banner gone true
+K1 clinics list: Sunrise Recovery via Peak Panel LaboratoryFBG-3001—
 Q1 queue finds their order number: true | Interface tag true
 Q2 order page: Partner orderPeak Panel Laboratory order PP-1001Tube PP1001U
 Q3 rejection sent to their system right away: [{"action":"results.push","order_id":"oxpp1"}]
